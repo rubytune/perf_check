@@ -11,7 +11,7 @@ class PerfCheck
     def self.checkout_reference(reference='master')
       checkout(reference)
       at_exit do
-        puts
+        $stderr.puts
         Git.checkout_current_branch
       end
     end
@@ -21,16 +21,16 @@ class PerfCheck
     end
 
     def self.checkout(branch)
-      print "Checking out #{branch}... "
+      $stderr.print "Checking out #{branch}... "
       `git checkout #{branch} --quiet`
-      puts "Problem with git checkout! Bailing..." and exit(1) unless $?.success?
+      abort "Problem with git checkout! Bailing..." unless $?.success?
     end
 
     def self.stash_if_needed
       if anything_to_stash?
-        print("Stashing your changes... ")
+        $stderr.print("Stashing your changes... ")
         system('git stash -q >/dev/null')
-        puts("Problem with git stash! Bailing...") and exit(1) unless $?.success?
+        abort("Problem with git stash! Bailing...") unless $?.success?
         at_exit do
           Git.pop
         end
@@ -44,9 +44,9 @@ class PerfCheck
     end
 
     def self.pop
-      puts("Git stash applying...")
+      warn("Git stash applying...")
       system('git stash pop -q')
-      puts("Problem with git stash! Bailing...") and exit(1) unless $?.success?
+      abort("Problem with git stash! Bailing...") unless $?.success?
     end
   end
 
