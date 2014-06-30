@@ -1,5 +1,13 @@
+## usage notes
+
+`perf_check` launches a `rails server` in development mode to perform the benchmarks.
+
+**Do not edit the working tree while `perf_check` is running!** This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise.
+
 ## application interface
-To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example:
+`ENV['PERF_CHECK']` is set inside the server used to perform the benchmarks.
+
+The `perf_check` command also loads an instance of the application, separate from the server used to provide the benchmark. To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example:
 
 
     # config/initializers/perf_check.rb
