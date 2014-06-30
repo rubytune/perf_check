@@ -33,7 +33,8 @@ opts = OptionParser.new do |opts|
   end
 
   opts.separator "\nBenchmark options:"
-  opts.on('--requests N', '-n', 'Use N requests in benchmark, defaults to ') do |n|
+  opts.on('--requests N', '-n',
+          'Use N requests in benchmark, defaults to 10') do |n|
     options.number_of_requests = n.to_i
   end
 
