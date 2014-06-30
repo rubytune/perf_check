@@ -9,26 +9,27 @@
 
 The `perf_check` command also loads an instance of the application, separate from the server used to provide the benchmark. To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example:
 
+```Ruby
+# config/initializers/perf_check.rb
+if defined?(PerfCheck)
+  PerfCheck::Server.authorization do |login, route|
+      secret = Rails.application.config.secret_token
+      marshal = ActiveSupport::MessageVerifier.new(secret, :serializer => Marshal)
+      marshal_value = marshal.generate(:user_id => 1, :session_id => '1234')
 
-    # config/initializers/perf_check.rb
-    if defined?(PerfCheck)
-      PerfCheck::Server.authorization do |login, route|
-          secret = Rails.application.config.secret_token
-          marshal = ActiveSupport::MessageVerifier.new(secret, :serializer => Marshal)
-          marshal_value = marshal.generate(:user_id => 1, :session_id => '1234')
-
-          "_app_session=#{marshal_value}"
-      end
-    end
+      "_app_session=#{marshal_value}"
+  end
+end
+```
 
 Note that this logic depends greatly on your rails configuration. In this example we have assumed that the app uses an unencryped CookieStore to hold session data.
 
 The `login` parameter to the authorization block is one of
 
-    1. :super
-    2. :admin
-    3. :standard
-    4. A user name, passed in as a string.
+  1. `:super`
+  2. `:admin`
+  3. `:standard`
+  4. A user name, passed in as a string (corresponding to the `-u` command line argument)
 
 It is up to the application to decide the semantics of this parameter.
 
