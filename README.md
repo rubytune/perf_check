@@ -61,3 +61,34 @@ The `route` parameter is a PerfCheck::TestCase. The block should return a cookie
 
       Benchmark the changes in the working tree
          perf_check /user/45/posts -r HEAD
+
+## example usage
+```
+$ perf_check -r HEAD -n5 /notes/browse 2>/dev/null
+=============================================================================
+PERRRRF CHERRRK! Grab a coffee and don't touch your working tree (we automate git)
+=============================================================================
+
+
+Benchmarking /notes/browse:
+	Request  1: 774.8ms	  66MB	
+	Request  2: 773.4ms	  66MB	
+	Request  3: 771.1ms	  66MB	
+	Request  4: 774.1ms	  66MB	
+	Request  5: 773.7ms	  67MB	
+
+
+
+Benchmarking /notes/browse:
+	Request  1: 20.2ms	  68MB	
+	Request  2: 23.0ms	  68MB	
+	Request  3: 19.9ms	  68MB	
+	Request  4: 19.5ms	  69MB	
+	Request  5: 19.4ms	  69MB	
+
+==== Results ====
+/notes/browse
+       master: 20.4ms
+  your branch: 773.4ms
+       change: +753.0ms (yours is 37.9x slower!!!)
+```
