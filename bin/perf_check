@@ -1,0 +1,113 @@
+#!/usr/bin/env ruby
+
+require 'perf_check'
+
+perf_check = PerfCheck.new
+options = perf_check.options
+options.login = :admin
+options.number_of_requests = 10
+options.reference = 'master'
+
+opts = OptionParser.new do |opts|
+  opts.banner = "Usage: perf_check [options] [route ...]"
+
+  opts.separator 'Login options:'
+  opts.on('--admin', 'Log in as admin user for route') do
+    options.login = :admin
+  end
+
+  opts.on('--standard', 'Log in as standard user for route') do
+    options.login = :standard
+  end
+
+  opts.on('--super', 'Log in as super user') do
+    options.login = :super
+  end
+
+  opts.on('--user USER', '-u', 'Log in as USER') do |user|
+    options.login = user
+  end
+
+  opts.on('--no-login', '-L', "Don't log in") do
+    options.login = nil
+  end
+
+  opts.separator "\nBenchmark options:"
+  opts.on('--requests N', '-n', 'Use N requests in benchmark, defaults to ') do |n|
+    options.number_of_requests = n.to_i
+  end
+
+  opts.on('--reference COMMIT', '-r',
+          'Benchmark against COMMIT instead of master') do |commit|
+    options.reference = commit
+  end
+
+  opts.on('--quick', '-q',
+          'Fire off 5 requests just on this branch, no comparison with master') do
+    options.number_of_requests = 5
+    options.reference = nil
+  end
+
+  opts.separator ''
+  opts.separator <<EOF
+Usage examples:
+  Benchmark PostController#index against master
+     perf_check /user/45/posts
+     perf_check /user/45/posts -n5
+     perf_check /user/45/posts --standard
+
+  Benchmark against a specific commit
+     perf_check /user/45/posts -r 0123abcdefg
+     perf_check /user/45/posts -r HEAD~2
+
+  Benchmark the changes in the working tree
+     perf_check /user/45/posts -r HEAD
+EOF
+end
+opts.parse!
+
+app_root = Dir.pwd
+until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
+  app_root = File.dirname(app_root)
+end
+
+unless File.exist?("#{app_root}/config/application.rb")
+  abort("perf_check should be run from a rails directory")
+end
+
+ENV['RAILS_ENV'] = 'development'
+ENV['PERF_CHECK'] = '1'
+require File.expand_path("#{app_root}/config/environment")
+
+
+ARGV.each do |route|
+  perf_check.add_test_case(route)
+end
+
+if perf_check.test_cases.empty?
+  abort(opts.help)
+end
+
+perf_check.sanity_check
+perf_check.run
+
+perf_check.print_results
+
+#            _______________________
+#           < You made it faster!!! >
+#            -----------------------
+#           o                             .       .
+#            o                           / `.   .' "
+#             o                  .---.  <    > <    >  .---.
+#              O                 |    \  \ - ~ ~ - /  /    |
+#                    _____          ..-~             ~-..-~
+#                   |     |   \~~~\.'                    `./~~~/
+#                  =========   \__/    R U B Y T U N E     \__/
+#                 .'  O    \     /               /       \  "
+#                (_____,    `._.'               |         }  \/~~~/
+#                 `----.          /       }     |        /    \__/
+#                       `-.      |       /      |       /      `. ,~~|
+#                           ~-.__|      /_ - ~ ^|      /- _      `..-'
+#                                |     /        |     /     ~-.     `-. _  _  _
+#                                |_____|        |_____|         ~ - . _ _ _ _ _>
+#
