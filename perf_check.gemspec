@@ -4,6 +4,8 @@ Gem::Specification.new do |s|
   s.date = '2014-06-30'
   s.summary = 'PERF CHECKKK!'
   s.authors = ['rubytune']
+  s.homepage = 'https://github.com/rubytune/perf_check'
+  s.license = 'MIT'
 
   s.files = ['lib/perf_check.rb',
              'lib/perf_check/server.rb',
