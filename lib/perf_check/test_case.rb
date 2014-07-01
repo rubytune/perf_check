@@ -21,6 +21,7 @@ class PerfCheck
     def run(server, count)
       (count+1).times do |i|
         errors = 0
+
         begin
           profile = server.profile do |http|
             http.get(resource, {'Cookie' => cookie})
@@ -29,8 +30,11 @@ class PerfCheck
           File.open("public/perf_check_failed_request.html", 'w') do |error_dump|
             error_dump.write(e.body)
           end
-          printf("\tRequest %2i: —— FAILURE (HTTP %s): %s\n",
-                 i, e.code, '/perf_check_failed_request.html')
+          error = sprintf("\tRequest %2i:\tFAILED! (HTTP %s)", i, e.code)
+          puts(error.red.bold)
+          puts("\t   The server responded with a non-2xx status for this request.")
+          print("\t   The response has been written to public")
+          puts("/perf_check_failed_request.html".blue)
           exit(1)
         end
 

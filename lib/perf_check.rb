@@ -6,6 +6,7 @@ require 'digest'
 require 'fileutils'
 require 'benchmark'
 require 'ostruct'
+require 'colorize'
 
 class PerfCheck
   attr_accessor :options, :server, :test_cases
@@ -90,15 +91,17 @@ class PerfCheck
       if test.latency_difference < 0
         formatted_change = sprintf('%.1fx', test.latency_factor)
         formatted_change = "yours is #{formatted_change} faster!"
+        color = :green
       else
         formatted_change = sprintf('%.1fx', 1.0 / test.latency_factor)
         formatted_change = "yours is #{formatted_change} slower!!!"
+        color = :light_red
       end
       formatted_change = difference + " (#{formatted_change})"
 
       puts("master: ".rjust(15)     + "#{master_latency}")
       puts("your branch: ".rjust(15)+ "#{this_latency}")
-      puts("change: ".rjust(15)     + "#{formatted_change}")
+      puts(("change: ".rjust(15)     + "#{formatted_change}").bold.send(color))
     end
   end
 end
