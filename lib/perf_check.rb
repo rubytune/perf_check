@@ -24,11 +24,6 @@ class PerfCheck
       abort("perf_check should be run from a rails directory")
     end
 
-    require "#{app_root}/config/boot"
-
-    require 'rails/all'
-    Rails::Application::Configuration.send(:define_method, :cache_classes){ true }
-
     require "#{app_root}/config/environment"
   end
 
@@ -110,3 +105,7 @@ end
 require 'perf_check/server'
 require 'perf_check/test_case'
 require 'perf_check/git'
+
+if defined?(Rails)
+  require 'perf_check/railtie'
+end

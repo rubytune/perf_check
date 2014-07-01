@@ -10,16 +10,6 @@ class PerfCheck
       define_method(:login, &block)
     end
 
-    def self.start
-      ARGV.replace(['-b', '127.0.0.1', '-d', '-p', '3031'])
-
-      PerfCheck.require_rails
-      require 'rails/commands/server'
-
-      Rails::Server.new.start
-      exit!(0)
-    end
-
     def initialize
       at_exit do
         exit
@@ -86,8 +76,7 @@ class PerfCheck
     end
 
     def start
-      # Clear RUBYOPT or bundler whines
-      system({'RUBYOPT' => nil}, "perf_check --server >/dev/null")
+      system('rails server -b 127.0.0.1 -d -p 3031 >/dev/null')
       sleep(1.5)
 
       @running = true

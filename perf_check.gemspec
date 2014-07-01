@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'perf_check'
-  s.version = '0.0.5'
+  s.version = '0.0.6'
   s.date = '2014-06-30'
   s.summary = 'PERF CHECKKK!'
   s.authors = ['rubytune']
@@ -12,7 +12,8 @@ Gem::Specification.new do |s|
   s.files = ['lib/perf_check.rb',
              'lib/perf_check/server.rb',
              'lib/perf_check/test_case.rb',
-             'lib/perf_check/git.rb']
+             'lib/perf_check/git.rb',
+             'lib/perf_check/railtie.rb']
 
   s.executables << 'perf_check'
 end
