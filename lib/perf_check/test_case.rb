@@ -19,6 +19,11 @@ class PerfCheck
     end
 
     def run(server, count)
+      print("\t"+'request #'.underline)
+      print("  "+'latency'.underline)
+      print("   "+'server rss'.underline)
+      puts("   "+'profiler data'.underline)
+
       (count+1).times do |i|
         errors = 0
 
@@ -30,7 +35,7 @@ class PerfCheck
           File.open("public/perf_check_failed_request.html", 'w') do |error_dump|
             error_dump.write(e.body)
           end
-          error = sprintf("\tRequest %2i:\tFAILED! (HTTP %s)", i, e.code)
+          error = sprintf("\t%2i:\tFAILED! (HTTP %s)", i, e.code)
           puts(error.red.bold)
           puts("\t   The server responded with a non-2xx status for this request.")
           print("\t   The response has been written to public")
@@ -42,7 +47,7 @@ class PerfCheck
         # all the autoload overhead (?)
         next if i.zero?
 
-        printf("\tRequest %2i: %.1fms\t%4dMB\t%s\n",
+        printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
                i, profile.latency, server.mem, profile.profile_url)
 
         self.latencies << profile.latency
