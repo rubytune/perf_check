@@ -10,6 +10,17 @@ class PerfCheck
       define_method(:login, &block)
     end
 
+    def self.sign_cookie_data(key, data, opts={})
+      opts[:serializer] ||= Marshal
+      secret = Rails.application.config.secret_token
+
+      marshal = ActiveSupport::MessageVerifier.new(secret,
+                                                   :serializer => opts[:serializer])
+      marshal_value = marshal.generate(data)
+
+      "#{key}=#{marshal_value}"
+    end
+
     def initialize
       at_exit do
         exit

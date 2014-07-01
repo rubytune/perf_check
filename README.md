@@ -13,16 +13,21 @@ The `perf_check` command also loads an instance of the application, separate fro
 # config/initializers/perf_check.rb
 if defined?(PerfCheck)
   PerfCheck::Server.authorization do |login, route|
-      secret = Rails.application.config.secret_token
-      marshal = ActiveSupport::MessageVerifier.new(secret, :serializer => Marshal)
-      marshal_value = marshal.generate(:user_id => 1, :session_id => '1234')
-
-      "_app_session=#{marshal_value}"
+      session = { :user_id => 1, :sesssion_id => '1234' }
+      PerfCheck::Server.sign_cookie_data('_notes_session', session)
   end
 end
 ```
 
-Note that this logic depends greatly on your rails configuration. In this example we have assumed that the app uses an unencryped CookieStore to hold session data.
+Note that this logic depends greatly on your rails configuration. In this example we have assumed that the app uses an unencryped CookieStore to hold session data, and has a simple authorization filter such as
+
+```Ruby
+   before_filter :authorize
+   def authorize
+      return false unless session[:session_id]
+      @user = User.find(session[:session_id])
+   end
+```
 
 The `login` parameter to the authorization block is one of
 
@@ -71,20 +76,20 @@ PERRRRF CHERRRK! Grab a coffee and don't touch your working tree (we automate gi
 
 
 Benchmarking /notes/browse:
-	Request  1: 774.8ms	  66MB	
-	Request  2: 773.4ms	  66MB	
-	Request  3: 771.1ms	  66MB	
-	Request  4: 774.1ms	  66MB	
-	Request  5: 773.7ms	  67MB	
+	Request  1: 774.8ms	  66MB
+	Request  2: 773.4ms	  66MB
+	Request  3: 771.1ms	  66MB
+	Request  4: 774.1ms	  66MB
+	Request  5: 773.7ms	  67MB
 
 
 
 Benchmarking /notes/browse:
-	Request  1: 20.2ms	  68MB	
-	Request  2: 23.0ms	  68MB	
-	Request  3: 19.9ms	  68MB	
-	Request  4: 19.5ms	  69MB	
-	Request  5: 19.4ms	  69MB	
+	Request  1: 20.2ms	  68MB
+	Request  2: 23.0ms	  68MB
+	Request  3: 19.9ms	  68MB
+	Request  4: 19.5ms	  69MB
+	Request  5: 19.4ms	  69MB
 
 ==== Results ====
 /notes/browse
