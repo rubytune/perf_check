@@ -12,7 +12,6 @@ class PerfCheck
   attr_accessor :options, :server, :test_cases
 
   def self.require_rails
-    ENV['RAILS_ENV'] = 'development'
     ENV['PERF_CHECK'] = '1'
 
     app_root = Dir.pwd
@@ -39,6 +38,10 @@ class PerfCheck
   end
 
   def sanity_check
+    if ENV['RAILS_ENV'] == 'production'
+      abort("perf_check cannot be run in the production environment")
+    end
+
     if Git.current_branch == "master"
       puts("Yo, profiling master vs. master isn't too useful, but hey, we'll do it")
     end
