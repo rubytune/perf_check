@@ -3,7 +3,7 @@ class PerfCheck
 
     config.before_initialize do
 
-      if defined?(Rack::MiniProfiler)
+      if defined?(Rack::MiniProfiler) && ENV['PERF_CHECK']
         # Integrate with rack-mini-profiler
         tmp = "#{Rails.root}/tmp/perf_check/miniprofiler"
         FileUtils.mkdir_p(tmp)
