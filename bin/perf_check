@@ -8,6 +8,7 @@ options.login = :admin
 options.number_of_requests = 10
 options.reference = 'master'
 
+
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: perf_check [options] [route ...]"
 
@@ -49,6 +50,12 @@ opts = OptionParser.new do |opts|
     options.reference = nil
   end
 
+  opts.separator "\nOther"
+  opts.on('--server') do
+    PerfCheck::Server.start
+    exit!(0)
+  end
+
   opts.separator ''
   opts.separator <<EOF
 Usage examples:
@@ -67,19 +74,7 @@ EOF
 end
 opts.parse!
 
-app_root = Dir.pwd
-until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
-  app_root = File.dirname(app_root)
-end
-
-unless File.exist?("#{app_root}/config/application.rb")
-  abort("perf_check should be run from a rails directory")
-end
-
-ENV['RAILS_ENV'] = 'development'
-ENV['PERF_CHECK'] = '1'
-require File.expand_path("#{app_root}/config/environment")
-
+PerfCheck.require_rails
 
 ARGV.each do |route|
   perf_check.add_test_case(route)

@@ -10,6 +10,27 @@ require 'ostruct'
 class PerfCheck
   attr_accessor :options, :server, :test_cases
 
+  def self.require_rails
+    ENV['RAILS_ENV'] = 'development'
+    ENV['PERF_CHECK'] = '1'
+
+    app_root = Dir.pwd
+    until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
+      app_root = File.dirname(app_root)
+    end
+
+    unless File.exist?("#{app_root}/config/application.rb")
+      abort("perf_check should be run from a rails directory")
+    end
+
+    require "#{app_root}/config/boot"
+
+    require 'rails/all'
+    Rails::Application::Configuration.send(:define_method, :cache_classes){ true }
+
+    require "#{app_root}/config/environment"
+  end
+
   def initialize
     self.options = OpenStruct.new
     self.server = Server.new
