@@ -50,12 +50,6 @@ opts = OptionParser.new do |opts|
     options.reference = nil
   end
 
-  opts.separator "\nOther"
-  opts.on('--server') do
-    PerfCheck::Server.start
-    exit!(0)
-  end
-
   opts.separator ''
   opts.separator <<EOF
 Usage examples:
