@@ -12,8 +12,11 @@ class PerfCheck
           Rack::MiniProfiler::FileStore.new(:path => tmp)
       end
 
-      # Force cache_classes = true .... :\
-      Rails::Application::Configuration.send(:define_method, :cache_classes){ true }
+      if ENV['PERF_CHECK']
+        # Force cache_classes = true .... :\
+        config = Rails::Application::Configuration
+        config.send(:define_method, :cache_classes){true}
+      end
     end
   end
 end
