@@ -5,9 +5,11 @@
 **Do not edit the working tree while `perf_check` is running!** This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise.
 
 ## application interface
-`ENV['PERF_CHECK']` is set inside the server used to perform the benchmarks.
+`ENV['PERF_CHECK']` is set inside the server used to perform the benchmarks. The `perf_check` command also loads an instance of the application, separate from the server used to provide the benchmark.
 
-The `perf_check` command also loads an instance of the application, separate from the server used to provide the benchmark. To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example:
+#### benchmarking resources which require authorization
+
+To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example:
 
 ```Ruby
 # config/initializers/perf_check.rb
@@ -27,6 +29,17 @@ Note that this logic depends greatly on your rails configuration. In this exampl
       return false unless session[:session_id]
       @user = User.find(session[:session_id])
    end
+```
+
+Alternatively, you can provide a block to `PerfCheck::Server.authorization_action`, which will replace the login action of your app with the given block. Requests will be made to this action when a session cookie is required. For example, for an app with `post '/login', :to => 'application#login'`, you could have:
+
+```Ruby
+# config/initializers/perf_check.rb
+if ENV['PERF_CHECK']
+   PerfCheck::Server.authorization_action(:post, '/login') do |login, route|
+      session[:user_id] = User.find_by_login(login).id
+   end
+end
 ```
 
 The `login` parameter to the authorization block is one of
