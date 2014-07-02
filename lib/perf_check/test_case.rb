@@ -29,7 +29,7 @@ class PerfCheck
 
         begin
           profile = server.profile do |http|
-            http.get(resource, {'Cookie' => cookie})
+            http.get(resource, {'Cookie' => "#{cookie}"})
           end
         rescue Server::ApplicationError => e
           File.open("public/perf_check_failed_request.html", 'w') do |error_dump|
