@@ -24,7 +24,7 @@ class PerfCheck
       print("   "+'server rss'.underline)
       puts("   "+'profiler data'.underline)
 
-      (options.number_of_requests+1).times do |i|
+      options.number_of_requests.times do |i|
         profile = server.profile do |http|
           http.get(resource, {'Cookie' => "#{cookie}"})
         end
@@ -40,10 +40,6 @@ class PerfCheck
           puts("/perf_check_failed_request.html".blue)
           exit(1)
         end
-
-        # Disregard initial request, since in dev. mode it includes
-        # all the autoload overhead (?)
-        next if i.zero?
 
         printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
                i, profile.latency, server.mem, profile.profile_url)
