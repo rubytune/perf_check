@@ -21,6 +21,7 @@ class PerfCheck
         get_perf_check_session(params[:login], params[:route])
         render :nothing => true
       end
+      controller.send(:skip_before_filter, :verify_authenticity_token)
 
       authorization do |login, route|
         http = Net::HTTP.new(host, port)
@@ -29,6 +30,7 @@ class PerfCheck
         elsif method == :get
           response = http.get(login_route+"?login=#{login}")
         end
+
         response['Set-Cookie']
       end
     end
