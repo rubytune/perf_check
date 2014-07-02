@@ -13,9 +13,12 @@ class PerfCheck
       end
 
       if ENV['PERF_CHECK']
-        # Force cache_classes = true .... :\
+        # Force cacheing .... :\
         config = Rails::Application::Configuration
-        config.send(:define_method, :cache_classes){true}
+        config.send(:define_method, :cache_classes){ true }
+
+        config = ActiveSupport::Configurable::Configuration
+        config.send(:define_method, :perform_caching){ true }
       end
     end
   end
