@@ -86,12 +86,15 @@ class PerfCheck
       this_latency = sprintf('%.1fms', test.this_latency)
 
       difference = sprintf('%+.1fms', test.latency_difference)
-      if test.latency_difference < 0
-        formatted_change = sprintf('%.1fx', test.latency_factor)
+      percent_change = 100 * (test.latency_difference / test.reference_latency).abs
+      formatted_change = sprintf('%d%%', percent_change)
+      if percent_change < 5
+        formatted_change = "yours is about the same"
+        color = :blue
+      elsif test.latency_difference < 0
         formatted_change = "yours is #{formatted_change} faster!"
         color = :green
       else
-        formatted_change = sprintf('%.1fx', 1.0 / test.latency_factor)
         formatted_change = "yours is #{formatted_change} slower!!!"
         color = :light_red
       end
