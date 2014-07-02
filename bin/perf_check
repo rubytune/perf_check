@@ -4,7 +4,7 @@ require 'perf_check'
 
 perf_check = PerfCheck.new
 options = perf_check.options
-options.login = :admin
+options.login = nil
 options.number_of_requests = 10
 options.reference = 'master'
 
