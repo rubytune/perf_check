@@ -91,15 +91,11 @@ class PerfCheck
         http.finish
       end.real
 
-      case response.code
-      when '200'
-        Profile.new.tap do |result|
-          result.latency = latency
-          result.profile_url = latest_profiler_url
-          result.response_body = response.body
-        end
-      else
-        raise Server::ApplicationError.new(response) unless response.code == '200'
+      Profile.new.tap do |result|
+        result.latency = latency
+        result.profile_url = latest_profiler_url
+        result.response_body = response.body
+        result.response_code = response.code.to_i
       end
     end
 
@@ -137,17 +133,6 @@ class PerfCheck
       3031
     end
 
-    class ApplicationError < Exception
-      def initialize(resp)
-        @response = resp
-      end
-      def code
-        @response.code
-      end
-      def body
-        @response.body
-      end
-    end
     class Profile < OpenStruct; end
   end
 end

@@ -67,7 +67,7 @@ class PerfCheck
         end
 
         puts("\n\nBenchmarking #{test.resource}:")
-        test.run(server, options.number_of_requests)
+        test.run(server, options)
       end
     end
   end

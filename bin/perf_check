@@ -7,6 +7,7 @@ options = perf_check.options
 options.login = nil
 options.number_of_requests = 10
 options.reference = 'master'
+options.http_statuses = [200]
 
 
 opts = OptionParser.new do |opts|
@@ -48,6 +49,14 @@ opts = OptionParser.new do |opts|
           'Fire off 5 requests just on this branch, no comparison with master') do
     options.number_of_requests = 5
     options.reference = nil
+  end
+
+  opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
+    options.http_statuses.push(302)
+  end
+
+  opts.on('--302-failure', 'Consider HTTP 302 code an unsuccessful request') do
+    options.http_statuses.delete(302)
   end
 
   opts.separator ''

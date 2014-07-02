@@ -18,24 +18,22 @@ class PerfCheck
       self.resource = route
     end
 
-    def run(server, count)
+    def run(server, options)
       print("\t"+'request #'.underline)
       print("  "+'latency'.underline)
       print("   "+'server rss'.underline)
       puts("   "+'profiler data'.underline)
 
-      (count+1).times do |i|
-        errors = 0
+      (options.number_of_requests+1).times do |i|
+        profile = server.profile do |http|
+          http.get(resource, {'Cookie' => "#{cookie}"})
+        end
 
-        begin
-          profile = server.profile do |http|
-            http.get(resource, {'Cookie' => "#{cookie}"})
-          end
-        rescue Server::ApplicationError => e
+        unless options.http_statuses.include? profile.response_code
           File.open("public/perf_check_failed_request.html", 'w') do |error_dump|
-            error_dump.write(e.body)
+            error_dump.write(profile.response_body)
           end
-          error = sprintf("\t%2i:\tFAILED! (HTTP %s)", i, e.code)
+          error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
           puts(error.red.bold)
           puts("\t   The server responded with a non-2xx status for this request.")
           print("\t   The response has been written to public")
