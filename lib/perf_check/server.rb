@@ -10,6 +10,29 @@ class PerfCheck
       define_method(:login, &block)
     end
 
+    def self.authorization_action(method, login_route, &block)
+      Rails.application.reload_routes!
+      p = Rails.application.routes.recognize_path(login_route, :method => method)
+      controller = "#{p[:controller]}_controller".classify.constantize
+      action = p[:action]
+
+      controller.send(:define_method, :get_perf_check_session, &block)
+      controller.send(:define_method, action) do
+        get_perf_check_session(params[:login], params[:route])
+        render :nothing => true
+      end
+
+      authorization do |login, route|
+        http = Net::HTTP.new(host, port)
+        if method == :post
+          response = http.post(login_route, "login=#{login}")
+        elsif method == :get
+          response = http.get(login_route+"?login=#{login}")
+        end
+        response['Set-Cookie']
+      end
+    end
+
     def self.sign_cookie_data(key, data, opts={})
       opts[:serializer] ||= Marshal
       secret = Rails.application.config.secret_token
