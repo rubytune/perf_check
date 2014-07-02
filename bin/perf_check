@@ -51,6 +51,10 @@ opts = OptionParser.new do |opts|
     options.reference = nil
   end
 
+  opts.on('--clear-cache', 'Call Rails.cache.clear before running benchmark') do
+    options.clear_cache = true
+  end
+
   opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
     options.http_statuses.push(302)
   end
