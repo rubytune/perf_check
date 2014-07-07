@@ -2,7 +2,7 @@
 
 class PerfCheck
   class TestCase
-    attr_accessor :resource, :controller, :action
+    attr_accessor :resource, :controller, :action, :format
     attr_accessor :latencies, :cookie
     attr_accessor :this_latencies, :reference_latencies
 
@@ -15,6 +15,7 @@ class PerfCheck
 
       self.controller = params[:controller].split('/')[-1]
       self.action = params[:action]
+      self.format = params[:format]
       self.resource = route
     end
 
@@ -24,9 +25,13 @@ class PerfCheck
       print("   "+'server rss'.underline)
       puts("   "+'profiler data'.underline)
 
+      headers = {'Cookie' => "#{cookie}"}
+      unless self.format
+        headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
+      end
       options.number_of_requests.times do |i|
         profile = server.profile do |http|
-          http.get(resource, {'Cookie' => "#{cookie}"})
+          http.get(resource, headers)
         end
 
         unless options.http_statuses.include? profile.response_code
