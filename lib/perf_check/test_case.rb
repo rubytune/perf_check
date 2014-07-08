@@ -35,14 +35,13 @@ class PerfCheck
         end
 
         unless options.http_statuses.include? profile.response_code
-          File.open("public/perf_check_failed_request.html", 'w') do |error_dump|
+          File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
             error_dump.write(profile.response_body)
           end
           error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
           puts(error.red.bold)
           puts("\t   The server responded with a non-2xx status for this request.")
-          print("\t   The response has been written to public")
-          puts("/perf_check_failed_request.html".blue)
+          puts("\t   The response has been written to tmp/perf_check/failed_request.html")
           exit(1)
         end
 
