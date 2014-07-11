@@ -1,12 +1,12 @@
 ## What is perf check
 
-`perf_check` gives you a nice lazy way to regularly benchmark your rails app.
+`perf_check` is a nice and easy way to benchmark branches of your rails app.
 
-It's kind of like a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We mainly run it locally, in development mode to get a relative idea of how our branches improved code performance.
+Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We mainly run it locally or on staging, to get a decent idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or admin, so `perf_check` provides an easy way to deal with that.
 
 ## How to install
 
-Add to your Gemfile, in the `:development` group
+Add to your Gemfile, probably just in the `:development` group
 
 ```
 gem 'perf_check'
@@ -56,19 +56,16 @@ Benchmarking /notes/browse:
        change: +753.0ms (yours is 37.9x slower!!!)
 ```
 
-## How does it do
+## How does it work
 
-In the example above, `perf_check`
+In the above example, `perf_check`
 
-* Launches a rails server on a custom port WITH CACHING ENABLED
-* Hits /user/45/posts 11 times, throwing away the first request
+* Launches its own rails server on a custom port (WITH CACHING FORCE-ENABLED)
+* Hits /user/45/posts 11 times (throws away the first request)
 * Git stashes in case you have uncommitted stuff. Checks out master. Restarts server
-* Hits /user/45/posts 11 times, throwing away the first request
-* Applies a the stash if it existed
+* Hits /user/45/posts 11 times (throws away the first request)
+* Applies the stash if it existed
 * Prints results
-* 
-However, `perf_check`'s true power comes with it's ability to auto-login as any type of user...(dun dun dun)
-
 
 ## Caveats of DOOOOM
 
@@ -78,15 +75,15 @@ However, `perf_check`'s true power comes with it's ability to auto-login as any 
 
 This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise. 
 
-### We turn caching on
+### We turn force caching on by default
 
-We start up with `cache_classes=true` and `perform_caching=true` regardless of what's in your development.rb
+Perf check start ups its rails server with `cache_classes=true` and `perform_caching=true` regardless of what's in your development.rb
 
-You can pass `--clear-cache` to run Rails.cache.clear when testing caching.
+You can pass `--clear-cache` which will run `Rails.cache.clear` before each batch of requests. This is useful when testing caching.
 
 ## benchmarking resources which require authorization
 
-To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example:
+To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example, pop something like this in an initializer:
 
 ```Ruby
 # config/initializers/perf_check.rb
@@ -187,3 +184,43 @@ Benchmarking /notes/browse:
   your branch: 773.4ms
        change: +753.0ms (yours is 37.9x slower!!!)
 ```
+
+
+### Troubleshooting
+
+## Redis
+
+Certain versions of redis might need the following snippet to fork properly:
+
+```
+  # Circumvent redis forking issues with our version of redis
+  # Will be fixed when we update redis https://github.com/redis/redis-rb/issues/364
+  class Redis
+    class Client
+      def ensure_connected
+        tries = 0
+        begin
+          if connected?
+            if Process.pid != @pid
+              reconnect
+            end
+          else
+            connect
+          end
+          tries += 1
+          yield
+        rescue ConnectionError
+          disconnect
+          if tries < 2 && @reconnect
+            retry
+          else
+            raise
+          end
+        rescue Exception
+          disconnect
+          raise
+        end
+      end
+    end
+  end
+  ```
