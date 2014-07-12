@@ -2,7 +2,7 @@
 
 `perf_check` is a nice and easy way to benchmark branches of your rails app.
 
-Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We typically run it locally or on staging, to get a decent idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or admin, so `perf_check` provides an easy way to deal with that.
+Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We typically run it locally or on staging, to get a decent idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or as an admin, so `perf_check` provides an easy way to deal with that.
 
 ## How to install
 
