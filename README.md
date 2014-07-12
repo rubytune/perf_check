@@ -12,7 +12,7 @@ Add it to your Gemfile, probably just in the `:development` group
 gem 'perf_check'
 ```
 
-You will actually have to commit this. Preferably to master (as long as the gem exists on whatever reference branch you are testing against, you are good to go).
+You will actually have to commit this. Preferably to master, which will make life easiest. Basically, as long as the gem exists on whatever reference branch you are benchmarking against, you are good to go.
 
 ## How to use
 
