@@ -2,11 +2,11 @@
 
 `perf_check` is a nice and easy way to benchmark branches of your rails app.
 
-Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We mainly run it locally or on staging, to get a decent idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or admin, so `perf_check` provides an easy way to deal with that.
+Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We typically run it locally or on staging, to get a decent idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or admin, so `perf_check` provides an easy way to deal with that.
 
 ## How to install
 
-Add to your Gemfile, probably just in the `:development` group
+Add it to your Gemfile, probably just in the `:development` group
 
 ```
 gem 'perf_check'
@@ -16,10 +16,10 @@ You will actually have to commit this. Preferably to master (as long as the gem 
 
 ## How to use
 
-Pick an url you want to bench
+In it's simplest incarnation, just feed an url to it
 
 ```
-$ perf_check /notes/browse 
+$ bundle exec perf_check /notes/browse 
 =============================================================================
 PERRRRF CHERRRK! Grab a coffee and don't touch your working tree (we automate git)
 =============================================================================
@@ -75,19 +75,19 @@ In the above example, `perf_check`
 
 This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise. 
 
-### We turn force caching on by default
+### Caching is on by default
 
 Perf check start ups its rails server with `cache_classes=true` and `perform_caching=true` regardless of what's in your development.rb
 
 You can pass `--clear-cache` which will run `Rails.cache.clear` before each batch of requests. This is useful when testing caching.
 
-## benchmarking resources which require authorization
+## Benchmarking resources which require authorization
 
-To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example, pop something like this in an initializer:
+To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example, pop something like this into an initializer:
 
 ```Ruby
 # config/initializers/perf_check.rb
-if defined?(PerfCheck)
+if if ENV['PERF_CHECK']
   PerfCheck::Server.authorization do |login, route|
       session = { :user_id => 1, :sesssion_id => '1234' }
       PerfCheck::Server.sign_cookie_data('_notes_session', session)
@@ -95,15 +95,7 @@ if defined?(PerfCheck)
 end
 ```
 
-Note that this logic depends greatly on your rails configuration. In this example we have assumed that the app uses an unencryped CookieStore to hold session data, and has a simple authorization filter such as
-
-```Ruby
-   before_filter :authorize
-   def authorize
-      return false unless session[:session_id]
-      @user = User.find(session[:session_id])
-   end
-```
+This code will only be run when a `PERF_CHECK` environment variable is set (which will only be when perf_check itself is booting up rails). Note that this logic depends greatly on your rails configuration. 
 
 Alternatively, you can provide a block to `PerfCheck::Server.authorization_action`, which will replace the login action of your app with the given block. Requests will be made to this action when a session cookie is required. For example, for an app with `post '/login', :to => 'application#login'`, you could have:
 
@@ -123,7 +115,7 @@ The `login` parameter to the authorization block is one of
   3. `:standard`
   4. A user name, passed in as a string (corresponding to the `-u` command line argument)
 
-It is up to the application to decide the semantics of this parameter.
+It is up to the application how it will use this parameter.
 
 The `route` parameter is a PerfCheck::TestCase. The block should return a cookie suitable for accessing `route.resource` (e.g. /users/1/posts) as the given `login`.
 
