@@ -119,32 +119,38 @@ It is up to the application how it will use this parameter.
 
 The `route` parameter is a PerfCheck::TestCase. The block should return a cookie suitable for accessing `route.resource` (e.g. /users/1/posts) as the given `login`.
 
-## command line usage
-    Usage: perf_check [options] [route ...]
-    Login options:
-            --admin                      Log in as admin user for route
-            --standard                   Log in as standard user for route
-            --super                      Log in as super user
-        -u, --user USER                  Log in as USER
-        -L, --no-login                   Don't log in
+## All options
+```
+$ bundle exec perf_check
+Usage: perf_check [options] [route ...]
+Login options:
+        --admin                      Log in as admin user for route
+        --standard                   Log in as standard user for route
+        --super                      Log in as super user
+    -u, --user USER                  Log in as USER
+    -L, --no-login                   Don't log in
 
-    Benchmark options:
-        -n, --requests N                 Use N requests in benchmark, defaults to
-        -r, --reference COMMIT           Benchmark against COMMIT instead of master
-        -q, --quick                      Fire off 5 requests just on this branch, no comparison with master
+Benchmark options:
+    -n, --requests N                 Use N requests in benchmark, defaults to 10
+    -r, --reference COMMIT           Benchmark against COMMIT instead of master
+    -q, --quick                      Fire off 5 requests just on this branch, no comparison with master
+        --clear-cache                Call Rails.cache.clear before running benchmark
+        --302-success                Consider HTTP 302 code a successful request
+        --302-failure                Consider HTTP 302 code an unsuccessful request
 
-    Usage examples:
-      Benchmark PostController#index against master
-         perf_check /user/45/posts
-         perf_check /user/45/posts -n5
-         perf_check /user/45/posts --standard
+Usage examples:
+  Benchmark PostController#index against master
+     perf_check /user/45/posts
+     perf_check /user/45/posts -n5
+     perf_check /user/45/posts --standard
 
-      Benchmark against a specific commit
-         perf_check /user/45/posts -r 0123abcdefg
-         perf_check /user/45/posts -r HEAD~2
+  Benchmark against a specific commit
+     perf_check /user/45/posts -r 0123abcdefg
+     perf_check /user/45/posts -r HEAD~2
 
-      Benchmark the changes in the working tree
-         perf_check /user/45/posts -r HEAD
+  Benchmark the changes in the working tree
+     perf_check /user/45/posts -r HEAD
+```
 
 ## Troubleshooting
 
