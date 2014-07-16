@@ -51,8 +51,8 @@ opts = OptionParser.new do |opts|
     options.reference = nil
   end
 
-  opts.on('--clear-cache', 'Call Rails.cache.clear before running benchmark') do
-    options.clear_cache = true
+  opts.on('--no-caching', 'Do not enable fragment caching') do
+    ENV['PERF_CHECK_NOCACHING'] = true
   end
 
   opts.on('--302-success', 'Consider HTTP 302 code a successful request') do

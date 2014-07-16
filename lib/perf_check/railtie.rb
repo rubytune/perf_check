@@ -17,8 +17,9 @@ class PerfCheck
         config = Rails::Application::Configuration
         config.send(:define_method, :cache_classes){ true }
 
+        fragment_caching = !ENV['PERF_CHECK_NOCACHING']
         config = ActiveSupport::Configurable::Configuration
-        config.send(:define_method, :perform_caching){ true }
+        config.send(:define_method, :perform_caching){ fragment_caching }
       end
     end
   end
