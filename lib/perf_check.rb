@@ -62,7 +62,6 @@ class PerfCheck
 
       test_cases.each do |test|
         server.restart
-        Rails.cache.clear if options.clear_cache
 
         if options.login
           test.cookie = server.login(options.login, test)
