@@ -52,7 +52,7 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on('--no-caching', 'Do not enable fragment caching') do
-    ENV['PERF_CHECK_NOCACHING'] = true
+    ENV['PERF_CHECK_NOCACHING'] = 'true'
   end
 
   opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
