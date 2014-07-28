@@ -29,7 +29,7 @@ class PerfCheck
       unless self.format
         headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
       end
-      options.number_of_requests.times do |i|
+      (options.number_of_requests+1).times do |i|
         profile = server.profile do |http|
           http.get(resource, headers)
         end
@@ -45,6 +45,7 @@ class PerfCheck
           exit(1)
         end
 
+        next if i.zero?
         printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
                i, profile.latency, server.mem, profile.profile_url)
 
