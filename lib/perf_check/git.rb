@@ -32,6 +32,7 @@ class PerfCheck
         system('git stash -q >/dev/null')
         abort("Problem with git stash! Bailing...") unless $?.success?
         at_exit do
+          system('git checkout .')
           Git.pop
         end
       end
