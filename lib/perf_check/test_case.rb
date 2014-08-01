@@ -3,7 +3,7 @@
 class PerfCheck
   class TestCase
     attr_accessor :resource, :controller, :action, :format
-    attr_accessor :latencies, :cookie
+    attr_accessor :cookie
     attr_accessor :this_latencies, :reference_latencies
 
     def initialize(route)
@@ -11,7 +11,6 @@ class PerfCheck
 
       self.this_latencies = []
       self.reference_latencies = []
-      self.latencies = this_latencies
 
       self.controller = params[:controller].split('/')[-1]
       self.action = params[:action]
@@ -19,11 +18,17 @@ class PerfCheck
       self.resource = route
     end
 
+    def switch_to_reference_context
+      @context = :reference
+    end
+
     def run(server, options)
       print("\t"+'request #'.underline)
       print("  "+'latency'.underline)
       print("   "+'server rss'.underline)
       puts("   "+'profiler data'.underline)
+
+      latencies = (@context == :reference) ? reference_latencies : this_latencies
 
       headers = {'Cookie' => "#{cookie}"}
       unless self.format
@@ -49,7 +54,7 @@ class PerfCheck
         printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
                i, profile.latency, server.mem, profile.profile_url)
 
-        self.latencies << profile.latency
+        latencies << profile.latency
       end
       puts
     end

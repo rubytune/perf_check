@@ -57,7 +57,7 @@ class PerfCheck
       if i == 1
         Git.stash_if_needed
         Git.checkout_reference(options.reference)
-        test_cases.each{ |x| x.latencies = x.reference_latencies }
+        test_cases.each{ |x| x.switch_to_reference_context }
       end
 
       test_cases.each do |test|
