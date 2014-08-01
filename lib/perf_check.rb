@@ -117,16 +117,8 @@ class PerfCheck
       puts(("change: ".rjust(15)     + "#{formatted_change}").bold.send(color))
 
       if ENV['PERF_CHECK_VERIFICATION']
-        Tempfile.new('this_response').tap do |this_response|
-          Tempfile.new('reference_response').tap do |reference_response|
-            this_response.write(test.this_response)
-            reference_response.write(test.reference_response)
-            this_response.close
-            reference_response.close
-            system('diff', '-U0', *PerfCheck.diff_options,
-                   this_response.path, reference_response.path)
-          end
-        end
+        diff = test.response_diff.lines.count == 0
+        puts("diff: ".rjust(15) + (diff ? "no" : "yes"))
       end
     end
   end

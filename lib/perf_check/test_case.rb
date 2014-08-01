@@ -86,6 +86,22 @@ class PerfCheck
       reference_latency / this_latency
     end
 
+    def response_diff
+      Tempfile.new('this_response').tap do |this_response|
+        Tempfile.new('reference_response').tap do |reference_response|
+          this_response.write(test.this_response)
+          reference_response.write(test.reference_response)
+          this_response.close
+          reference_response.close
+
+           IO.popen(['diff', '-U0', *PerfCheck.diff_options,
+                     this_response.path, reference_response.path]) do |diff|
+             return diff.read
+           end
+        end
+      end
+    end
+
     def eql?(test)
       resource == test.resource
     end
