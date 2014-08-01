@@ -13,7 +13,7 @@ class PerfCheck
 
   def self.diff_options
     @@diff_options ||=
-      ['--ignore-matching-lines=/mini-profiler-resources/includes.js']
+      ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
   end
 
   def self.require_rails
