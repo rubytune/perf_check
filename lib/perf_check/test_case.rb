@@ -1,5 +1,7 @@
 # coding: utf-8
 
+require 'diffy'
+
 class PerfCheck
   class TestCase
     attr_accessor :resource, :controller, :action, :format
@@ -87,18 +89,16 @@ class PerfCheck
     end
 
     def response_diff
-      Tempfile.new('this_response').tap do |this_response|
-        Tempfile.new('reference_response').tap do |reference_response|
-          this_response.write(this_response)
-          reference_response.write(reference_response)
-          this_response.close
-          reference_response.close
-
-           IO.popen(['diff', '-U0', *PerfCheck.diff_options,
-                     this_response.path, reference_response.path]) do |diff|
-             return diff.read
-           end
+      diff = Diffy::Diff.new(this_response, reference_response)
+      if diff.to_s.empty?
+        OpenStruct.new(:changed? => false)
+      else
+        FileUtils.mkdir_p("#{Rails.root}/tmp/perf_check/diffs")
+        file = `mkdir -u "#{Rails.root}/tmp/perf_check/diffs/XXXXXXXXXX"`.strip
+        [:text, :html].each do |format|
+          File.open("#{file}.#{format}", 'w'){ |f| f.write(diff.to_s(format)) }
         end
+        OpenStruct.new(:changed? => true, :file => "#{file}.text")
       end
     end
 

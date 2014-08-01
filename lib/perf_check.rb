@@ -117,8 +117,10 @@ class PerfCheck
       puts(("change: ".rjust(15)     + "#{formatted_change}").bold.send(color))
 
       if ENV['PERF_CHECK_VERIFICATION']
-        diff = test.response_diff.lines.count == 0
-        puts("diff: ".rjust(15) + (diff ? "no" : "yes"))
+        diff = test.response_diff
+        if diff.changed?
+          puts("diff: ".rjust(15) + diff.file)
+        end
       end
     end
   end

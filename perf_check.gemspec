@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
 
   s.add_runtime_dependency 'colorize', '= 0.7.3'
+  s.add_runtime_dependency 'diffy', '= 3.0.5'
 
   s.files = ['lib/perf_check.rb',
              'lib/perf_check/server.rb',
