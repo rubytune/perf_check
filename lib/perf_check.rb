@@ -11,6 +11,11 @@ require 'colorize'
 class PerfCheck
   attr_accessor :options, :server, :test_cases
 
+  def self.diff_options
+    @@diff_options ||=
+      ['--ignore-matching-lines=/mini-profiler-resources/includes.js']
+  end
+
   def self.require_rails
     ENV['PERF_CHECK'] = '1'
 
@@ -118,7 +123,8 @@ class PerfCheck
             reference_response.write(test.reference_response)
             this_response.close
             reference_response.close
-            system('diff', '-U0', this_response.path, reference_response.path)
+            system('diff', '-U0', *PerfCheck.diff_options,
+                   this_response.path, reference_response.path)
           end
         end
       end
