@@ -21,6 +21,10 @@ class PerfCheck
         config = ActiveSupport::Configurable::Configuration
         config.send(:define_method, :perform_caching){ fragment_caching }
       end
+
+      if ENV['PERF_CHECK'] && ENV['PERF_CHECK_VERIFICATION']
+        PerfCheck::Server.seed_random!
+      end
     end
   end
 end

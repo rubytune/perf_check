@@ -35,6 +35,28 @@ class PerfCheck
       end
     end
 
+    def self.seed_random!
+      # Seed random
+      srand(1)
+
+      # SecureRandom cannot be seeded, so we have to monkey patch it instead :\
+      def SecureRandom.hex(n=16)
+        '4' * n
+      end
+      def SecureRandom.random_bytes(n=16)
+        '4' * n
+      end
+      def SecureRandom.random_number(n=0)
+        n > 4 ? 4 : n
+      end
+      def SecureRandom.urlsafe_base64(n=16, padding=false)
+        '4' * (4*n / 3)
+      end
+      def SecureRandom.uuid
+        "00000000-0000-0000-0000-000000000004"
+      end
+    end
+
     def self.sign_cookie_data(key, data, opts={})
       opts[:serializer] ||= Marshal
       secret = Rails.application.config.secret_token
