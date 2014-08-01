@@ -89,8 +89,8 @@ class PerfCheck
     def response_diff
       Tempfile.new('this_response').tap do |this_response|
         Tempfile.new('reference_response').tap do |reference_response|
-          this_response.write(test.this_response)
-          reference_response.write(test.reference_response)
+          this_response.write(this_response)
+          reference_response.write(reference_response)
           this_response.close
           reference_response.close
 
