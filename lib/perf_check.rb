@@ -119,7 +119,7 @@ class PerfCheck
       if ENV['PERF_CHECK_VERIFICATION']
         diff = test.response_diff
         if diff.changed?
-          puts("diff: ".rjust(15) + diff.file)
+          puts(("diff: ".rjust(15) + diff.file).bold.light_red)
         end
       end
     end
