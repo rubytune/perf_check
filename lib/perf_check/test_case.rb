@@ -3,7 +3,7 @@
 class PerfCheck
   class TestCase
     attr_accessor :resource, :controller, :action, :format
-    attr_accessor :cookie
+    attr_accessor :cookie, :this_response, :reference_response
     attr_accessor :this_latencies, :reference_latencies
 
     def initialize(route)
@@ -51,6 +51,17 @@ class PerfCheck
         end
 
         next if i.zero?
+
+        if ENV['PERF_CHECK_VERIFICATION']
+          if i == 1
+            if @context == :reference
+              self.reference_response = profile.response_body
+            else
+              self.this_response = profile.response_body
+            end
+          end
+        end
+
         printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
                i, profile.latency, server.mem, profile.profile_url)
 
