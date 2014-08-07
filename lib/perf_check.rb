@@ -116,7 +116,7 @@ class PerfCheck
       puts("your branch: ".rjust(15)+ "#{this_latency}")
       puts(("change: ".rjust(15)     + "#{formatted_change}").bold.send(color))
 
-      if ENV['PERF_CHECK_VERIFICATION']
+      if options.verify_responses
         diff = test.response_diff
         if diff.changed?
           puts(("diff: ".rjust(15) + diff.file).bold.light_red)

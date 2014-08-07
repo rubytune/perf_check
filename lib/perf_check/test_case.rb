@@ -54,7 +54,7 @@ class PerfCheck
 
         next if i.zero?
 
-        if ENV['PERF_CHECK_VERIFICATION']
+        if options.verify_responses
           if i == 1
             if @context == :reference
               self.reference_response = profile.response_body

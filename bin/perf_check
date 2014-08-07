@@ -8,6 +8,7 @@ options.login = nil
 options.number_of_requests = 10
 options.reference = 'master'
 options.http_statuses = [200]
+options.verify_responses = false
 
 
 opts = OptionParser.new do |opts|
@@ -61,6 +62,13 @@ opts = OptionParser.new do |opts|
 
   opts.on('--302-failure', 'Consider HTTP 302 code an unsuccessful request') do
     options.http_statuses.delete(302)
+  end
+
+  opts.separator "\nMisc"
+  opts.on('--verify-responses',
+          'Check whether there is a diff between the responses of this and the reference branch') do
+    options.verify_responses = true
+    ENV['PERF_CHECK_VERIFICATION'] = '1'
   end
 
   opts.separator ''
