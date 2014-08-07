@@ -43,15 +43,19 @@ class PerfCheck
       def SecureRandom.hex(n=16)
         '4' * n
       end
+
       def SecureRandom.random_bytes(n=16)
         '4' * n
       end
+
       def SecureRandom.random_number(n=0)
         n > 4 ? 4 : n
       end
+
       def SecureRandom.urlsafe_base64(n=16, padding=false)
         '4' * (4*n / 3)
       end
+
       def SecureRandom.uuid
         "00000000-0000-0000-0000-000000000004"
       end
