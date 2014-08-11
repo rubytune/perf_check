@@ -9,7 +9,7 @@ class PerfCheck
     attr_accessor :this_latencies, :reference_latencies
 
     def initialize(route)
-      params = Rails.application.routes.recognize_path(route)
+      params = PerfCheck::Server.recognize_path(route)
 
       self.this_latencies = []
       self.reference_latencies = []

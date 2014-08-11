@@ -12,7 +12,7 @@ class PerfCheck
 
     def self.authorization_action(method, login_route, &block)
       Rails.application.reload_routes!
-      p = Rails.application.routes.recognize_path(login_route, :method => method)
+      p = PerfCheck::Server.recognize_path(login_route, :method => method)
       controller = "#{p[:controller]}_controller".classify.constantize
       action = p[:action]
 
@@ -33,6 +33,23 @@ class PerfCheck
 
         response['Set-Cookie']
       end
+    end
+
+    def self.mounted_path(engine)
+      route = Rails.application.routes.routes.detect do |route|
+        route.app == engine
+      end
+      route && route.path
+    end
+
+    def self.recognize_path(path, opts={})
+      Rails::Engine.subclasses.each do |engine|
+        if match = mounted_path(engine) =~ path
+          path = path.sub(match.to_s, '')
+          return engine.routes.recognize_path(path, opts)
+        end
+      end
+      Rails.application.routes.recognize_path(path, opts)
     end
 
     def self.seed_random!
