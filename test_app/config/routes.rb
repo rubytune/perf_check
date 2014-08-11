@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   get '/', :to => 'posts#index'
 
+  mount TestEngine::Engine, :at => 'test_engine'
+
   resources :posts
 
   # The priority is based upon order of creation: first created -> highest priority.
