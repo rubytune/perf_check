@@ -77,6 +77,10 @@ opts = OptionParser.new do |opts|
     ENV['PERF_CHECK_VERIFICATION'] = '1'
   end
 
+  opts.on('--brief', '-b') do
+    options.brief = true
+  end
+
   opts.separator ''
   opts.separator <<EOF
 Usage examples:
@@ -108,7 +112,11 @@ end
 perf_check.sanity_check
 perf_check.run
 
-perf_check.print_results
+if options.brief
+  perf_check.print_brief_results
+else
+  perf_check.print_results
+end
 
 #            _______________________
 #           < You made it faster!!! >

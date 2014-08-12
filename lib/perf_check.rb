@@ -78,10 +78,28 @@ class PerfCheck
     end
   end
 
+  def print_brief_results
+    test_cases.each do |test|
+      print(test.resource.ljust(40) + ': ')
+      printf('%.1fms', test.this_latency)
+
+      puts && next if test.reference_latencies.empty?
+
+      print(sprintf(' (%+5.1fms)', test.latency_difference).bold)
+      if options.verify_responses
+        diff = test.response_diff
+        if diff.changed?
+          print('; '+"Diff: #{diff.file}".bold.light_red)
+        end
+      end
+      puts
+    end
+  end
+
   def print_results
     puts("==== Results ====")
     test_cases.each do |test|
-      puts(test.resource)
+      puts(test.resource.bold)
 
       if test.reference_latencies.empty?
         printf("your branch: ".rjust(15)+"%.1fms\n", test.this_latency)
