@@ -65,6 +65,12 @@ opts = OptionParser.new do |opts|
   end
 
   opts.separator "\nMisc"
+  opts.on('--input FILE', '-i') do |input|
+    File.readlines(input).each do |resource|
+      ARGV << resource.strip
+    end
+  end
+
   opts.on('--verify-responses',
           'Check whether there is a diff between the responses of this and the reference branch') do
     options.verify_responses = true
