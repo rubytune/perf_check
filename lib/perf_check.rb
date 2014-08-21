@@ -73,7 +73,7 @@ class PerfCheck
         if options.diff
           puts "Issuing #{test.resource}"
         else
-          puts("\n\nBenchmarking #{test.resource}:") 
+          puts("\nBenchmarking #{test.resource}:") 
         end
         test.run(server, options)
         server.restart unless options.diff

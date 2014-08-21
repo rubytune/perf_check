@@ -159,10 +159,10 @@ class PerfCheck
 
     def restart
       if !@running
-        $stderr.print "starting rails..."
+        $stderr.print "starting rails...\n"
         start
       else
-        $stderr.print "re-starting rails..."
+        $stderr.print "re-starting rails...\n"
         exit
         start
       end
