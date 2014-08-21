@@ -81,9 +81,9 @@ class PerfCheck
 
   def print_diff_results(diff)
     if diff.changed?
-      print("Diff: #{diff.file}".bold.light_red)
+      print(" Diff: #{diff.file}".bold.light_red)
     else
-      print("Output is identical!".bold.green)
+      print(" Diff: Output is identical!".bold.light_green)
     end
   end
 
