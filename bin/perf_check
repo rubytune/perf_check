@@ -80,6 +80,12 @@ opts = OptionParser.new do |opts|
   opts.on('--brief', '-b') do
     options.brief = true
   end
+  
+  opts.on('--diff') do 
+    options.brief = true
+    options.verify_responses = true
+    options.number_of_requests = 1
+  end
 
   opts.separator ''
   opts.separator <<EOF
@@ -88,6 +94,7 @@ Usage examples:
      perf_check /user/45/posts
      perf_check /user/45/posts -n5
      perf_check /user/45/posts --standard
+     perf_check /user/45/posts --admin 
 
   Benchmark against a specific commit
      perf_check /user/45/posts -r 0123abcdefg
@@ -95,6 +102,15 @@ Usage examples:
 
   Benchmark the changes in the working tree
      perf_check /user/45/posts -r HEAD
+     
+  Benchmark and diff the output against master 
+     perf_check /user/45/posts --verify-responses
+        
+  Just diff the output on your branch with master
+     perf_check /user/45/posts --diff
+     
+  Diff a bunch of urls listed in a file (newline seperated)
+    perf_check --diff --input FILE
 EOF
 end
 opts.parse!

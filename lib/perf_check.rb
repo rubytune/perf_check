@@ -78,6 +78,15 @@ class PerfCheck
     end
   end
 
+
+  def print_diff_results(diff)
+    if diff.changed?
+      print("Diff: #{diff.file}".bold.light_red)
+    else
+      print("Output is identical!").bold.green
+    end
+  end
+
   def print_brief_results
     test_cases.each do |test|
       print(test.resource.ljust(40) + ': ')
@@ -86,12 +95,7 @@ class PerfCheck
       puts && next if test.reference_latencies.empty?
 
       print(sprintf(' (%+5.1fms)', test.latency_difference).bold)
-      if options.verify_responses
-        diff = test.response_diff
-        if diff.changed?
-          print('; '+"Diff: #{diff.file}".bold.light_red)
-        end
-      end
+      print_diff_results(test.response_diff) if options.verify_responses
       puts
     end
   end
@@ -134,12 +138,7 @@ class PerfCheck
       puts("your branch: ".rjust(15)+ "#{this_latency}")
       puts(("change: ".rjust(15)     + "#{formatted_change}").bold.send(color))
 
-      if options.verify_responses
-        diff = test.response_diff
-        if diff.changed?
-          puts(("diff: ".rjust(15) + diff.file).bold.light_red)
-        end
-      end
+      print_diff_results(test.response_diff) if options.verify_responses
     end
   end
 end

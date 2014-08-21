@@ -150,6 +150,15 @@ Usage examples:
 
   Benchmark the changes in the working tree
      perf_check /user/45/posts -r HEAD
+
+  Benchmark and diff the output against master 
+     perf_check /user/45/posts --verify-responses
+        
+  Diff the output on your branch with master
+     perf_check /user/45/posts --diff
+    
+  Diff a bunch of urls listed in a file (newline seperated)
+     perf_check --diff --input FILE
 ```
 
 ## Troubleshooting
