@@ -83,7 +83,7 @@ class PerfCheck
     if diff.changed?
       print("Diff: #{diff.file}".bold.light_red)
     else
-      print("Output is identical!").bold.green
+      print("Output is identical!".bold.green)
     end
   end
 
