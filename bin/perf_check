@@ -82,6 +82,7 @@ opts = OptionParser.new do |opts|
   end
   
   opts.on('--diff') do 
+    options.diff = true
     options.brief = true
     options.verify_responses = true
     options.number_of_requests = 1

@@ -25,10 +25,12 @@ class PerfCheck
     end
 
     def run(server, options)
-      print("\t"+'request #'.underline)
-      print("  "+'latency'.underline)
-      print("   "+'server rss'.underline)
-      puts("   "+'profiler data'.underline)
+      unless options.diff
+        print("\t"+'request #'.underline)
+        print("  "+'latency'.underline)
+        print("   "+'server rss'.underline)
+        puts("   "+'profiler data'.underline)
+      end
 
       latencies = (@context == :reference) ? reference_latencies : this_latencies
 
@@ -65,7 +67,7 @@ class PerfCheck
         end
 
         printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
-               i, profile.latency, server.mem, profile.profile_url)
+               i, profile.latency, server.mem, profile.profile_url) unless options.diff
 
         latencies << profile.latency
       end
