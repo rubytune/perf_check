@@ -64,8 +64,11 @@ class PerfCheck
         Git.checkout_reference(options.reference)
         test_cases.each{ |x| x.switch_to_reference_context }
       end
-      server.restart
-      test_cases.each do |test|
+      
+      server.restart 
+      test_cases.each_with_index do |test, i|
+        server.restart unless i.zero? || options.diff
+
         if options.login
           test.cookie = server.login(options.login, test)
         end
@@ -76,7 +79,6 @@ class PerfCheck
           puts("\nBenchmarking #{test.resource}:") 
         end
         test.run(server, options)
-        server.restart unless options.diff
       end
     end
   end

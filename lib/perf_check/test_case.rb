@@ -71,7 +71,6 @@ class PerfCheck
 
         latencies << profile.latency
       end
-      puts
     end
 
     def this_latency
