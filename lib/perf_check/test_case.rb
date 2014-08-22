@@ -71,6 +71,7 @@ class PerfCheck
 
         latencies << profile.latency
       end
+      puts unless options.diff # pretty!
     end
 
     def this_latency
