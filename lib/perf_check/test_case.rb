@@ -6,13 +6,13 @@ class PerfCheck
   class TestCase
     attr_accessor :resource, :controller, :action, :format
     attr_accessor :cookie, :this_response, :reference_response
-    attr_accessor :this_latencies, :reference_latencies
+    attr_accessor :this_profiles, :reference_profiles
 
     def initialize(route)
       params = PerfCheck::Server.recognize_path(route)
 
-      self.this_latencies = []
-      self.reference_latencies = []
+      self.this_profiles = []
+      self.reference_profiles = []
 
       self.controller = params[:controller].split('/')[-1]
       self.action = params[:action]
@@ -32,7 +32,7 @@ class PerfCheck
         puts("   "+'profiler data'.underline)
       end
 
-      latencies = (@context == :reference) ? reference_latencies : this_latencies
+      profiles = (@context == :reference) ? reference_profiles : this_profiles
 
       headers = {'Cookie' => "#{cookie}"}
       unless self.format
@@ -69,17 +69,17 @@ class PerfCheck
         printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
                i, profile.latency, server.mem, profile.profile_url) unless options.diff
 
-        latencies << profile.latency
+        profiles << profile
       end
       puts unless options.diff # pretty!
     end
 
     def this_latency
-      this_latencies.inject(0.0, :+) / this_latencies.size
+      this_profiles.map(&:latency).inject(0.0, :+) / this_profiles.size
     end
 
     def reference_latency
-      reference_latencies.inject(0.0, :+) / reference_latencies.size
+      reference_profiles.map(&:latency).inject(0.0, :+) / reference_profiles.size
     end
 
     def latency_difference

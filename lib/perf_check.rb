@@ -97,7 +97,7 @@ class PerfCheck
       print(test.resource.ljust(40) + ': ')
       printf('%.1fms', test.this_latency)
 
-      puts && next if test.reference_latencies.empty?
+      puts && next if test.reference_profiles.empty?
 
       print(sprintf(' (%+5.1fms)', test.latency_difference).bold)
       print_diff_results(test.response_diff) if options.verify_responses
@@ -110,7 +110,7 @@ class PerfCheck
     test_cases.each do |test|
       puts(test.resource.bold)
 
-      if test.reference_latencies.empty?
+      if test.reference_profiles.empty?
         printf("your branch: ".rjust(15)+"%.1fms\n", test.this_latency)
         next
       end
