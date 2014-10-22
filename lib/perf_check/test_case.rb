@@ -29,6 +29,7 @@ class PerfCheck
         print("\t"+'request #'.underline)
         print("  "+'latency'.underline)
         print("   "+'server rss'.underline)
+        print("   "+'status'.underline)
         puts("   "+'profiler data'.underline)
       end
 
@@ -44,14 +45,16 @@ class PerfCheck
         end
 
         unless options.http_statuses.include? profile.response_code
-          File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
-            error_dump.write(profile.response_body)
+          if options.fail_fast?
+            File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
+              error_dump.write(profile.response_body)
+            end
+            error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
+            puts(error.red.bold)
+            puts("\t   The server responded with a non-2xx status for this request.")
+            puts("\t   The response has been written to tmp/perf_check/failed_request.html")
+            exit(1)
           end
-          error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-          puts(error.red.bold)
-          puts("\t   The server responded with a non-2xx status for this request.")
-          puts("\t   The response has been written to tmp/perf_check/failed_request.html")
-          exit(1)
         end
 
         next if i.zero?
@@ -66,8 +69,11 @@ class PerfCheck
           end
         end
 
-        printf("\t%2i:\t   %.1fms   %4dMB\t  %s\n",
-               i, profile.latency, server.mem, profile.profile_url) unless options.diff
+        unless options.diff
+          printf("\t%2i:\t   %.1fms   %4dMB\t  %s\t   %s\n",
+                 i, profile.latency, server.mem,
+                 profile.response_code, profile.profile_url)
+        end
 
         profiles << profile
       end

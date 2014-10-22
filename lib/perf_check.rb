@@ -101,6 +101,10 @@ class PerfCheck
   def print_brief_results
     test_cases.each do |test|
       print(test.resource.ljust(40) + ': ')
+
+      codes = (test.this_profiles+test.reference_profiles).map(&:response_code).uniq
+      print("(HTTP "+codes.join(',')+") ")
+
       printf('%.1fms', test.this_latency)
 
       puts && next if test.reference_profiles.empty?
