@@ -37,6 +37,14 @@ class PerfCheck
     require "#{app_root}/config/environment"
   end
 
+  def self.when_finished(&block)
+    @when_finished_callback = block
+  end
+
+  def self.callback
+    @when_finished_callback
+  end
+
   def initialize
     self.options = OpenStruct.new
     self.server = Server.new
@@ -89,6 +97,14 @@ class PerfCheck
     end
   end
 
+  def trigger_callback
+    results = OpenStruct.new(:current_branch => PerfCheck::Git.current_branch)
+    if test_cases.size == 1
+      results.current_latency = test_cases.first.this_latency
+      results.reference_latency = test_cases.first.reference_latency
+    end
+    PerfCheck.callback.call(results)
+  end
 
   def print_diff_results(diff)
     if diff.changed?

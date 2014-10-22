@@ -85,6 +85,7 @@ class PerfCheck
     end
 
     def reference_latency
+      return nil if reference_profiles.empty?
       reference_profiles.map(&:latency).inject(0.0, :+) / reference_profiles.size
     end
 

@@ -138,6 +138,8 @@ else
   perf_check.print_results
 end
 
+perf_check.trigger_callback
+
 #            _______________________
 #           < You made it faster!!! >
 #            -----------------------
