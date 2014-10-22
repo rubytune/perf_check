@@ -64,8 +64,8 @@ class PerfCheck
         Git.checkout_reference(options.reference)
         test_cases.each{ |x| x.switch_to_reference_context }
       end
-      
-      server.restart 
+
+      server.restart
       test_cases.each_with_index do |test, i|
         server.restart unless i.zero? || options.diff
 
@@ -76,7 +76,7 @@ class PerfCheck
         if options.diff
           puts "Issuing #{test.resource}"
         else
-          puts("\nBenchmarking #{test.resource}:") 
+          puts("\nBenchmarking #{test.resource}:")
         end
         test.run(server, options)
       end
