@@ -9,7 +9,7 @@ options.number_of_requests = 10
 options.reference = 'master'
 options.http_statuses = [200]
 options.verify_responses = false
-
+options.caching = true
 
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: perf_check [options] [route ...]"
@@ -53,7 +53,7 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on('--no-caching', 'Do not enable fragment caching') do
-    ENV['PERF_CHECK_NOCACHING'] = 'true'
+    options.caching = false
   end
 
   opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
@@ -74,7 +74,6 @@ opts = OptionParser.new do |opts|
   opts.on('--verify-responses',
           'Check whether there is a diff between the responses of this and the reference branch') do
     options.verify_responses = true
-    ENV['PERF_CHECK_VERIFICATION'] = '1'
   end
 
   opts.on('--brief', '-b') do
@@ -116,7 +115,7 @@ EOF
 end
 opts.parse!
 
-PerfCheck.require_rails
+PerfCheck.require_rails(options)
 
 ARGV.each do |route|
   perf_check.add_test_case(route)

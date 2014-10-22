@@ -16,8 +16,14 @@ class PerfCheck
       ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
   end
 
-  def self.require_rails
+  def self.require_rails(options)
     ENV['PERF_CHECK'] = '1'
+    if options.verify_responses
+      ENV['PERF_CHECK_VERIFICATION'] = '1'
+    end
+    if !options.caching
+      ENV['PERF_CHECK_NOCACHING'] = '1'
+    end
 
     app_root = Dir.pwd
     until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
