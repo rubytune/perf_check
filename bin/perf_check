@@ -11,6 +11,8 @@ options.http_statuses = [200]
 options.verify_responses = false
 options.caching = true
 
+ORIGINAL_ARGV = ARGV.clone
+
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: perf_check [options] [route ...]"
 

@@ -99,6 +99,7 @@ class PerfCheck
 
   def trigger_callback
     results = OpenStruct.new(:current_branch => PerfCheck::Git.current_branch)
+    results[:ARGV] = ORIGINAL_ARGV
     if test_cases.size == 1
       results.current_latency = test_cases.first.this_latency
       results.reference_latency = test_cases.first.reference_latency
