@@ -120,6 +120,7 @@ Usage examples:
 EOF
 end
 
+error = nil
 begin
   opts.parse!
 
@@ -143,14 +144,14 @@ begin
   else
     perf_check.print_results
   end
-rescue error
+rescue Exception => error
 ensure
   cbdata = {}
   if error
     cbdata[:error_message] = "#{error.class}: #{error.message}\n"
     cbdata[:error_message] << error.backtrace.map{|x| "\t#{x}"}.join("\n")
   end
-  perf_check.trigger_when_finished_callback(dbdata)
+  perf_check.trigger_when_finished_callback(cbdata)
   raise error if error
 end
 
