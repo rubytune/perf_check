@@ -46,7 +46,7 @@ class PerfCheck
   end
 
   def self.before_start(&block)
-    @before_start = block
+    @before_start_callback = block
   end
 
   def self.before_start_callback
