@@ -41,8 +41,16 @@ class PerfCheck
     @when_finished_callback = block
   end
 
-  def self.callback
-    @when_finished_callback
+  def self.when_finished_callback
+    @when_finished_callback || proc{ |*args| }
+  end
+
+  def self.before_start(&block)
+    @before_start = block
+  end
+
+  def self.before_start_callback
+    @before_start_callback || proc{ |*args| }
   end
 
   def initialize
@@ -97,14 +105,18 @@ class PerfCheck
     end
   end
 
-  def trigger_callback
+  def trigger_before_start_callback
+    PerfCheck.before_start_callback.call(self)
+  end
+
+  def trigger_when_finished_callback
     results = OpenStruct.new(:current_branch => PerfCheck::Git.current_branch)
     results[:ARGV] = ORIGINAL_ARGV
     if test_cases.size == 1
       results.current_latency = test_cases.first.this_latency
       results.reference_latency = test_cases.first.reference_latency
     end
-    PerfCheck.callback.call(results)
+    PerfCheck.when_finished_callback.call(results)
   end
 
   def print_diff_results(diff)

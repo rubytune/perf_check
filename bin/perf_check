@@ -131,6 +131,8 @@ if perf_check.test_cases.empty?
   abort(opts.help)
 end
 
+perf_check.trigger_before_start_callback
+
 perf_check.sanity_check
 perf_check.run
 
@@ -140,7 +142,7 @@ else
   perf_check.print_results
 end
 
-perf_check.trigger_callback
+perf_check.trigger_when_finished_callback
 
 #            _______________________
 #           < You made it faster!!! >
