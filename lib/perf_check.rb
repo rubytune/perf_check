@@ -109,8 +109,9 @@ class PerfCheck
     PerfCheck.before_start_callback.call(self)
   end
 
-  def trigger_when_finished_callback
-    results = OpenStruct.new(:current_branch => PerfCheck::Git.current_branch)
+  def trigger_when_finished_callback(data={})
+    data = data.merge(:current_branch => PerfCheck::Git.current_branch)
+    results = OpenStruct.new(data)
     results[:ARGV] = ORIGINAL_ARGV
     if test_cases.size == 1
       results.current_latency = test_cases.first.this_latency

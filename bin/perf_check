@@ -119,30 +119,40 @@ Usage examples:
     perf_check --diff --input FILE
 EOF
 end
-opts.parse!
 
-PerfCheck.require_rails(options)
+begin
+  opts.parse!
 
-ARGV.each do |route|
-  perf_check.add_test_case(route)
+  PerfCheck.require_rails(options)
+
+  ARGV.each do |route|
+    perf_check.add_test_case(route)
+  end
+
+  if perf_check.test_cases.empty?
+    abort(opts.help)
+  end
+
+  perf_check.trigger_before_start_callback
+
+  perf_check.sanity_check
+  perf_check.run
+
+  if options.brief
+    perf_check.print_brief_results
+  else
+    perf_check.print_results
+  end
+rescue error
+ensure
+  cbdata = {}
+  if error
+    cbdata[:error_message] = "#{error.class}: #{error.message}\n"
+    cbdata[:error_message] << error.backtrace.map{|x| "\t#{x}"}.join("\n")
+  end
+  perf_check.trigger_when_finished_callback(dbdata)
+  raise error if error
 end
-
-if perf_check.test_cases.empty?
-  abort(opts.help)
-end
-
-perf_check.trigger_before_start_callback
-
-perf_check.sanity_check
-perf_check.run
-
-if options.brief
-  perf_check.print_brief_results
-else
-  perf_check.print_results
-end
-
-perf_check.trigger_when_finished_callback
 
 #            _______________________
 #           < You made it faster!!! >
