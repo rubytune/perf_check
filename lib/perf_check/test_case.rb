@@ -14,7 +14,7 @@ class PerfCheck
       self.this_profiles = []
       self.reference_profiles = []
 
-      self.controller = params[:controller].split('/')[-1]
+      self.controller = params[:controller]
       self.action = params[:action]
       self.format = params[:format]
       self.resource = route
