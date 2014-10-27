@@ -21,9 +21,11 @@ class PerfCheck
     end
 
     def self.checkout(branch)
-      $stderr.print "Checking out #{branch}... "
+      $stderr.print "Checking out #{branch} and bundling... "
       `git checkout #{branch} --quiet`
       abort "Problem with git checkout! Bailing..." unless $?.success?
+      `bundle`
+      abort "Problem bundling! Bailing..." unless $?.success?
     end
 
     def self.stash_if_needed
