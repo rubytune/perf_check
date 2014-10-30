@@ -18,17 +18,19 @@ class PerfCheck
 
       controller.send(:define_method, :get_perf_check_session, &block)
       controller.send(:define_method, action) do
-        get_perf_check_session(params[:login], params[:route])
+        login = params[:login_symbol].presence.try(:to_sym) || params[:login]
+        get_perf_check_session(login, params[:route])
         render :nothing => true
       end
       controller.send(:skip_before_filter, :verify_authenticity_token)
 
       authorization do |login, route|
         http = Net::HTTP.new(host, port)
+        params = login.is_a?(Symbol) ? "login_symbol=#{login}" : "login=#{login}"
         if method == :post
-          response = http.post(login_route, "login=#{login}")
+          response = http.post(login_route, params)
         elsif method == :get
-          response = http.get(login_route+"?login=#{login}")
+          response = http.get(login_route+"?#{params}")
         end
 
         response['Set-Cookie']
