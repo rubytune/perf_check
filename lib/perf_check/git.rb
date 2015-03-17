@@ -24,7 +24,7 @@ class PerfCheck
       $stderr.print "Checking out #{branch} and bundling... "
       `git checkout #{branch} --quiet`
       abort "Problem with git checkout! Bailing..." unless $?.success?
-      `bundle`
+      Bundler.with_clean_env{ `bundle` }
       abort "Problem bundling! Bailing..." unless $?.success?
     end
 
