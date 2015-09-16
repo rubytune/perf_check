@@ -81,55 +81,10 @@ Perf check start ups its rails server with `cache_classes=true` and `perform_cac
 
 You can pass `--clear-cache` which will run `Rails.cache.clear` before each batch of requests. This is useful when testing caching.
 
-## Benchmarking resources which require authorization
-
-To enable benchmarking routes that require authorization, the rails app should provide a block to `PerfCheck::Server.authorization` that returns a cookie suitable for access to the route. For example, pop something like this into an initializer:
-
-```Ruby
-# config/initializers/perf_check.rb
-if if ENV['PERF_CHECK']
-  PerfCheck::Server.authorization do |login, route|
-      session = { :user_id => 1, :sesssion_id => '1234' }
-      PerfCheck::Server.sign_cookie_data('_notes_session', session)
-  end
-end
-```
-
-This code will only be run when a `PERF_CHECK` environment variable is set (which will only be when perf_check itself is booting up rails). Note that this logic depends greatly on your rails configuration. 
-
-Alternatively, you can provide a block to `PerfCheck::Server.authorization_action`, which will replace the login action of your app with the given block. Requests will be made to this action when a session cookie is required. For example, for an app with `post '/login', :to => 'application#login'`, you could have:
-
-```Ruby
-# config/initializers/perf_check.rb
-if ENV['PERF_CHECK']
-   PerfCheck::Server.authorization_action(:post, '/login') do |login, route|
-      session[:user_id] = User.find_by_login(login).id
-   end
-end
-```
-
-The `login` parameter to the authorization block is one of
-
-  1. `:super`
-  2. `:admin`
-  3. `:standard`
-  4. A user name, passed in as a string (corresponding to the `-u` command line argument)
-
-It is up to the application how it will use this parameter.
-
-The `route` parameter is a PerfCheck::TestCase. The block should return a cookie suitable for accessing `route.resource` (e.g. /users/1/posts) as the given `login`.
-
 ## All options
 ```
 $ bundle exec perf_check
 Usage: perf_check [options] [route ...]
-Login options:
-        --admin                      Log in as admin user for route
-        --standard                   Log in as standard user for route
-        --super                      Log in as super user
-    -u, --user USER                  Log in as USER
-    -L, --no-login                   Don't log in
-
 Benchmark options:
     -n, --requests N                 Use N requests in benchmark, defaults to 10
     -r, --reference COMMIT           Benchmark against COMMIT instead of master
@@ -142,7 +97,6 @@ Usage examples:
   Benchmark PostController#index against master
      perf_check /user/45/posts
      perf_check /user/45/posts -n5
-     perf_check /user/45/posts --standard
 
   Benchmark against a specific commit
      perf_check /user/45/posts -r 0123abcdefg

@@ -6,54 +6,6 @@ require 'fileutils'
 
 class PerfCheck
   class Server
-    def self.authorization(&block)
-      define_method(:login, &block)
-    end
-
-    def self.authorization_action(method, login_route, &block)
-      Rails.application.reload_routes!
-      p = PerfCheck::Server.recognize_path(login_route, :method => method)
-      controller = "#{p[:controller]}_controller".classify.constantize
-      action = p[:action]
-
-      controller.send(:define_method, :get_perf_check_session, &block)
-      controller.send(:define_method, action) do
-        login = params[:login_symbol].presence.try(:to_sym) || params[:login]
-        get_perf_check_session(login, params[:route])
-        render :nothing => true
-      end
-      controller.send(:skip_before_filter, :verify_authenticity_token)
-
-      authorization do |login, route|
-        http = Net::HTTP.new(host, port)
-        params = login.is_a?(Symbol) ? "login_symbol=#{login}" : "login=#{login}"
-        if method == :post
-          response = http.post(login_route, params)
-        elsif method == :get
-          response = http.get(login_route+"?#{params}")
-        end
-
-        response['Set-Cookie']
-      end
-    end
-
-    def self.mounted_path(engine)
-      route = Rails.application.routes.routes.detect do |route|
-        route.app == engine
-      end
-      route && route.path
-    end
-
-    def self.recognize_path(path, opts={})
-      Rails::Engine.subclasses.each do |engine|
-        if match = mounted_path(engine) =~ path
-          path = path.sub(match.to_s, '')
-          return engine.routes.recognize_path(path, opts)
-        end
-      end
-      Rails.application.routes.recognize_path(path, opts)
-    end
-
     def self.seed_random!
       # Seed random
       srand(1)
@@ -80,25 +32,10 @@ class PerfCheck
       end
     end
 
-    def self.sign_cookie_data(key, data, opts={})
-      opts[:serializer] ||= Marshal
-      secret = Rails.application.config.secret_token
-
-      marshal = ActiveSupport::MessageVerifier.new(secret,
-                                                   :serializer => opts[:serializer])
-      marshal_value = marshal.generate(data)
-
-      "#{key}=#{marshal_value}"
-    end
-
     def initialize
       at_exit do
         exit
       end
-    end
-
-    def login(login, route)
-      ''
     end
 
     def pid
@@ -130,11 +67,11 @@ class PerfCheck
       response = nil
       prepare_to_profile
 
-      latency = 1000 * Benchmark.measure do
-        http.start
-        response = yield(http)
-        http.finish
-      end.real
+      http.start
+      response = yield(http)
+      http.finish
+
+      latency = 1000 * response['X-Runtime'].to_f
 
       Profile.new.tap do |result|
         result.latency = latency

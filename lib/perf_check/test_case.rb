@@ -4,19 +4,13 @@ require 'diffy'
 
 class PerfCheck
   class TestCase
-    attr_accessor :resource, :controller, :action, :format
+    attr_accessor :resource
     attr_accessor :cookie, :this_response, :reference_response
     attr_accessor :this_profiles, :reference_profiles
 
     def initialize(route)
-      params = PerfCheck::Server.recognize_path(route)
-
       self.this_profiles = []
       self.reference_profiles = []
-
-      self.controller = params[:controller]
-      self.action = params[:action]
-      self.format = params[:format]
       self.resource = route
     end
 
@@ -35,10 +29,9 @@ class PerfCheck
 
       profiles = (@context == :reference) ? reference_profiles : this_profiles
 
-      headers = {'Cookie' => "#{cookie}"}
-      unless self.format
-        headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
-      end
+      headers = {'Cookie' => "#{cookie}".strip}
+      headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
+
       (options.number_of_requests+1).times do |i|
         profile = server.profile do |http|
           http.get(resource, headers)

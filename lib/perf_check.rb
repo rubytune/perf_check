@@ -91,9 +91,7 @@ class PerfCheck
       test_cases.each_with_index do |test, i|
         server.restart unless i.zero? || options.diff
 
-        if options.login
-          test.cookie = server.login(options.login, test)
-        end
+        test.cookie = options.cookie
 
         if options.diff
           puts "Issuing #{test.resource}"
