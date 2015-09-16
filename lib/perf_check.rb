@@ -177,9 +177,9 @@ class PerfCheck
       end
       formatted_change = difference + " (#{formatted_change})"
 
-      puts("master: ".rjust(15)     + "#{master_latency}")
+      puts("reference: ".rjust(15)  + "#{master_latency}")
       puts("your branch: ".rjust(15)+ "#{this_latency}")
-      puts(("change: ".rjust(15)     + "#{formatted_change}").bold.send(color))
+      puts(("change: ".rjust(15)    + "#{formatted_change}").bold.send(color))
 
       print_diff_results(test.response_diff) if options.verify_responses
     end
