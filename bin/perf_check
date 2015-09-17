@@ -4,115 +4,32 @@ require 'perf_check'
 
 perf_check = PerfCheck.new
 options = perf_check.options
-options.number_of_requests = 10
-options.reference = 'master'
-options.cookie = nil
-options.http_statuses = [200]
-options.verify_responses = false
-options.caching = true
 
 ORIGINAL_ARGV = ARGV.clone
 
-opts = OptionParser.new do |opts|
-  opts.banner = "Usage: perf_check [options] [route ...]"
-
-  opts.separator "\nBenchmark options:"
-  opts.on('--requests N', '-n',
-          'Use N requests in benchmark, defaults to 10') do |n|
-    options.number_of_requests = n.to_i
-  end
-
-  opts.on('--reference COMMIT', '-r',
-          'Benchmark against COMMIT instead of master') do |commit|
-    options.reference = commit
-  end
-
-  opts.on('--quick', '-q',
-          'Fire off 5 requests just on this branch, no comparison with master') do
-    options.number_of_requests = 5
-    options.reference = nil
-  end
-
-  opts.on('--no-caching', 'Do not enable fragment caching') do
-    options.caching = false
-  end
-
-  opts.on('--fail-fast', '-f', 'Bail immediately on non-200 HTTP response') do
-    options[:fail_fast?] = true
-  end
-
-  opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
-    options.http_statuses.push(302)
-  end
-
-  opts.on('--302-failure', 'Consider HTTP 302 code an unsuccessful request') do
-    options.http_statuses.delete(302)
-  end
-
-  opts.separator "\nMisc"
-  opts.on('--cookie COOKIE', '-c') do |cookie|
-    options.cookie = cookie
-  end
-
-  opts.on('--input FILE', '-i') do |input|
-    File.readlines(input).each do |resource|
-      ARGV << resource.strip
-    end
-  end
-
-  opts.on('--verify-responses',
-          'Check whether there is a diff between the responses of this and the reference branch') do
-    options.verify_responses = true
-  end
-
-  opts.on('--brief', '-b') do
-    options.brief = true
-  end
-
-  opts.on('--diff') do
-    options.diff = true
-    options.brief = true
-    options.verify_responses = true
-    options.number_of_requests = 1
-  end
-
-  opts.separator ''
-  opts.separator <<EOF
-Usage examples:
-  Benchmark PostController#index against master
-     perf_check /user/45/posts
-     perf_check /user/45/posts -n5
-
-  Benchmark against a specific commit
-     perf_check /user/45/posts -r 0123abcdefg
-     perf_check /user/45/posts -r HEAD~2
-
-  Benchmark the changes in the working tree
-     perf_check /user/45/posts -r HEAD
-
-  Benchmark and diff the output against master
-     perf_check /user/45/posts --verify-responses
-
-  Just diff the output on your branch with master
-     perf_check /user/45/posts --diff
-
-  Diff a bunch of urls listed in a file (newline seperated)
-    perf_check --diff --input FILE
-EOF
-end
-
 error = nil
 begin
-  opts.parse!
+  app_root = Dir.pwd
+  until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
+    app_root = File.dirname(app_root)
+  end
 
-  PerfCheck.require_rails(options)
+  unless File.exist?("#{app_root}/config/application.rb")
+    abort("perf_check should be run from a rails directory")
+  end
 
-  ARGV.each do |route|
+  if File.exists?("#{app_root}/config/perf_check")
+    require "#{app_root}/config/perf_check"
+  end
+
+  PerfCheck::Options.parse!
+
+  ARGV.grep(/^[^-]/).each do |route|
     perf_check.add_test_case(route)
   end
 
   if perf_check.test_cases.empty?
-    abort(opts.help)
+    abort(PerfCheck::Options.help)
   end
 
   perf_check.trigger_before_start_callback

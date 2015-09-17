@@ -1,6 +1,5 @@
 # coding: utf-8
 
-require 'optparse'
 require 'net/http'
 require 'digest'
 require 'fileutils'
@@ -14,27 +13,6 @@ class PerfCheck
   def self.diff_options
     @@diff_options ||=
       ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
-  end
-
-  def self.require_rails(options)
-    ENV['PERF_CHECK'] = '1'
-    if options.verify_responses
-      ENV['PERF_CHECK_VERIFICATION'] = '1'
-    end
-    if !options.caching
-      ENV['PERF_CHECK_NOCACHING'] = '1'
-    end
-
-    app_root = Dir.pwd
-    until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
-      app_root = File.dirname(app_root)
-    end
-
-    unless File.exist?("#{app_root}/config/application.rb")
-      abort("perf_check should be run from a rails directory")
-    end
-
-    require "#{app_root}/config/environment"
   end
 
   def self.when_finished(&block)
@@ -190,6 +168,7 @@ end
 require 'perf_check/server'
 require 'perf_check/test_case'
 require 'perf_check/git'
+require 'perf_check/options'
 
 if defined?(Rails)
   require 'perf_check/railtie'

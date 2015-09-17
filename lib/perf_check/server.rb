@@ -90,6 +90,14 @@ class PerfCheck
     end
 
     def start
+      ENV['PERF_CHECK'] = '1'
+      if PerfCheck.config.verify_responses
+        ENV['PERF_CHECK_VERIFICATION'] = '1'
+      end
+      unless PerfCheck.config.caching
+        ENV['PERF_CHECK_NOCACHING'] = '1'
+      end
+
       system('rails server -b 127.0.0.1 -d -p 3031 >/dev/null')
       sleep(1.5)
 
