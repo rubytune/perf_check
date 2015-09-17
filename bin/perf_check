@@ -18,7 +18,7 @@ begin
     abort("perf_check should be run from a rails directory")
   end
 
-  if File.exists?("#{app_root}/config/perf_check")
+  if File.exists?("#{app_root}/config/perf_check.rb")
     require "#{app_root}/config/perf_check"
   end
 
