@@ -6,6 +6,7 @@ require 'fileutils'
 require 'benchmark'
 require 'ostruct'
 require 'colorize'
+require 'json'
 
 class PerfCheck
   attr_accessor :options, :server, :test_cases
@@ -48,13 +49,12 @@ class PerfCheck
     end
 
     if Git.current_branch == "master"
-      puts("Yo, profiling master vs. master isn't too useful, but hey, we'll do it")
+      warn("Yo, profiling master vs. master isn't too useful, but hey, we'll do it")
     end
 
-    puts "="*77
-    print "PERRRRF CHERRRK! Grab a ☕️  and don't touch your working tree "
-    puts "(we automate git)"
-    puts "="*77
+    warn "="*77
+    warn "PERRRRF CHERRRK! Grab a ☕️  and don't touch your working tree (we automate git)"
+    warn "="*77
   end
 
   def run
@@ -72,9 +72,9 @@ class PerfCheck
         test.cookie = options.cookie
 
         if options.diff
-          puts "Issuing #{test.resource}"
+          warn "Issuing #{test.resource}"
         else
-          puts("\nBenchmarking #{test.resource}:")
+          warn("\nBenchmarking #{test.resource}:")
         end
         test.run(server, options)
       end
@@ -161,6 +161,44 @@ class PerfCheck
 
       print_diff_results(test.response_diff) if options.verify_responses
     end
+  end
+
+  def print_json_results
+    results = []
+    test_cases.each do |test|
+      results.push(
+        route: test.resource,
+        latency: test.this_latency,
+        requests: []
+      )
+
+      test.this_profiles.each do |profile|
+        results[-1][:requests].push(
+          latency: profile.latency,
+          server_memory: profile.server_memory,
+          response_code: profile.response_code,
+          miniprofiler_url: profile.profile_url
+        )
+      end
+
+      if options.reference
+        results[-1].merge!(
+          reference_latency: test.reference_latency,
+          latency_difference: test.latency_difference,
+          reference_requests: []
+        )
+
+        test.reference_profiles.each do |profile|
+          results[-1][:reference_requests].push(
+            latency: profile.latency,
+            server_memory: profile.server_memory,
+            response_code: profile.response_code,
+            miniprofiler_url: profile.profile_url
+          )
+        end
+      end
+    end
+    puts JSON.pretty_generate(results)
   end
 end
 

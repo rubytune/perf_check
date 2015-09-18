@@ -8,7 +8,8 @@ class PerfCheck
       cookie: nil,
       http_statuses: [200],
       verify_responses: false,
-      caching: true
+      caching: true,
+      json: false
      )
   end
 
@@ -57,6 +58,10 @@ class PerfCheck
     opts.separator "\nMisc"
     opts.on('--cookie COOKIE', '-c') do |cookie|
       config.cookie = cookie
+    end
+
+    opts.on('--json', '-j') do
+      config.json = true
     end
 
     opts.on('--input FILE', '-i') do |input|

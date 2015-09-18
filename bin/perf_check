@@ -39,6 +39,8 @@ begin
 
   if options.brief
     perf_check.print_brief_results
+  elsif options.json
+    perf_check.print_json_results
   else
     perf_check.print_results
   end
