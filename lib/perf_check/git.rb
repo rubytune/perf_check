@@ -12,20 +12,22 @@ class PerfCheck
       checkout(reference)
       at_exit do
         $stderr.puts
-        Git.checkout_current_branch
+        Git.checkout_current_branch(false)
       end
     end
 
-    def self.checkout_current_branch
-      checkout(@current_branch)
+    def self.checkout_current_branch(bundle=true)
+      checkout(@current_branch, bundle)
     end
 
-    def self.checkout(branch)
+    def self.checkout(branch, bundle=true)
       $stderr.print "Checking out #{branch} and bundling... "
       `git checkout #{branch} --quiet`
       abort "Problem with git checkout! Bailing..." unless $?.success?
-      Bundler.with_clean_env{ `bundle` }
-      abort "Problem bundling! Bailing..." unless $?.success?
+      if bundle
+        Bundler.with_clean_env{ `bundle` }
+        abort "Problem bundling! Bailing..." unless $?.success?
+      end
     end
 
     def self.stash_if_needed
