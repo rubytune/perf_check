@@ -20,7 +20,7 @@ class PerfCheck
 
     def run(server, options)
       unless options.diff
-        logger.info("\t"+'request #'.underline+"  "+'latency'.underline+"   "+'server rss'.underline+"   "+'status'.underline+"   "+'profiler data'.underline)
+        logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
 
       profiles = (@context == :reference) ? reference_profiles : this_profiles
@@ -61,9 +61,9 @@ class PerfCheck
         profile.server_memory = server.mem
 
         unless options.diff
-          row = sprintf("\t%2i:\t   %.1fms   %4dMB\t  %s\t   %s",
+          row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s",
                         i, profile.latency, profile.server_memory,
-                        profile.response_code, profile.profile_url)
+                        profile.response_code, profile.query_count, profile.profile_url)
           logger.info(row)
         end
 
@@ -80,6 +80,15 @@ class PerfCheck
     def reference_latency
       return nil if reference_profiles.empty?
       reference_profiles.map(&:latency).inject(0.0, :+) / reference_profiles.size
+    end
+
+    def this_query_count
+      this_profiles.map(&:query_count).inject(0, :+) / this_profiles.size
+    end
+
+    def reference_query_count
+      return nil if reference_profiles.empty?
+      reference_profiles.map(&:query_count).inject(0, :+) / reference_profiles.size
     end
 
     def latency_difference

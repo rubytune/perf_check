@@ -72,9 +72,11 @@ class PerfCheck
       http.finish
 
       latency = 1000 * response['X-Runtime'].to_f
+      query_count = response['X-PerfCheck-Query-Count'].to_i
 
       Profile.new.tap do |result|
         result.latency = latency
+        result.query_count = query_count
         result.profile_url = latest_profiler_url
         result.response_body = response.body
         result.response_code = response.code.to_i

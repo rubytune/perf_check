@@ -73,12 +73,14 @@ class PerfCheck
       results.push(
         route: test.resource,
         latency: test.this_latency,
+        query_count: test.this_query_count,
         requests: []
       )
 
       test.this_profiles.each do |profile|
         results[-1][:requests].push(
           latency: profile.latency,
+          query_count: profile.query_count,
           server_memory: profile.server_memory,
           response_code: profile.response_code,
           miniprofiler_url: profile.profile_url
@@ -89,12 +91,14 @@ class PerfCheck
         results[-1].merge!(
           reference_latency: test.reference_latency,
           latency_difference: test.latency_difference,
+          reference_query_count: test.reference_query_count,
           reference_requests: []
         )
 
         test.reference_profiles.each do |profile|
           results[-1][:reference_requests].push(
             latency: profile.latency,
+            query_count: profile.query_count,
             server_memory: profile.server_memory,
             response_code: profile.response_code,
             miniprofiler_url: profile.profile_url
