@@ -11,7 +11,7 @@ class PerfCheck
     def self.checkout_reference(reference='master')
       checkout(reference)
       at_exit do
-        $stderr.puts
+        logger.info ''
         Git.checkout_current_branch(false)
       end
     end
@@ -21,20 +21,30 @@ class PerfCheck
     end
 
     def self.checkout(branch, bundle=true)
-      $stderr.print "Checking out #{branch} and bundling... "
+      logger.info("Checking out #{branch} and bundling... ")
       `git checkout #{branch} --quiet`
-      abort "Problem with git checkout! Bailing..." unless $?.success?
+
+      unless $?.success?
+        logger.fatal("Problem with git checkout! Bailing...") && abort
+      end
+
       if bundle
         Bundler.with_clean_env{ `bundle` }
-        abort "Problem bundling! Bailing..." unless $?.success?
+        unless $?.success?
+          logger.fatal("Problem bundling! Bailing...") && abort
+        end
       end
     end
 
     def self.stash_if_needed
       if anything_to_stash?
-        $stderr.print("Stashing your changes... ")
+        logger.info("Stashing your changes... ")
         system('git stash -q >/dev/null')
-        abort("Problem with git stash! Bailing...") unless $?.success?
+
+        unless $?.success?
+          logger.fatal("Problem with git stash! Bailing...") && abort
+        end
+
         at_exit do
           Git.pop
         end
@@ -48,13 +58,12 @@ class PerfCheck
     end
 
     def self.pop
-      warn("Git stash applying...")
+      logger.info("Git stash applying...")
       system('git stash pop -q')
-      abort("Problem with git stash! Bailing...") unless $?.success?
-    end
-  end
 
-  def self.normalize_resource(resource)
-    resource.sub(/^([^\/])/, '/\1')
+      unless $?.success?
+        logger.fatal("Problem with git stash! Bailing...") && abort
+      end
+    end
   end
 end

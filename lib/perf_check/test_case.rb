@@ -20,11 +20,7 @@ class PerfCheck
 
     def run(server, options)
       unless options.diff
-        $stderr.print("\t"+'request #'.underline)
-        $stderr.print("  "+'latency'.underline)
-        $stderr.print("   "+'server rss'.underline)
-        $stderr.print("   "+'status'.underline)
-        warn("   "+'profiler data'.underline)
+        logger.info("\t"+'request #'.underline+"  "+'latency'.underline+"   "+'server rss'.underline+"   "+'status'.underline+"   "+'profiler data'.underline)
       end
 
       profiles = (@context == :reference) ? reference_profiles : this_profiles
@@ -43,10 +39,10 @@ class PerfCheck
               error_dump.write(profile.response_body)
             end
             error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-            warn(error.red.bold)
-            warn("\t   The server responded with a non-2xx status for this request.")
-            warn("\t   The response has been written to tmp/perf_check/failed_request.html")
-            exit(1)
+            logger.fatal(error.red.bold)
+            logger.fatal("\t   The server responded with a non-2xx status for this request.")
+            logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
+            abort
           end
         end
 
@@ -65,14 +61,16 @@ class PerfCheck
         profile.server_memory = server.mem
 
         unless options.diff
-          $stderr.printf("\t%2i:\t   %.1fms   %4dMB\t  %s\t   %s\n",
-                         i, profile.latency, profile.server_memory,
-                         profile.response_code, profile.profile_url)
+          row = sprintf("\t%2i:\t   %.1fms   %4dMB\t  %s\t   %s",
+                        i, profile.latency, profile.server_memory,
+                        profile.response_code, profile.profile_url)
+          logger.info(row)
         end
 
         profiles << profile
       end
-      warn unless options.diff # pretty!
+
+      logger.info '' unless options.diff # pretty!
     end
 
     def this_latency

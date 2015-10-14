@@ -34,7 +34,7 @@ class PerfCheck
 
     def initialize
       at_exit do
-        exit
+        exit rescue nil
       end
     end
 
@@ -106,10 +106,10 @@ class PerfCheck
 
     def restart
       if !@running
-        $stderr.print "starting rails...\n"
+        logger.info("starting rails...")
         start
       else
-        $stderr.print "re-starting rails...\n"
+        logger.info("re-starting rails...")
         exit
         start
       end

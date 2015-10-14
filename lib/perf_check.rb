@@ -1,5 +1,3 @@
-# coding: utf-8
-
 require 'net/http'
 require 'digest'
 require 'fileutils'
@@ -11,25 +9,19 @@ require 'json'
 class PerfCheck
   attr_accessor :options, :server, :test_cases
 
-  def self.diff_options
-    @@diff_options ||=
-      ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
-  end
+  def self.app_root
+    @app_root ||= begin
+      dir = Dir.pwd
+      until dir == '/' || File.exist?("#{dir}/config/application.rb")
+        dir = File.dirname(dir)
+      end
 
-  def self.when_finished(&block)
-    @when_finished_callback = block
-  end
+      unless File.exist?("#{dir}/config/application.rb")
+        abort("perf_check should be run from a rails directory")
+      end
 
-  def self.when_finished_callback
-    @when_finished_callback || proc{ |*args| }
-  end
-
-  def self.before_start(&block)
-    @before_start_callback = block
-  end
-
-  def self.before_start_callback
-    @before_start_callback || proc{ |*args| }
+      dir
+    end
   end
 
   def initialize
@@ -39,175 +31,52 @@ class PerfCheck
   end
 
   def add_test_case(route)
-    route = PerfCheck.normalize_resource(route)
-    test_cases.push(TestCase.new(route))
-  end
-
-  def sanity_check
-    if ENV['RAILS_ENV'] == 'production'
-      abort("perf_check cannot be run in the production environment")
-    end
-
-    if Git.current_branch == "master"
-      warn("Yo, profiling master vs. master isn't too useful, but hey, we'll do it")
-    end
-
-    warn "="*77
-    warn "PERRRRF CHERRRK! Grab a ☕️  and don't touch your working tree (we automate git)"
-    warn "="*77
+    test_cases.push(TestCase.new(route.sub(/^([^\/])/, '/\1')))
   end
 
   def run
-    (options.reference ? 2 : 1).times do |i|
-      if i == 1
-        Git.stash_if_needed
-        Git.checkout_reference(options.reference)
-        test_cases.each{ |x| x.switch_to_reference_context }
-      end
+    trigger_before_start_callbacks
 
-      server.restart
-      test_cases.each_with_index do |test, i|
-        server.restart unless i.zero? || options.diff
+    profile_requests
 
-        test.cookie = options.cookie
+    if options.reference
+      Git.stash_if_needed
+      Git.checkout_reference(options.reference)
+      test_cases.each{ |x| x.switch_to_reference_context }
 
-        if options.diff
-          warn "Issuing #{test.resource}"
-        else
-          warn("\nBenchmarking #{test.resource}:")
-        end
-        test.run(server, options)
-      end
+      profile_requests
     end
   end
 
-  def trigger_before_start_callback
-    PerfCheck.before_start_callback.call(self)
-  end
+  private
 
-  def trigger_when_finished_callback(data={})
-    data = data.merge(:current_branch => PerfCheck::Git.current_branch)
-    results = OpenStruct.new(data)
-    results[:ARGV] = ORIGINAL_ARGV
-    if test_cases.size == 1
-      results.current_latency = test_cases.first.this_latency
-      results.reference_latency = test_cases.first.reference_latency
-    end
-    PerfCheck.when_finished_callback.call(results)
-  end
+  def profile_requests
+    server.restart
+    test_cases.each_with_index do |test, i|
+      server.restart unless i.zero? || options.diff
 
-  def print_diff_results(diff)
-    if diff.changed?
-      print(" Diff: #{diff.file}".bold.light_red)
-    else
-      print(" Diff: Output is identical!".bold.light_green)
-    end
-  end
+      test.cookie = options.cookie
 
-  def print_brief_results
-    test_cases.each do |test|
-      print(test.resource.ljust(40) + ': ')
-
-      codes = (test.this_profiles+test.reference_profiles).map(&:response_code).uniq
-      print("(HTTP "+codes.join(',')+") ")
-
-      printf('%.1fms', test.this_latency)
-
-      puts && next if test.reference_profiles.empty?
-
-      print(sprintf(' (%+5.1fms)', test.latency_difference).bold)
-      print_diff_results(test.response_diff) if options.verify_responses
-      puts
-    end
-  end
-
-  def print_results
-    puts("==== Results ====")
-    test_cases.each do |test|
-      puts(test.resource.bold)
-
-      if test.reference_profiles.empty?
-        printf("your branch: ".rjust(15)+"%.1fms\n", test.this_latency)
-        next
-      end
-
-      master_latency = sprintf('%.1fms', test.reference_latency)
-      this_latency = sprintf('%.1fms', test.this_latency)
-      difference = sprintf('%+.1fms', test.latency_difference)
-
-      if test.latency_difference < 0
-        change_factor = test.reference_latency / test.this_latency
+      if options.diff
+        logger.info("Issuing #{test.resource}")
       else
-        change_factor = test.this_latency / test.reference_latency
+        logger.info ''
+        logger.info("Benchmarking #{test.resource}:")
       end
-      formatted_change = sprintf('%.1fx', change_factor)
 
-      percent_change = 100*(test.latency_difference / test.reference_latency).abs
-      if percent_change < 10
-        formatted_change = "yours is about the same"
-        color = :blue
-      elsif test.latency_difference < 0
-        formatted_change = "yours is #{formatted_change} faster!"
-        color = :green
-      else
-        formatted_change = "yours is #{formatted_change} slower!!!"
-        color = :light_red
-      end
-      formatted_change = difference + " (#{formatted_change})"
-
-      puts("reference: ".rjust(15)  + "#{master_latency}")
-      puts("your branch: ".rjust(15)+ "#{this_latency}")
-      puts(("change: ".rjust(15)    + "#{formatted_change}").bold.send(color))
-
-      print_diff_results(test.response_diff) if options.verify_responses
+      test.run(server, options)
     end
-  end
-
-  def print_json_results
-    results = []
-    test_cases.each do |test|
-      results.push(
-        route: test.resource,
-        latency: test.this_latency,
-        requests: []
-      )
-
-      test.this_profiles.each do |profile|
-        results[-1][:requests].push(
-          latency: profile.latency,
-          server_memory: profile.server_memory,
-          response_code: profile.response_code,
-          miniprofiler_url: profile.profile_url
-        )
-      end
-
-      if options.reference
-        results[-1].merge!(
-          reference_latency: test.reference_latency,
-          latency_difference: test.latency_difference,
-          reference_requests: []
-        )
-
-        test.reference_profiles.each do |profile|
-          results[-1][:reference_requests].push(
-            latency: profile.latency,
-            server_memory: profile.server_memory,
-            response_code: profile.response_code,
-            miniprofiler_url: profile.profile_url
-          )
-        end
-      end
-    end
-    puts JSON.pretty_generate(results)
   end
 end
 
-
+require 'perf_check/logger'
 require 'perf_check/server'
 require 'perf_check/test_case'
 require 'perf_check/git'
-require 'perf_check/options'
+require 'perf_check/config'
+require 'perf_check/callbacks'
+require 'perf_check/output'
 
-if defined?(Rails)
+if defined?(Rails) && ENV['PERF_CHECK']
   require 'perf_check/railtie'
 end

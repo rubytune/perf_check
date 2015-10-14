@@ -112,4 +112,15 @@ EOF
 
     opts.separator ''
   end
+
+  def self.diff_options
+    @@diff_options ||=
+      ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
+  end
+
+  def self.load_config
+    if File.exists?("#{app_root}/config/perf_check.rb")
+      require "#{app_root}/config/perf_check"
+    end
+  end
 end

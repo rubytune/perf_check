@@ -2,57 +2,38 @@
 
 require 'perf_check'
 
-perf_check = PerfCheck.new
-options = perf_check.options
-
 ORIGINAL_ARGV = ARGV.clone
 
-error = nil
-begin
-  app_root = Dir.pwd
-  until app_root == '/' || File.exist?("#{app_root}/config/application.rb")
-    app_root = File.dirname(app_root)
-  end
+perf_check = PerfCheck.new
 
-  unless File.exist?("#{app_root}/config/application.rb")
-    abort("perf_check should be run from a rails directory")
-  end
-
-  if File.exists?("#{app_root}/config/perf_check.rb")
-    require "#{app_root}/config/perf_check"
-  end
-
-  PerfCheck::Options.parse!
-
-  ARGV.grep(/^[^-]/).each do |route|
-    perf_check.add_test_case(route)
-  end
-
-  if perf_check.test_cases.empty?
-    abort(PerfCheck::Options.help)
-  end
-
-  perf_check.trigger_before_start_callback
-
-  perf_check.sanity_check
-  perf_check.run
-
-  if options.brief
-    perf_check.print_brief_results
-  elsif options.json
-    perf_check.print_json_results
-  else
-    perf_check.print_results
-  end
-rescue Exception => error
-ensure
+at_exit do
   cbdata = {}
-  if error
-    cbdata[:error_message] = "#{error.class}: #{error.message}\n"
-    cbdata[:error_message] << error.backtrace.map{|x| "\t#{x}"}.join("\n")
+
+  if $!
+    cbdata[:error_message] = "#{$!.class}: #{$!.message}\n"
+    cbdata[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
   end
-  perf_check.trigger_when_finished_callback(cbdata)
-  raise error if error
+
+  perf_check.trigger_when_finished_callbacks(cbdata)
+end
+
+PerfCheck.load_config
+PerfCheck::Options.parse!
+
+ARGV.each{ |route| perf_check.add_test_case(route) }
+
+if perf_check.test_cases.empty?
+  abort(PerfCheck::Options.help)
+end
+
+perf_check.run
+
+if PerfCheck.config.brief
+  perf_check.print_brief_results
+elsif PerfCheck.config.json
+  perf_check.print_json_results
+else
+  perf_check.print_full_results
 end
 
 #            _______________________
