@@ -28,6 +28,8 @@ class PerfCheck
         logger.fatal("Problem with git checkout! Bailing...") && abort
       end
 
+      `git submodule update --quiet`
+
       if bundle
         Bundler.with_clean_env{ `bundle` }
         unless $?.success?
