@@ -91,6 +91,7 @@ class PerfCheck
         results[-1].merge!(
           reference_latency: test.reference_latency,
           latency_difference: test.latency_difference,
+          speedup_factor: test.reference_latency / test.this_latency,
           reference_query_count: test.reference_query_count,
           reference_requests: []
         )
