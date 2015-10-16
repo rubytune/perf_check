@@ -61,7 +61,7 @@ class PerfCheck
         profile.server_memory = server.mem
 
         unless options.diff
-          row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s",
+          row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s\t   %s",
                         i, profile.latency, profile.server_memory,
                         profile.response_code, profile.query_count, profile.profile_url)
           logger.info(row)
