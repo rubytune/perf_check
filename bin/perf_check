@@ -4,6 +4,10 @@ require 'perf_check'
 
 ORIGINAL_ARGV = ARGV.clone
 
+if File.exists?("#{PerfCheck.app_root}/tmp/pids/server.pid")
+  abort("It looks like a rails server is already running. Shut it down before continuing with perf_check.")
+end
+
 perf_check = PerfCheck.new
 
 at_exit do
