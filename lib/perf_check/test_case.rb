@@ -27,6 +27,7 @@ class PerfCheck
 
       headers = {'Cookie' => "#{cookie}".strip}
       headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
+      headers.merge!(PerfCheck.config.headers)
 
       (options.number_of_requests+1).times do |i|
         profile = server.profile do |http|

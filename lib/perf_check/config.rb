@@ -6,6 +6,7 @@ class PerfCheck
       number_of_requests: 10,
       reference: 'master',
       cookie: nil,
+      headers: {},
       http_statuses: [200],
       verify_responses: false,
       caching: true,
