@@ -61,6 +61,11 @@ class PerfCheck
       config.cookie = cookie
     end
 
+    opts.on('--header HEADER', '-H') do |header|
+      key, value = header.split(':', 2)
+      config.headers[key.strip] = value.strip
+    end
+
     opts.on('--json', '-j') do
       config.json = true
     end

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'perf_check'
-  s.version = '0.2.5'
+  s.version = '0.2.6'
   s.date = '2014-07-02'
   s.summary = 'PERF CHECKKK!'
   s.authors = ['rubytune']
