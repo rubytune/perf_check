@@ -35,8 +35,6 @@ class PerfCheck
   end
 
   def run
-    trigger_before_start_callbacks
-
     profile_requests
 
     if options.reference
@@ -53,6 +51,7 @@ class PerfCheck
   def profile_requests
     server.restart
     test_cases.each_with_index do |test, i|
+      trigger_before_start_callbacks(test)
       server.restart unless i.zero? || options.diff
 
       test.cookie = options.cookie

@@ -25,8 +25,8 @@ class PerfCheck
   end
 
 
-  def trigger_before_start_callbacks
-    PerfCheck.before_start_callbacks.each{ |f| f.call(self) }
+  def trigger_before_start_callbacks(test_case)
+    PerfCheck.before_start_callbacks.each{ |f| f.call(self, test_case) }
   end
 
   def trigger_when_finished_callbacks(data={})
