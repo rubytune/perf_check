@@ -44,6 +44,10 @@ class PerfCheck
       config.caching = false
     end
 
+    opts.on('--run-migrations', 'Run migrations on the branch and unmigrate at the end') do
+      config[:run_migrations?] = true
+    end
+
     opts.on('--fail-fast', '-f', 'Bail immediately on non-200 HTTP response') do
       config[:fail_fast?] = true
     end
