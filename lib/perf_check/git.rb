@@ -67,5 +67,14 @@ class PerfCheck
         logger.fatal("Problem with git stash! Bailing...") && abort
       end
     end
+
+    def self.migrations_to_run_down
+      current_migrations_not_on_master.map { |filename| File.basename(filename, '.rb').split('_').first }
+    end
+
+    def self.current_migrations_not_on_master
+      %x{git diff origin/master --name-only --diff-filter=A db/migrate/}.split.reverse
+    end
+    private_class_method :current_migrations_not_on_master
   end
 end

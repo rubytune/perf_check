@@ -72,25 +72,13 @@ class PerfCheck
   end
 
   def run_migrations_up
-    `bundle exec rake db:migrate`
+    Bundler.with_clean_env{ `bundle exec rake db:migrate` }
   end
 
   def run_migrations_down
-    current_migration_versions_not_on_master.each do |version|
-      `bundle exec rake db:migrate:down VERSION=#{version}`
+    Git.migrations_to_run_down.each do |version|
+      Bundler.with_clean_env{ `bundle exec rake db:migrate:down VERSION=#{version}` }
     end
-  end
-
-  def current_migration_versions_not_on_master
-    current_migration_filenames_not_on_master.map { |filename| file_name_to_migration_version(filename) }
-  end
-
-  def current_migration_filenames_not_on_master
-    %x{git diff origin/master --name-only --diff-filter=A db/migrate/}.split.reverse
-  end
-
-  def file_name_to_migration_version(filename)
-    File.basename(filename, '.rb').split('_').first
   end
 end
 
