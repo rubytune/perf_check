@@ -49,6 +49,8 @@ class PerfCheck
   private
 
   def profile_requests
+    run_migrations_up if options.run_migrations?
+
     server.restart
     test_cases.each_with_index do |test, i|
       trigger_before_start_callbacks(test)
@@ -65,6 +67,20 @@ class PerfCheck
 
       test.run(server, options)
     end
+  ensure
+    run_migrations_down if options.run_migrations?
+  end
+
+  def run_migrations_up
+    Bundler.with_clean_env{ puts `bundle exec rake db:migrate` }
+    Git.clean_db
+  end
+
+  def run_migrations_down
+    Git.migrations_to_run_down.each do |version|
+      Bundler.with_clean_env{ puts `bundle exec rake db:migrate:down VERSION=#{version}` }
+    end
+    Git.clean_db
   end
 end
 

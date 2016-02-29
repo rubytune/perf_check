@@ -92,6 +92,7 @@ Benchmark options:
         --clear-cache                Call Rails.cache.clear before running benchmark
         --302-success                Consider HTTP 302 code a successful request
         --302-failure                Consider HTTP 302 code an unsuccessful request
+        --run-migrations             Run migrations up and down with branch
 
 Usage examples:
   Benchmark PostController#index against master
