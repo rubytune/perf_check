@@ -72,13 +72,13 @@ class PerfCheck
   end
 
   def run_migrations_up
-    Bundler.with_clean_env{ `bundle exec rake db:migrate` }
+    Bundler.with_clean_env{ puts `bundle exec rake db:migrate` }
     Git.clean_db
   end
 
   def run_migrations_down
     Git.migrations_to_run_down.each do |version|
-      Bundler.with_clean_env{ `bundle exec rake db:migrate:down VERSION=#{version}` }
+      Bundler.with_clean_env{ puts `bundle exec rake db:migrate:down VERSION=#{version}` }
     end
     Git.clean_db
   end
