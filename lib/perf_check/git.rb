@@ -76,5 +76,9 @@ class PerfCheck
       %x{git diff origin/master --name-only --diff-filter=A db/migrate/}.split.reverse
     end
     private_class_method :current_migrations_not_on_master
+
+    def self.clean_db
+      `git checkout db`
+    end
   end
 end
