@@ -59,10 +59,10 @@ class PerfCheck
       test.cookie = options.cookie
 
       if options.diff
-        logger.info("Issuing #{test.resource}")
+        PerfCheck.logger.info("Issuing #{test.resource}")
       else
-        logger.info ''
-        logger.info("Benchmarking #{test.resource}:")
+        PerfCheck.logger.info ''
+        PerfCheck.logger.info("Benchmarking #{test.resource}:")
       end
 
       test.run(server, options)

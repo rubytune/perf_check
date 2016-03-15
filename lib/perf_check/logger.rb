@@ -12,8 +12,3 @@ class PerfCheck
 
   def logger; self.class.logger; end
 end
-
-class Object
-  def self.logger; PerfCheck.logger; end
-  def logger; PerfCheck.logger; end
-end

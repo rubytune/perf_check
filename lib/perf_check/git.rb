@@ -11,7 +11,7 @@ class PerfCheck
     def self.checkout_reference(reference='master')
       checkout(reference)
       at_exit do
-        logger.info ''
+        PerfCheck.logger.info ''
         Git.checkout_current_branch(false)
       end
     end
@@ -21,11 +21,11 @@ class PerfCheck
     end
 
     def self.checkout(branch, bundle=true)
-      logger.info("Checking out #{branch} and bundling... ")
+      PerfCheck.logger.info("Checking out #{branch} and bundling... ")
       `git checkout #{branch} --quiet`
 
       unless $?.success?
-        logger.fatal("Problem with git checkout! Bailing...") && abort
+        PerfCheck.logger.fatal("Problem with git checkout! Bailing...") && abort
       end
 
       `git submodule update --quiet`
@@ -33,18 +33,18 @@ class PerfCheck
       if bundle
         Bundler.with_clean_env{ `bundle` }
         unless $?.success?
-          logger.fatal("Problem bundling! Bailing...") && abort
+          PerfCheck.logger.fatal("Problem bundling! Bailing...") && abort
         end
       end
     end
 
     def self.stash_if_needed
       if anything_to_stash?
-        logger.info("Stashing your changes... ")
+        PerfCheck.logger.info("Stashing your changes... ")
         system('git stash -q >/dev/null')
 
         unless $?.success?
-          logger.fatal("Problem with git stash! Bailing...") && abort
+          PerfCheck.logger.fatal("Problem with git stash! Bailing...") && abort
         end
 
         at_exit do
@@ -60,11 +60,11 @@ class PerfCheck
     end
 
     def self.pop
-      logger.info("Git stash applying...")
+      PerfCheck.logger.info("Git stash applying...")
       system('git stash pop -q')
 
       unless $?.success?
-        logger.fatal("Problem with git stash! Bailing...") && abort
+        PerfCheck.logger.fatal("Problem with git stash! Bailing...") && abort
       end
     end
 

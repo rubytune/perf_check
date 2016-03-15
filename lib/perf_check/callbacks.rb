@@ -17,9 +17,9 @@ class PerfCheck
   def self.before_start_callbacks
     (@before_start_callbacks || []) + [
       proc {
-        logger.info("=" * 77)
-        logger.info("PERRRRF CHERRRK! Grab a ☕️  and don't touch your working tree (we automate git)")
-        logger.info("=" * 77)
+        PerfCheck.logger.info("=" * 77)
+        PerfCheck.logger.info("PERRRRF CHERRRK! Grab a ☕️  and don't touch your working tree (we automate git)")
+        PerfCheck.logger.info("=" * 77)
       }
     ]
   end

@@ -20,7 +20,7 @@ class PerfCheck
 
     def run(server, options)
       unless options.diff
-        logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
+        PerfCheck.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
 
       profiles = (@context == :reference) ? reference_profiles : this_profiles
@@ -40,9 +40,9 @@ class PerfCheck
               error_dump.write(profile.response_body)
             end
             error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-            logger.fatal(error.red.bold)
-            logger.fatal("\t   The server responded with a non-2xx status for this request.")
-            logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
+            PerfCheck.logger.fatal(error.red.bold)
+            PerfCheck.logger.fatal("\t   The server responded with a non-2xx status for this request.")
+            PerfCheck.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
             abort
           end
         end
@@ -65,13 +65,13 @@ class PerfCheck
           row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s\t   %s",
                         i, profile.latency, profile.server_memory,
                         profile.response_code, profile.query_count, profile.profile_url)
-          logger.info(row)
+          PerfCheck.logger.info(row)
         end
 
         profiles << profile
       end
 
-      logger.info '' unless options.diff # pretty!
+      PerfCheck.logger.info '' unless options.diff # pretty!
     end
 
     def this_latency
