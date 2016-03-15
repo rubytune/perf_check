@@ -108,10 +108,10 @@ class PerfCheck
 
     def restart
       if !@running
-        logger.info("starting rails...")
+        PerfCheck.logger.info("starting rails...")
         start
       else
-        logger.info("re-starting rails...")
+        PerfCheck.logger.info("re-starting rails...")
         exit
         start
       end
