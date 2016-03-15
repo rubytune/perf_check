@@ -1,8 +1,10 @@
 ## What is perf check
 
-`perf_check` is a nice and easy way to benchmark branches of your rails app.
+`perf_check` is a quick-n-dirty way to benchmark branches of your rails app.
 
-Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html). We typically run it locally or on staging, to get a decent idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or as an admin, so `perf_check` provides an easy way to deal with that.
+Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html).
+
+We typically run it locally or on staging, to get a general idea of how our branches might have affected app performance. Often, certain pages render differently if logged in, or as an admin, so `perf_check` provides an easy way to deal with that.
 
 ## How to install
 
@@ -75,7 +77,7 @@ In the above example, `perf_check`
 
 This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise. 
 
-### Caching is on by default
+### Caching is forced on (by default)
 
 Perf check start ups its rails server with `cache_classes=true` and `perform_caching=true` regardless of what's in your development.rb
 
