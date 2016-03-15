@@ -3,7 +3,7 @@ require 'optparse'
 class PerfCheck
   def self.config
     @config ||= OpenStruct.new(
-      number_of_requests: 10,
+      number_of_requests: 20,
       reference: 'master',
       cookie: nil,
       headers: {},
@@ -25,7 +25,7 @@ class PerfCheck
 
     opts.separator "\nBenchmark options:"
     opts.on('--requests N', '-n',
-            'Use N requests in benchmark, defaults to 10') do |n|
+            'Use N requests in benchmark, defaults to 20') do |n|
       config.number_of_requests = n.to_i
     end
 
@@ -35,8 +35,7 @@ class PerfCheck
     end
 
     opts.on('--quick', '-q',
-            'Fire off 5 requests just on this branch, no comparison with master') do
-      config.number_of_requests = 5
+            'Fire off 20 requests just on this branch (no comparison with master)') do
       config.reference = nil
     end
 
