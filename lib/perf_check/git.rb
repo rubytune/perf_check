@@ -2,6 +2,8 @@ require 'shellwords'
 
 class PerfCheck
   class Git
+    class NoSuchBranch < Exception; end
+
     attr_reader :perf_check, :git_root, :current_branch
     attr_accessor :logger
 
@@ -10,16 +12,15 @@ class PerfCheck
       @git_root = perf_check.app_root
       @logger = perf_check.logger
 
-      root = Shellwords.shellescape(git_root)
-      @current_branch = `cd #{root} && git rev-parse --abbrev-ref HEAD`.strip
+      @current_branch = exec "git rev-parse --abbrev-ref HEAD"
     end
 
     def checkout_reference(reference='master')
       checkout(reference)
-      at_exit do
-        logger.info ''
-        checkout_current_branch(false)
-      end
+#      at_exit do
+#        logger.info ''
+#        checkout_current_branch(false)
+#      end
     end
 
     def checkout_current_branch(bundle=true)
@@ -28,16 +29,17 @@ class PerfCheck
 
     def checkout(branch, bundle=true)
       logger.info("Checking out #{branch} and bundling... ")
-      `git checkout #{branch} --quiet`
+      exec "git checkout #{branch} --quiet"
 
       unless $?.success?
-        logger.fatal("Problem with git checkout! Bailing...") && abort
+        logger.fatal("Problem with git checkout! Bailing...")
+        raise NoSuchBranch
       end
 
-      `git submodule update --quiet`
+      exec "git submodule update --quiet"
 
       if bundle
-        Bundler.with_clean_env{ `bundle` }
+        Bundler.with_clean_env{ exec "bundle" }
         unless $?.success?
           logger.fatal("Problem bundling! Bailing...") && abort
         end
@@ -47,27 +49,27 @@ class PerfCheck
     def stash_if_needed
       if anything_to_stash?
         logger.info("Stashing your changes... ")
-        system('git stash -q >/dev/null')
+        exec "git stash -q >/dev/null"
 
         unless $?.success?
           logger.fatal("Problem with git stash! Bailing...") && abort
         end
 
-        at_exit do
-          pop
-        end
+#        at_exit do
+#          pop
+#        end
       end
     end
 
     def anything_to_stash?
-      git_stash = `git diff`
-      git_stash << `git diff --staged`
+      git_stash = exec "git diff"
+      git_stash << exec("git diff --staged")
       !git_stash.empty?
     end
 
     def pop
       logger.info("Git stash applying...")
-      system('git stash pop -q')
+      exec "git stash pop -q"
 
       unless $?.success?
         logger.fatal("Problem with git stash! Bailing...") && abort
@@ -75,17 +77,25 @@ class PerfCheck
     end
 
     def migrations_to_run_down
-      current_migrations_not_on_master.map { |filename| File.basename(filename, '.rb').split('_').first }
+      current_migrations_not_on_master.map do |filename|
+        File.basename(filename, '.rb').split('_').first
+      end
     end
 
     def clean_db
-      `git checkout db`
+      exec "git checkout db"
     end
 
     private
 
     def current_migrations_not_on_master
-      %x{git diff origin/master --name-only --diff-filter=A db/migrate/}.split.reverse
+      exec("git diff origin/master --name-only --diff-filter=A db/migrate/").
+        split.reverse
+    end
+
+    def exec(command)
+      root = Shellwords.shellescape(git_root)
+      `cd #{root} && #{command}`.strip
     end
   end
 end

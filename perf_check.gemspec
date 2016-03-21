@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/rubytune/perf_check'
   s.license = 'MIT'
 
+  s.add_development_dependency 'rspec'
   s.add_runtime_dependency 'colorize', '= 0.7.3'
   s.add_runtime_dependency 'diffy', '= 3.0.5'
 
