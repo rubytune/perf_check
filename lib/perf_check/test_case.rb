@@ -4,11 +4,13 @@ require 'diffy'
 
 class PerfCheck
   class TestCase
+    attr_reader :perf_check
     attr_accessor :resource
     attr_accessor :cookie, :this_response, :reference_response
     attr_accessor :this_profiles, :reference_profiles
 
-    def initialize(route)
+    def initialize(perf_check, route)
+      @perf_check = perf_check
       self.this_profiles = []
       self.reference_profiles = []
       self.resource = route
@@ -20,14 +22,14 @@ class PerfCheck
 
     def run(server, options)
       unless options.diff
-        PerfCheck.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
+        perf_check.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
 
       profiles = (@context == :reference) ? reference_profiles : this_profiles
 
       headers = {'Cookie' => "#{cookie}".strip}
       headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
-      headers.merge!(PerfCheck.config.headers)
+      headers.merge!(perf_check.options.headers)
 
       (options.number_of_requests+1).times do |i|
         profile = server.profile do |http|
@@ -40,9 +42,9 @@ class PerfCheck
               error_dump.write(profile.response_body)
             end
             error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-            PerfCheck.logger.fatal(error.red.bold)
-            PerfCheck.logger.fatal("\t   The server responded with a non-2xx status for this request.")
-            PerfCheck.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
+            perf_check.logger.fatal(error.red.bold)
+            perf_check.logger.fatal("\t   The server responded with a non-2xx status for this request.")
+            perf_check.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
             abort
           end
         end
@@ -65,13 +67,13 @@ class PerfCheck
           row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s\t   %s",
                         i, profile.latency, profile.server_memory,
                         profile.response_code, profile.query_count, profile.profile_url)
-          PerfCheck.logger.info(row)
+          perf_check.logger.info(row)
         end
 
         profiles << profile
       end
 
-      PerfCheck.logger.info '' unless options.diff # pretty!
+      perf_check.logger.info '' unless options.diff # pretty!
     end
 
     def this_latency

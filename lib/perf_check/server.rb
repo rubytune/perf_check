@@ -6,6 +6,8 @@ require 'fileutils'
 
 class PerfCheck
   class Server
+    attr_reader :perf_check
+
     def self.seed_random!
       # Seed random
       srand(1)
@@ -32,7 +34,9 @@ class PerfCheck
       end
     end
 
-    def initialize
+    def initialize(perf_check)
+      @perf_check = perf_check
+
       at_exit do
         exit rescue nil
       end
@@ -93,10 +97,10 @@ class PerfCheck
 
     def start
       ENV['PERF_CHECK'] = '1'
-      if PerfCheck.config.verify_responses
+      if perf_check.options.verify_responses
         ENV['PERF_CHECK_VERIFICATION'] = '1'
       end
-      unless PerfCheck.config.caching
+      unless perf_check.options.caching
         ENV['PERF_CHECK_NOCACHING'] = '1'
       end
 
@@ -108,10 +112,10 @@ class PerfCheck
 
     def restart
       if !@running
-        PerfCheck.logger.info("starting rails...")
+        perf_check.logger.info("starting rails...")
         start
       else
-        PerfCheck.logger.info("re-starting rails...")
+        perf_check.logger.info("re-starting rails...")
         exit
         start
       end

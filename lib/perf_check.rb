@@ -5,9 +5,11 @@ require 'benchmark'
 require 'ostruct'
 require 'colorize'
 require 'json'
+require 'logger'
 
 class PerfCheck
-  attr_accessor :options, :server, :test_cases
+  attr_reader :app_root, :options, :git, :server, :test_cases
+  attr_accessor :logger
 
   def self.app_root
     @app_root ||= begin
@@ -24,22 +26,47 @@ class PerfCheck
     end
   end
 
-  def initialize
-    self.options = OpenStruct.new
-    self.server = Server.new
-    self.test_cases = []
+  def initialize(app_root)
+    @app_root = app_root
+
+    @options = OpenStruct.new(
+      number_of_requests: 20,
+      reference: 'master',
+      cookie: nil,
+      headers: {},
+      http_statuses: [200],
+      verify_responses: false,
+      caching: true,
+      json: false
+    )
+
+    @logger = Logger.new(STDERR).tap do |logger|
+      logger.formatter = proc do |severity, datetime, progname, msg|
+        "[#{datetime}] #{sprintf('%5s', severity)} --: #{msg}\n"
+      end
+    end
+
+    @git = Git.new(self)
+    @server = Server.new(self)
+    @test_cases = []
+  end
+
+  def load_config
+    if File.exists?("#{app_root}/config/perf_check.rb")
+      require "#{app_root}/config/perf_check"
+    end
   end
 
   def add_test_case(route)
-    test_cases.push(TestCase.new(route.sub(/^([^\/])/, '/\1')))
+    test_cases.push(TestCase.new(self, route.sub(/^([^\/])/, '/\1')))
   end
 
   def run
     profile_requests
 
     if options.reference
-      Git.stash_if_needed
-      Git.checkout_reference(options.reference)
+      git.stash_if_needed
+      git.checkout_reference(options.reference)
       test_cases.each{ |x| x.switch_to_reference_context }
 
       profile_requests
@@ -59,10 +86,10 @@ class PerfCheck
       test.cookie = options.cookie
 
       if options.diff
-        PerfCheck.logger.info("Issuing #{test.resource}")
+        logger.info("Issuing #{test.resource}")
       else
-        PerfCheck.logger.info ''
-        PerfCheck.logger.info("Benchmarking #{test.resource}:")
+        logger.info ''
+        logger.info("Benchmarking #{test.resource}:")
       end
 
       test.run(server, options)
@@ -73,18 +100,17 @@ class PerfCheck
 
   def run_migrations_up
     Bundler.with_clean_env{ puts `bundle exec rake db:migrate` }
-    Git.clean_db
+    git.clean_db
   end
 
   def run_migrations_down
-    Git.migrations_to_run_down.each do |version|
+    git.migrations_to_run_down.each do |version|
       Bundler.with_clean_env{ puts `bundle exec rake db:migrate:down VERSION=#{version}` }
     end
-    Git.clean_db
+    git.clean_db
   end
 end
 
-require 'perf_check/logger'
 require 'perf_check/server'
 require 'perf_check/test_case'
 require 'perf_check/git'
