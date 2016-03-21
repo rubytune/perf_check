@@ -10,9 +10,10 @@ end
 
 perf_check = PerfCheck.new
 
+# last exception thrown gets stored and passed to callbacks 
 at_exit do
   cbdata = {}
-
+  
   if $!
     cbdata[:error_message] = "#{$!.class}: #{$!.message}\n"
     cbdata[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")

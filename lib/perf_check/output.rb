@@ -74,11 +74,12 @@ class PerfCheck
         route: test.resource,
         latency: test.this_latency,
         query_count: test.this_query_count,
+        response: test.this_response,
         requests: []
       )
-
+      
       test.this_profiles.each do |profile|
-        results[-1][:requests].push(
+        results.last[:requests].push(
           latency: profile.latency,
           query_count: profile.query_count,
           server_memory: profile.server_memory,
@@ -88,7 +89,8 @@ class PerfCheck
       end
 
       if options.reference
-        results[-1].merge!(
+        results.last.merge!(
+          reference_response: test.reference_response,
           reference_latency: test.reference_latency,
           latency_difference: test.latency_difference,
           speedup_factor: test.reference_latency / test.this_latency,
@@ -97,7 +99,7 @@ class PerfCheck
         )
 
         test.reference_profiles.each do |profile|
-          results[-1][:reference_requests].push(
+          results.last[:reference_requests].push(
             latency: profile.latency,
             query_count: profile.query_count,
             server_memory: profile.server_memory,

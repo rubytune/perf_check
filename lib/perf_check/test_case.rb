@@ -4,7 +4,7 @@ require 'diffy'
 
 class PerfCheck
   class TestCase
-    attr_accessor :resource
+    attr_accessor :resource, :did_error
     attr_accessor :cookie, :this_response, :reference_response
     attr_accessor :this_profiles, :reference_profiles
 
@@ -29,39 +29,43 @@ class PerfCheck
       headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
       headers.merge!(PerfCheck.config.headers)
 
-      (options.number_of_requests+1).times do |i|
+      (options.number_of_requests + 1).times do |i|
         profile = server.profile do |http|
           http.get(resource, headers)
         end
 
+        # Be as verbose as possible with errors
         unless options.http_statuses.include? profile.response_code
-          if options.fail_fast?
-            File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
-              error_dump.write(profile.response_body)
+          self.did_error = true
+          error = sprintf("\t%2i:\tFAILED! (HTTP %d) ", i, profile.response_code)
+          File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
+            if $!
+              error_dump.write "#{$!.class}: #{$!.message}\n"
+              error_dump.write $!.backtrace.map{|x| "\t#{x}"}.join("\n")
             end
-            error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-            PerfCheck.logger.fatal(error.red.bold)
-            PerfCheck.logger.fatal("\t   The server responded with a non-2xx status for this request.")
-            PerfCheck.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
-            abort
+            error_dump.write(error)
+            error_dump.write(profile.response_body)
           end
+          PerfCheck.logger.fatal(error.red.bold)
+          PerfCheck.logger.fatal("\t   The server responded with a non-2xx status for this request.")
+          PerfCheck.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
         end
 
-        next if i.zero?
-
-        if options.verify_responses
-          if i == 1
-            if @context == :reference
-              self.reference_response = profile.response_body
-            else
-              self.this_response = profile.response_body
-            end
+        # store the response bodies in the test case if we want the diff or error
+        if did_error or (options.verify_responses && i == 1)
+          if @context == :reference
+            self.reference_response = profile.response_body
+          else
+            self.this_response = profile.response_body
           end
         end
+                
+        # throw away the first request, don't include in benchmarks
+        next if i.zero? 
 
         profile.server_memory = server.mem
 
-        unless options.diff
+        unless options.diff 
           row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s\t   %s",
                         i, profile.latency, profile.server_memory,
                         profile.response_code, profile.query_count, profile.profile_url)
@@ -69,6 +73,7 @@ class PerfCheck
         end
 
         profiles << profile
+        break if did_error# && options.fail_fast? # don't run more requests
       end
 
       PerfCheck.logger.info '' unless options.diff # pretty!
@@ -99,7 +104,7 @@ class PerfCheck
     def latency_factor
       reference_latency / this_latency
     end
-
+  
     def response_diff
       diff = Diffy::Diff.new(this_response, reference_response,
                              :diff => PerfCheck.diff_options)

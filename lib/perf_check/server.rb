@@ -81,6 +81,15 @@ class PerfCheck
         result.response_body = response.body
         result.response_code = response.code.to_i
       end
+    rescue => e
+      Profile.new.tap do |result|
+        result.latency = 0
+        result.query_count = 0
+        result.response_body = "PerfCheck had trouble reaching the rails server. Check that it booted and isn't timing out.\n" 
+        result.response_body += e.message
+        result.response_body += e.backtrace.map {|l| "  #{l}\n"}.join
+        result.response_code = 502
+      end
     end
 
     def exit
