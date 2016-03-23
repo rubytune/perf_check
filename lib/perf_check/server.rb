@@ -84,6 +84,7 @@ class PerfCheck
         result.profile_url = latest_profiler_url
         result.response_body = response.body
         result.response_code = response.code.to_i
+        result.server_memory = mem
       end
     end
 
