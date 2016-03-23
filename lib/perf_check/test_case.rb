@@ -16,16 +16,10 @@ class PerfCheck
       self.resource = route
     end
 
-    def switch_to_reference_context
-      @context = :reference
-    end
-
     def run(server, options)
       unless options.diff
         perf_check.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
-
-      profiles = (@context == :reference) ? reference_profiles : this_profiles
 
       headers = {'Cookie' => "#{cookie}".strip}
       headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
@@ -70,7 +64,7 @@ class PerfCheck
           perf_check.logger.info(row)
         end
 
-        profiles << profile
+        context_profiles << profile
       end
 
       perf_check.logger.info '' unless options.diff # pretty!
@@ -124,6 +118,14 @@ class PerfCheck
 
     def hash
       resource.hash
+    end
+
+    def switch_to_reference_context
+      @context = :reference
+    end
+
+    def context_profiles
+      (@context == :reference) ? reference_profiles : this_profiles
     end
   end
 end
