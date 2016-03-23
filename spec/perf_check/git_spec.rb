@@ -3,7 +3,7 @@ require 'spec_helper'
 require 'securerandom'
 
 RSpec.describe PerfCheck::Git do
-  repo = "tmp/spec_repo"
+  repo = "tmp/spec/repo"
   repo_file = "file"
   feature_branch = "another_branch"
   before do
