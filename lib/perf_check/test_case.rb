@@ -4,6 +4,8 @@ require 'diffy'
 
 class PerfCheck
   class TestCase
+    class UnexpectedHttpResponse < Exception; end
+
     attr_reader :perf_check
     attr_accessor :resource
     attr_accessor :cookie, :this_response, :reference_response
@@ -22,24 +24,8 @@ class PerfCheck
       end
 
       (options.number_of_requests+1).times do |i|
-        profile = server.profile do |http|
-          http.get(resource, headers)
-        end
-
-        unless options.http_statuses.include? profile.response_code
-          if options.fail_fast?
-            File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
-              error_dump.write(profile.response_body)
-            end
-            error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-            perf_check.logger.fatal(error.red.bold)
-            perf_check.logger.fatal("\t   The server responded with a non-2xx status for this request.")
-            perf_check.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
-            abort
-          end
-        end
-
-        next if i.zero?
+        profile = issue_request(server, options)
+        next if i.zero? # first request just warms up the server
 
         if options.verify_responses
           if i == 1
@@ -114,6 +100,25 @@ class PerfCheck
 
     def hash
       resource.hash
+    end
+
+    def issue_request(server, options)
+      profile = server.profile do |http|
+        http.get(resource, headers)
+      end
+
+      unless options.http_statuses.include? profile.response_code
+        # File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
+        #   error_dump.write(profile.response_body)
+        # end
+        error = sprintf("\t  :\tFAILED! (HTTP %d)", profile.response_code)
+        perf_check.logger.fatal(error.red.bold)
+        perf_check.logger.fatal("\t   The server responded with a non-2xx status for this request.")
+        perf_check.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
+        raise UnexpectedHttpResponse
+      end
+
+      profile
     end
 
     def request_headers

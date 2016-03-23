@@ -29,10 +29,6 @@ class PerfCheck
         options[:run_migrations?] = true
       end
 
-      opts.on('--fail-fast', '-f', 'Bail immediately on non-200 HTTP response') do
-        options[:fail_fast?] = true
-      end
-
       opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
         options.http_statuses.push(302)
       end

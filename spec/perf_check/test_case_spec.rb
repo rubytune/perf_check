@@ -2,7 +2,31 @@ require 'spec_helper'
 
 RSpec.describe PerfCheck::TestCase do
   let(:test_case) do
-    PerfCheck::TestCase.new(double(options: double(headers: {})), '/xyz')
+    system("mkdir", "-p", "tmp/spec/app")
+    perf_check = PerfCheck.new('tmp/spec/app')
+    perf_check.logger = Logger.new('/dev/null')
+    PerfCheck::TestCase.new(perf_check, '/xyz')
+  end
+
+  describe "#issue_request(server, options)" do
+    it "should issue its request inside the server.profile wrapper and return that result" do
+      server = double(profile: nil)
+      result = double(response_code: 200)
+      options = double(http_statuses: [200])
+      expect(server).to receive(:profile){ result }
+
+      expect(test_case.issue_request(server, options)).to eq(result)
+    end
+
+    it "should raise UnexpectedHttpResponse if the http response is not allowed" do
+      server = double(profile: nil)
+      result = double(response_code: 302)
+      options = double(http_statuses: [200])
+      expect(server).to receive(:profile){ result }
+
+      expect{ test_case.issue_request(server, options) }.
+        to raise_error(PerfCheck::TestCase::UnexpectedHttpResponse)
+    end
   end
 
   describe "#request_headers" do
