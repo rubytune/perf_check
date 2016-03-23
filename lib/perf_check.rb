@@ -11,21 +11,6 @@ class PerfCheck
   attr_reader :app_root, :options, :git, :server, :test_cases
   attr_accessor :logger
 
-  def self.app_root
-    @app_root ||= begin
-      dir = Dir.pwd
-      until dir == '/' || File.exist?("#{dir}/config/application.rb")
-        dir = File.dirname(dir)
-      end
-
-      unless File.exist?("#{dir}/config/application.rb")
-        abort("perf_check should be run from a rails directory")
-      end
-
-      dir
-    end
-  end
-
   def initialize(app_root)
     @app_root = app_root
 

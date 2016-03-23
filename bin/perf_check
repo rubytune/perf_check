@@ -2,11 +2,26 @@
 
 require 'perf_check'
 
-if File.exists?("#{PerfCheck.app_root}/tmp/pids/server.pid")
+app_root =
+  begin
+    dir = Dir.pwd
+    until dir == '/' || File.exist?("#{dir}/config/application.rb")
+      dir = File.dirname(dir)
+    end
+
+    unless File.exist?("#{dir}/config/application.rb")
+      abort("perf_check should be run from a rails directory")
+    end
+
+    dir
+  end
+
+
+if File.exists?("#{app_root}/tmp/pids/server.pid")
   abort("It looks like a rails server is already running. Shut it down before continuing with perf_check.")
 end
 
-perf_check = PerfCheck.new(PerfCheck.app_root).tap(&:load_config)
+perf_check = PerfCheck.new(app_root).tap(&:load_config)
 
 at_exit do
   cbdata = {}
