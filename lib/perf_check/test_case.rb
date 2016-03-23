@@ -66,7 +66,7 @@ class PerfCheck
       this_latency - reference_latency
     end
 
-    def latency_factor
+    def speedup_factor
       reference_latency / this_latency
     end
 
