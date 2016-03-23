@@ -21,10 +21,6 @@ class PerfCheck
         perf_check.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
 
-      headers = {'Cookie' => "#{cookie}".strip}
-      headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
-      headers.merge!(perf_check.options.headers)
-
       (options.number_of_requests+1).times do |i|
         profile = server.profile do |http|
           http.get(resource, headers)
@@ -118,6 +114,12 @@ class PerfCheck
 
     def hash
       resource.hash
+    end
+
+    def request_headers
+      headers = {'Cookie' => "#{cookie}".strip}
+      headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
+      headers.merge!(perf_check.options.headers)
     end
 
     def switch_to_reference_context
