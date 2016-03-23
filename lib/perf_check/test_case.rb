@@ -96,7 +96,7 @@ class PerfCheck
 
     def issue_request(server, options)
       profile = server.profile do |http|
-        http.get(resource, headers)
+        http.get(resource, request_headers)
       end
 
       unless options.http_statuses.include? profile.response_code
