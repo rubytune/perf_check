@@ -8,6 +8,52 @@ RSpec.describe PerfCheck::TestCase do
     PerfCheck::TestCase.new(perf_check, '/xyz')
   end
 
+  describe "#run(server, options)" do
+    let(:server){ double() }
+    let(:options){ OpenStruct.new(number_of_requests: 3) }
+    let(:profile) do
+      # need these fields or else logging fails
+      OpenStruct.new(latency: 0, server_memory: 0,
+                     response_code: 200, query_count: 0,
+                     profile_url: '', response_body: 'abcdef')
+    end
+
+    it "should issue_request options.number_of_requests+1 times" do
+      expect(test_case).to receive(:issue_request){ profile }.
+                            with(server, options).exactly(4).times
+      test_case.run(server, options)
+    end
+
+    it "should add a options.number_of_requests profiles to profiles array" do
+      allow(test_case).to receive(:issue_request){ profile }
+      expect(test_case.this_profiles).to receive(:<<).with(profile).
+                                          exactly(options.number_of_requests).times
+      test_case.run(server, options)
+
+      test_case.switch_to_reference_context
+      expect(test_case.reference_profiles).to receive(:<<).with(profile).
+                                               exactly(options.number_of_requests).times
+      test_case.run(server, options)
+    end
+
+    context "options.verify_responses" do
+      it "should save response bodies to this_response and reference_response" do
+        options.verify_responses = true
+        allow(test_case).to receive(:issue_request){ profile }
+
+        profile.response_body = 'abcdef'
+        test_case.run(server, options)
+
+        test_case.switch_to_reference_context
+        profile.response_body = 'uvwxyz'
+        test_case.run(server, options)
+
+        expect(test_case.this_response).to eq('abcdef')
+        expect(test_case.reference_response).to eq('uvwxyz')
+      end
+    end
+  end
+
   describe "#issue_request(server, options)" do
     it "should issue its request inside the server.profile wrapper and return that result" do
       server = double(profile: nil)
@@ -45,26 +91,46 @@ RSpec.describe PerfCheck::TestCase do
     end
   end
 
-  describe "#response_for_comparison(body)" do
-    it "should save body in (this|reference)_responsedepending on switch_to_reference_context" do
-      test_case.response_for_comparison('abcdef')
-      test_case.switch_to_reference_context
-      test_case.response_for_comparison('uvwxyz')
+  describe "stats methods" do
+    before do
+      test_case.this_profiles = (1..10).map do |x|
+        double(latency: x, query_count: x)
+      end
+      test_case.reference_profiles = (10..20).map do |x|
+        double(latency: x, query_count: x)
+      end
+    end
 
-      expect(test_case.this_response).to eq('abcdef')
-      expect(test_case.reference_response).to eq('uvwxyz')
+    describe "#(this|reference)_latency" do
+      it "should be the average this/reference profiles latency" do
+        expect(test_case.this_latency).to eq(5.5)
+        expect(test_case.reference_latency).to eq(15.0)
+      end
+    end
+
+    describe "#(this|reference)_query_count" do
+      it "should be the average this/reference profiles query count" do
+        expect(test_case.this_latency).to eq(5.5)
+        expect(test_case.reference_latency).to eq(15.0)
+      end
+    end
+
+    describe "#latency_difference" do
+      it "should be the difference between this and reference latency" do
+        expect(test_case.latency_difference).to eq(-9.5)
+      end
+    end
+
+    describe "#speedup_factor" do
+      it "should be the ratio of reference latency to this latency" do
+        expect(test_case.speedup_factor.to_s[0, 4]).to eq("2.72")
+      end
     end
   end
 
-  describe "#context_profiles" do
-    it "should be #this_profiles until switch_to_reference_context is called" do
-      expect(test_case.context_profiles.object_id).
-        to eq(test_case.this_profiles.object_id)
-
-      test_case.switch_to_reference_context
-
-      expect(test_case.context_profiles.object_id).
-        to eq(test_case.reference_profiles.object_id)
+  describe "#response_diff" do
+    it "should be the diff between response bodies on reference and this branch" do
+      pending "not tested yet"
     end
   end
 end

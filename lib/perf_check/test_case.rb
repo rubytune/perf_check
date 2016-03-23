@@ -123,6 +123,8 @@ class PerfCheck
       @context = :reference
     end
 
+    private
+
     def context_profiles
       (@context == :reference) ? reference_profiles : this_profiles
     end
