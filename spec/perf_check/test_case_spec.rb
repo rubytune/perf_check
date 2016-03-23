@@ -45,6 +45,17 @@ RSpec.describe PerfCheck::TestCase do
     end
   end
 
+  describe "#response_for_comparison(body)" do
+    it "should save body in (this|reference)_responsedepending on switch_to_reference_context" do
+      test_case.response_for_comparison('abcdef')
+      test_case.switch_to_reference_context
+      test_case.response_for_comparison('uvwxyz')
+
+      expect(test_case.this_response).to eq('abcdef')
+      expect(test_case.reference_response).to eq('uvwxyz')
+    end
+  end
+
   describe "#context_profiles" do
     it "should be #this_profiles until switch_to_reference_context is called" do
       expect(test_case.context_profiles.object_id).

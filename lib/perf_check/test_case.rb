@@ -27,14 +27,8 @@ class PerfCheck
         profile = issue_request(server, options)
         next if i.zero? # first request just warms up the server
 
-        if options.verify_responses
-          if i == 1
-            if @context == :reference
-              self.reference_response = profile.response_body
-            else
-              self.this_response = profile.response_body
-            end
-          end
+        if options.verify_responses && i == 1
+          response_for_comparison(profile.response_body)
         end
 
         profile.server_memory = server.mem
@@ -133,6 +127,14 @@ class PerfCheck
 
     def context_profiles
       (@context == :reference) ? reference_profiles : this_profiles
+    end
+
+    def response_for_comparison(response_body)
+      if @context == :reference
+        self.reference_response = response_body
+      else
+        self.this_response = response_body
+      end
     end
   end
 end
