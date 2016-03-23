@@ -37,9 +37,9 @@ class PerfCheck
     def initialize(perf_check)
       @perf_check = perf_check
 
-      at_exit do
-        exit rescue nil
-      end
+      # at_exit do
+      #   exit rescue nil
+      # end
     end
 
     def pid
@@ -112,7 +112,7 @@ class PerfCheck
     end
 
     def restart
-      if !@running
+      if !running?
         perf_check.logger.info("starting rails...")
         start
       else
@@ -128,6 +128,10 @@ class PerfCheck
 
     def port
       3031
+    end
+
+    def running?
+      @running
     end
 
     class Profile < OpenStruct; end
