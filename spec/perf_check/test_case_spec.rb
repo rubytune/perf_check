@@ -134,8 +134,6 @@ RSpec.describe PerfCheck::TestCase do
   end
 
   describe "#response_diff" do
-    it "should be the diff between response bodies on reference and this branch" do
-      pending "not tested yet"
-    end
+    it "should be the diff between response bodies on reference and this branch"
   end
 end

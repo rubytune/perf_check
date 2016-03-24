@@ -141,20 +141,14 @@ RSpec.describe PerfCheck::Server do
   end
 
   describe "#mem" do
-    it "should give the rss size of #pid in kilobytes" do
-      pending "not tested yet"
-    end
+    it "should give the rss size of #pid in kilobytes"
   end
 
   describe "prepare_to_profile" do
-    it "should clean app_root/tmp/perf_check/miniprofiler" do
-      pending "not tested yet"
-    end
+    it "should clean app_root/tmp/perf_check/miniprofiler"
   end
 
   describe "latest_profiler_url" do
-    it "should a url to the miniprofiler result from the last profile" do
-      pending "not tested yet"
-    end
+    it "should a url to the miniprofiler result from the last profile"
   end
 end

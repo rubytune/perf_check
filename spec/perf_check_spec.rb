@@ -35,21 +35,13 @@ RSpec.describe PerfCheck do
   end
 
   describe "#run" do
-    it "should run profile_requests, stash if needed, checkout the ref branch, and profile again" do
-      pending "not tested yet"
-    end
+    it "should run profile_requests, stash if needed, checkout the ref branch, and profile again"
 
-    it "should ensure that server is shut down" do
-      pending "not tested yet"
-    end
+    it "should ensure that server is shut down"
 
-    it "should ensure that current branch is checked out" do
-      pending "not tested yet"
-    end
+    it "should ensure that current branch is checked out"
 
-    it "should ensure that anything stashed is popped" do
-      pending "not tested yet"
-    end
+    it "should ensure that anything stashed is popped"
   end
 
   describe "#profile_requests" do
@@ -96,18 +88,12 @@ RSpec.describe PerfCheck do
   end
 
   describe "#run_migrations_up" do
-    it "should bundle exec rake db:migrate" do
-      pending "not tested yet"
-    end
+    it "should bundle exec rake db:migrate"
   end
 
   describe "#run_migrations_down" do
-    it "should bundle exec rake db:migrate:down each migration on the test branch" do
-      pending "not tested yet"
-    end
+    it "should bundle exec rake db:migrate:down each migration on the test branch"
 
-    it "should git.clean_db" do
-      pending "not tested yet"
-    end
+    it "should git.clean_db"
   end
 end

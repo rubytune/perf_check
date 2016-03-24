@@ -42,9 +42,7 @@ RSpec.describe PerfCheck::Git do
       expect(branch).to eq(feature_branch)
     end
 
-    it "should raise BundleError if `bundle` fails" do
-      pending "not tested yet"
-    end
+    it "should raise BundleError if `bundle` fails"
 
     context "when branch doesn't exist" do
       it "should raise Git::NoSuchBranch" do
@@ -64,10 +62,6 @@ RSpec.describe PerfCheck::Git do
 
       branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
       expect(branch).to eq("master")
-    end
-
-    it "should setup a callback to check the current branch back out" do
-      pending "this isn't set up yet"
     end
   end
 
@@ -113,9 +107,7 @@ RSpec.describe PerfCheck::Git do
       expect(`git stash list`.lines.size).to eq(1)
     end
 
-    it "should raise StashError if `git stash` fails" do
-      pending "not tested yet"
-    end
+    it "should raise StashError if `git stash` fails"
   end
 
   describe "#pop" do
@@ -130,14 +122,10 @@ RSpec.describe PerfCheck::Git do
       expect(File.read("#{repo}/#{repo_file}").strip).to eq(changes)
     end
 
-    it "should raise StashPopError if `git stash pop` fails" do
-      pending "not tested yet"
-    end
+    it "should raise StashPopError if `git stash pop` fails"
   end
 
   describe "#migrations_to_run_down" do
-    it "should list those migrations on current_branch which are not on master" do
-      pending "not spec'd"
-    end
+    it "should list those migrations on current_branch which are not on master"
   end
 end
