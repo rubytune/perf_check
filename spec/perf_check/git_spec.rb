@@ -42,6 +42,10 @@ RSpec.describe PerfCheck::Git do
       expect(branch).to eq(feature_branch)
     end
 
+    it "should raise BundleError if `bundle` fails" do
+      pending "not tested yet"
+    end
+
     context "when branch doesn't exist" do
       it "should raise Git::NoSuchBranch" do
         git = PerfCheck::Git.new(perf_check)
@@ -108,10 +112,14 @@ RSpec.describe PerfCheck::Git do
       expect(File.read("#{repo}/#{repo_file}")).to eq("")
       expect(`git stash list`.lines.size).to eq(1)
     end
+
+    it "should raise StashError if `git stash` fails" do
+      pending "not tested yet"
+    end
   end
 
   describe "#pop" do
-    it "should execute git pop" do
+    it "should execute git stash pop" do
       changes = SecureRandom.hex(8)
       system("cd #{repo} && echo #{changes} >#{repo_file} && git stash")
 
@@ -120,6 +128,10 @@ RSpec.describe PerfCheck::Git do
       git = PerfCheck::Git.new(perf_check)
       git.pop
       expect(File.read("#{repo}/#{repo_file}").strip).to eq(changes)
+    end
+
+    it "should raise StashPopError if `git stash pop` fails" do
+      pending "not tested yet"
     end
   end
 

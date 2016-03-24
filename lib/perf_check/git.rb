@@ -3,6 +3,9 @@ require 'shellwords'
 class PerfCheck
   class Git
     class NoSuchBranch < Exception; end
+    class StashError < Exception; end
+    class StashPopError < Exception; end
+    class BundleError < Exception; end
 
     attr_reader :perf_check, :git_root, :current_branch
     attr_accessor :logger
@@ -37,7 +40,8 @@ class PerfCheck
       if bundle
         Bundler.with_clean_env{ exec "bundle" }
         unless $?.success?
-          logger.fatal("Problem bundling! Bailing...") && abort
+          logger.fatal("Problem bundling! Bailing...")
+          raise BundleError
         end
       end
     end
@@ -48,7 +52,8 @@ class PerfCheck
         exec "git stash -q >/dev/null"
 
         unless $?.success?
-          logger.fatal("Problem with git stash! Bailing...") && abort
+          logger.fatal("Problem with git stash! Bailing...")
+          raise StashError
         end
 
         @stashed = true
@@ -70,7 +75,8 @@ class PerfCheck
       exec "git stash pop -q"
 
       unless $?.success?
-        logger.fatal("Problem with git stash! Bailing...") && abort
+        logger.fatal("Problem with git stash! Bailing...")
+        raise StashPopError
       end
     end
 
