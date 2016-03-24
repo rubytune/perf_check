@@ -137,6 +137,19 @@ RSpec.describe PerfCheck::Server do
       expect(prof.response_code).to eq(http_response.code.to_i)
       expect(prof.response_body).to eq(http_response.body)
       expect(prof.server_memory).to eq(server.mem)
+      expect(prof.backtrace).to be_nil
+    end
+
+    it "should include backtrace in the profile if request raised an exception" do
+      FileUtils.mkdir_p("tmp/spec")
+      File.open("tmp/spec/request_backtrace.txt", "w"){ |f| f.write("one\ntwo") }
+      http_response['X-PerfCheck-StackTrace'] = "tmp/spec/request_backtrace.txt"
+
+      prof = server.profile do |http|
+        http_response
+      end
+
+      expect(prof.backtrace).to eq(["one", "two"])
     end
   end
 

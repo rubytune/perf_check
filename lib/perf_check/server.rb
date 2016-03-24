@@ -76,6 +76,7 @@ class PerfCheck
 
       latency = 1000 * response['X-Runtime'].to_f
       query_count = response['X-PerfCheck-Query-Count'].to_i
+      backtrace_file = response['X-PerfCheck-StackTrace']
 
       Profile.new.tap do |result|
         result.latency = latency
@@ -84,6 +85,9 @@ class PerfCheck
         result.response_body = response.body
         result.response_code = response.code.to_i
         result.server_memory = mem
+        if backtrace_file
+          result.backtrace = File.read(backtrace_file).lines.map(&:chomp)
+        end
       end
     end
 
