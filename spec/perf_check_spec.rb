@@ -38,6 +38,18 @@ RSpec.describe PerfCheck do
     it "should run profile_requests, stash if needed, checkout the ref branch, and profile again" do
       pending "not tested yet"
     end
+
+    it "should ensure that server is shut down" do
+      pending "not tested yet"
+    end
+
+    it "should ensure that current branch is checked out" do
+      pending "not tested yet"
+    end
+
+    it "should ensure that anything stashed is popped" do
+      pending "not tested yet"
+    end
   end
 
   describe "#profile_requests" do

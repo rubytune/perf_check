@@ -17,10 +17,6 @@ class PerfCheck
 
     def checkout_reference(reference='master')
       checkout(reference)
-#      at_exit do
-#        logger.info ''
-#        checkout_current_branch(false)
-#      end
     end
 
     def checkout_current_branch(bundle=true)
@@ -55,10 +51,12 @@ class PerfCheck
           logger.fatal("Problem with git stash! Bailing...") && abort
         end
 
-#        at_exit do
-#          pop
-#        end
+        @stashed = true
       end
+    end
+
+    def stashed?
+      !!@stashed
     end
 
     def anything_to_stash?

@@ -37,10 +37,6 @@ class PerfCheck
 
     def initialize(perf_check)
       @perf_check = perf_check
-
-      # at_exit do
-      #   exit rescue nil
-      # end
     end
 
     def pid

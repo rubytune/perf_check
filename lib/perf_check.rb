@@ -47,14 +47,22 @@ class PerfCheck
   end
 
   def run
-    profile_requests
-
-    if options.reference
-      git.stash_if_needed
-      git.checkout_reference(options.reference)
-      test_cases.each{ |x| x.switch_to_reference_context }
-
+    begin
       profile_requests
+
+      if options.reference
+        git.stash_if_needed
+        git.checkout_reference(options.reference)
+        test_cases.each{ |x| x.switch_to_reference_context }
+
+        profile_requests
+      end
+    ensure
+      server.exit rescue nil
+      if options.reference
+        git.checkout_current_branch(false) rescue nil
+        (git.pop rescue nil) if git.stashed?
+      end
     end
   end
 
