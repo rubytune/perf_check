@@ -10,7 +10,7 @@ RSpec.describe PerfCheck::TestCase do
 
   describe "#run(server, options)" do
     let(:server){ double() }
-    let(:options){ OpenStruct.new(number_of_requests: 3) }
+    let(:options){ OpenStruct.new(number_of_requests: 3, http_statuses: [200]) }
     let(:profile) do
       # need these fields or else logging fails
       OpenStruct.new(latency: 0, server_memory: 0,
@@ -34,6 +34,21 @@ RSpec.describe PerfCheck::TestCase do
       expect(test_case.reference_profiles).to receive(:<<).with(profile).
                                                exactly(options.number_of_requests).times
       test_case.run(server, options)
+    end
+
+    it "should stop issuing requests if an unexpected response code is returned" do
+      i = 0
+      allow(test_case).to receive(:issue_request) do
+        profile.response_code = [200, 200, 500, 200][i]
+        i = i + 1
+        profile.dup
+      end
+
+      test_case.run(server, options)
+
+      expect(test_case.this_profiles.size).to eq(2)
+      expect(test_case.this_profiles[0].response_code).to eq(200)
+      expect(test_case.this_profiles[1].response_code).to eq(500)
     end
 
     context "options.verify_responses" do
@@ -62,16 +77,6 @@ RSpec.describe PerfCheck::TestCase do
       expect(server).to receive(:profile){ result }
 
       expect(test_case.issue_request(server, options)).to eq(result)
-    end
-
-    it "should raise UnexpectedHttpResponse if the http response is not allowed" do
-      server = double(profile: nil)
-      result = double(response_code: 302)
-      options = double(http_statuses: [200])
-      expect(server).to receive(:profile){ result }
-
-      expect{ test_case.issue_request(server, options) }.
-        to raise_error(PerfCheck::TestCase::UnexpectedHttpResponse)
     end
   end
 

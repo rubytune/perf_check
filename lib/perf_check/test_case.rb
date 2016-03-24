@@ -4,8 +4,6 @@ require 'diffy'
 
 class PerfCheck
   class TestCase
-    class UnexpectedHttpResponse < Exception; end
-
     attr_reader :perf_check
     attr_accessor :resource
     attr_accessor :cookie, :this_response, :reference_response
@@ -39,6 +37,12 @@ class PerfCheck
         end
 
         context_profiles << profile
+        unless options.http_statuses.include?(profile.response_code)
+          error = sprintf("\t  :\tFAILED! (HTTP %d)", profile.response_code)
+          perf_check.logger.warn(error.red.bold)
+          perf_check.logger.warn("\t   The server responded with an invalid http code")
+          break
+        end
       end
 
       perf_check.logger.info '' unless options.diff # pretty!
@@ -95,22 +99,9 @@ class PerfCheck
     end
 
     def issue_request(server, options)
-      profile = server.profile do |http|
+      server.profile do |http|
         http.get(resource, request_headers)
       end
-
-      unless options.http_statuses.include? profile.response_code
-        # File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
-        #   error_dump.write(profile.response_body)
-        # end
-        error = sprintf("\t  :\tFAILED! (HTTP %d)", profile.response_code)
-        perf_check.logger.fatal(error.red.bold)
-        perf_check.logger.fatal("\t   The server responded with a non-2xx status for this request.")
-        perf_check.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
-        raise UnexpectedHttpResponse
-      end
-
-      profile
     end
 
     def request_headers
