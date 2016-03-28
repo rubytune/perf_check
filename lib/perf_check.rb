@@ -38,7 +38,10 @@ class PerfCheck
 
   def load_config
     if File.exists?("#{app_root}/config/perf_check.rb")
+      this = self
+      Kernel.send(:define_method, :perf_check){ this }
       require "#{app_root}/config/perf_check"
+      Kernel.send(:remove_method, :perf_check)
     end
   end
 
