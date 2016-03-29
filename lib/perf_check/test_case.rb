@@ -41,6 +41,11 @@ class PerfCheck
           error = sprintf("\t  :\tFAILED! (HTTP %d)", profile.response_code)
           perf_check.logger.warn(error.red.bold)
           perf_check.logger.warn("\t   The server responded with an invalid http code")
+          if profile.backtrace
+            perf_check.logger.warn("Backtrace found:")
+            backtrace = [profile.backtrace[0], *profile.backtrace.grep(/#{perf_check.app_root}/)]
+            backtrace.each{ |line| perf_check.logger.warn("  #{line}") }
+          end
           break
         end
       end
