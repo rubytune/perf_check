@@ -22,7 +22,10 @@ class PerfCheck
                      "/trace-#{SecureRandom.hex(16)}.txt"
         FileUtils.mkdir_p(File.dirname(trace_file))
 
-        File.open(trace_file, 'w'){ |f| f.write(e.backtrace.join("\n")) }
+        File.open(trace_file, 'w') do |f|
+          f.puts("#{e.class}: #{e.message}")
+          f.write(e.backtrace.join("\n"))
+        end
         status, headers, body = 500, {"X-PerfCheck-StackTrace" => trace_file}, ''
       end
 
