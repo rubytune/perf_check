@@ -27,7 +27,7 @@ class PerfCheck
 
     @logger = Logger.new(STDERR).tap do |logger|
       logger.formatter = proc do |severity, datetime, progname, msg|
-        "[#{datetime}] #{sprintf('%5s', severity)} --: #{msg}\n"
+        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] #{msg}\n"
       end
     end
 

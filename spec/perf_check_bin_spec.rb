@@ -18,7 +18,7 @@ RSpec.describe "bin/perf_check" do
     it "should issue 20 requests to /posts on current branch" do
       out = perf_check("-q", "/posts", stderr: true)
       log = out.lines.drop_while{ |x| x !~ /Benchmarking \/posts/ }
-      expect(log.grep(/INFO --:\s+\d+:/).size).to eq(20)
+      expect(log.grep(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\s+\d+:/).size).to eq(20)
     end
   end
 
@@ -26,7 +26,7 @@ RSpec.describe "bin/perf_check" do
     it "should issue 7 requests to /posts on current branch" do
       out = perf_check("-qn7", "/posts", stderr: true)
       log = out.lines.drop_while{ |x| x !~ /Benchmarking \/posts/ }
-      expect(log.grep(/INFO --:\s+\d+:/).size).to eq(7)
+      expect(log.grep(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\s+\d+:/).size).to eq(7)
     end
   end
 
@@ -36,10 +36,10 @@ RSpec.describe "bin/perf_check" do
       log = out.lines.drop_while{ |x| x !~ /Benchmarking \/posts/ }
       log = log.take_while{ |x| x !~ /Checking out master/ }
 
-      expect(log.grep(/INFO --:\s+\d+:/).size).to eq(20)
+      expect(log.grep(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\s+\d+:/).size).to eq(20)
 
       log = out.lines.drop_while{ |x| x !~ /Checking out master/ }
-      expect(log.grep(/INFO --:\s+\d+:/).size).to eq(20)
+      expect(log.grep(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\s+\d+:/).size).to eq(20)
 
       log = out.lines.drop_while{ |x| x !~ /^=+ Results/ }
       expect(log.find{ |x| x =~ /reference: \d+\.\d+ms/ }).not_to be_nil
