@@ -8,6 +8,8 @@ require 'json'
 require 'logger'
 
 class PerfCheck
+  class Exception < ::Exception; end
+
   attr_reader :app_root, :options, :git, :server, :test_cases
   attr_accessor :logger
 
