@@ -8,11 +8,11 @@ RSpec.describe PerfCheck do
 
   describe "#load_config" do
     it "should require app_root/config/perf_check" do
-      config_file = "#{perf_check.app_root}/config/perf_check"
+      config_file = "#{perf_check.app_root}/config/perf_check.rb"
       system("mkdir", "-p", File.dirname(config_file))
       system("touch", config_file)
 
-      expect(perf_check).to receive(:require).with(config_file)
+      expect(perf_check).to receive(:load).with(config_file)
       perf_check.load_config
     end
   end
