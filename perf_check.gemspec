@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'perf_check'
-  s.version = '0.4.1'
-  s.date = '2016-03-15'
+  s.version = '0.5.0'
+  s.date = '2016-03-30'
   s.summary = 'PERF CHECKKK!'
   s.authors = ['rubytune']
   s.homepage = 'https://github.com/rubytune/perf_check'
@@ -15,7 +15,6 @@ Gem::Specification.new do |s|
              'lib/perf_check/callbacks.rb',
              'lib/perf_check/config.rb',
              'lib/perf_check/git.rb',
-             'lib/perf_check/logger.rb',
              'lib/perf_check/middleware.rb',
              'lib/perf_check/output.rb',
              'lib/perf_check/railtie.rb',
