@@ -2,13 +2,26 @@
 
 require 'perf_check'
 
-ORIGINAL_ARGV = ARGV.clone
+app_root =
+  begin
+    dir = Dir.pwd
+    until dir == '/' || File.exist?("#{dir}/config/application.rb")
+      dir = File.dirname(dir)
+    end
 
-if File.exists?("#{PerfCheck.app_root}/tmp/pids/server.pid")
+    unless File.exist?("#{dir}/config/application.rb")
+      abort("perf_check should be run from a rails directory")
+    end
+
+    dir
+  end
+
+
+if File.exists?("#{app_root}/tmp/pids/server.pid")
   abort("It looks like a rails server is already running. Shut it down before continuing with perf_check.")
 end
 
-perf_check = PerfCheck.new
+perf_check = PerfCheck.new(app_root).tap(&:load_config)
 
 at_exit do
   cbdata = {}
@@ -21,20 +34,19 @@ at_exit do
   perf_check.trigger_when_finished_callbacks(cbdata)
 end
 
-PerfCheck.load_config
-PerfCheck::Options.parse!
-
-ARGV.each{ |route| perf_check.add_test_case(route) }
+perf_check.option_parser.parse(ARGV).each do |route|
+  perf_check.add_test_case(route)
+end
 
 if perf_check.test_cases.empty?
-  abort(PerfCheck::Options.help)
+  abort(perf_check.option_parser.help)
 end
 
 perf_check.run
 
-if PerfCheck.config.brief
+if perf_check.options.brief
   perf_check.print_brief_results
-elsif PerfCheck.config.json
+elsif perf_check.options.json
   perf_check.print_json_results
 else
   perf_check.print_full_results

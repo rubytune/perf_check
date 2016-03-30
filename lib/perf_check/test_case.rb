@@ -4,74 +4,53 @@ require 'diffy'
 
 class PerfCheck
   class TestCase
+    attr_reader :perf_check
     attr_accessor :resource
     attr_accessor :cookie, :this_response, :reference_response
     attr_accessor :this_profiles, :reference_profiles
 
-    def initialize(route)
+    def initialize(perf_check, route)
+      @perf_check = perf_check
       self.this_profiles = []
       self.reference_profiles = []
       self.resource = route
     end
 
-    def switch_to_reference_context
-      @context = :reference
-    end
-
     def run(server, options)
       unless options.diff
-        PerfCheck.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
+        perf_check.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
 
-      profiles = (@context == :reference) ? reference_profiles : this_profiles
-
-      headers = {'Cookie' => "#{cookie}".strip}
-      headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
-      headers.merge!(PerfCheck.config.headers)
-
       (options.number_of_requests+1).times do |i|
-        profile = server.profile do |http|
-          http.get(resource, headers)
+        profile = issue_request(server, options)
+        next if i.zero? # first request just warms up the server
+
+        if options.verify_responses && i == 1
+          response_for_comparison(profile.response_body)
         end
-
-        unless options.http_statuses.include? profile.response_code
-          if options.fail_fast?
-            File.open("tmp/perf_check/failed_request.html", 'w') do |error_dump|
-              error_dump.write(profile.response_body)
-            end
-            error = sprintf("\t%2i:\tFAILED! (HTTP %d)", i, profile.response_code)
-            PerfCheck.logger.fatal(error.red.bold)
-            PerfCheck.logger.fatal("\t   The server responded with a non-2xx status for this request.")
-            PerfCheck.logger.fatal("\t   The response has been written to tmp/perf_check/failed_request.html")
-            abort
-          end
-        end
-
-        next if i.zero?
-
-        if options.verify_responses
-          if i == 1
-            if @context == :reference
-              self.reference_response = profile.response_body
-            else
-              self.this_response = profile.response_body
-            end
-          end
-        end
-
-        profile.server_memory = server.mem
 
         unless options.diff
           row = sprintf("\t%2i:\t  %.1fms   %4dMB\t  %s\t   %s\t   %s",
                         i, profile.latency, profile.server_memory,
                         profile.response_code, profile.query_count, profile.profile_url)
-          PerfCheck.logger.info(row)
+          perf_check.logger.info(row)
         end
 
-        profiles << profile
+        context_profiles << profile
+        unless options.http_statuses.include?(profile.response_code)
+          error = sprintf("\t  :\tFAILED! (HTTP %d)", profile.response_code)
+          perf_check.logger.warn(error.red.bold)
+          perf_check.logger.warn("\t   The server responded with an invalid http code")
+          if profile.backtrace
+            perf_check.logger.warn("Backtrace found:")
+            backtrace = [profile.backtrace[0], *profile.backtrace.grep(/#{perf_check.app_root}/)]
+            backtrace.each{ |line| perf_check.logger.warn("  #{line}") }
+          end
+          break
+        end
       end
 
-      PerfCheck.logger.info '' unless options.diff # pretty!
+      perf_check.logger.info '' unless options.diff # pretty!
     end
 
     def this_latency
@@ -96,7 +75,7 @@ class PerfCheck
       this_latency - reference_latency
     end
 
-    def latency_factor
+    def speedup_factor
       reference_latency / this_latency
     end
 
@@ -122,6 +101,36 @@ class PerfCheck
 
     def hash
       resource.hash
+    end
+
+    def issue_request(server, options)
+      server.profile do |http|
+        http.get(resource, request_headers)
+      end
+    end
+
+    def request_headers
+      headers = {'Cookie' => "#{cookie}".strip}
+      headers['Accept'] = 'text/html,application/xhtml+xml,application/xml'
+      headers.merge!(perf_check.options.headers)
+    end
+
+    def switch_to_reference_context
+      @context = :reference
+    end
+
+    private
+
+    def context_profiles
+      (@context == :reference) ? reference_profiles : this_profiles
+    end
+
+    def response_for_comparison(response_body)
+      if @context == :reference
+        self.reference_response = response_body
+      else
+        self.this_response = response_body
+      end
     end
   end
 end

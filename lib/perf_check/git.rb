@@ -1,84 +1,105 @@
+require 'shellwords'
 
 class PerfCheck
   class Git
-    # the branch we are on while loading the script
-    @current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+    class NoSuchBranch < Exception; end
+    class StashError < Exception; end
+    class StashPopError < Exception; end
+    class BundleError < Exception; end
 
-    def self.current_branch
-      @current_branch
+    attr_reader :perf_check, :git_root, :current_branch
+    attr_accessor :logger
+
+    def initialize(perf_check)
+      @perf_check = perf_check
+      @git_root = perf_check.app_root
+      @logger = perf_check.logger
+
+      @current_branch = exec "git rev-parse --abbrev-ref HEAD"
     end
 
-    def self.checkout_reference(reference='master')
+    def checkout_reference(reference='master')
       checkout(reference)
-      at_exit do
-        PerfCheck.logger.info ''
-        Git.checkout_current_branch(false)
-      end
     end
 
-    def self.checkout_current_branch(bundle=true)
+    def checkout_current_branch(bundle=true)
       checkout(@current_branch, bundle)
     end
 
-    def self.checkout(branch, bundle=true)
-      PerfCheck.logger.info("Checking out #{branch} and bundling... ")
-      `git checkout #{branch} --quiet`
+    def checkout(branch, bundle=true)
+      logger.info("Checking out #{branch} and bundling... ")
+      exec "git checkout #{branch} --quiet"
 
       unless $?.success?
-        PerfCheck.logger.fatal("Problem with git checkout! Bailing...") && abort
+        logger.fatal("Problem with git checkout! Bailing...")
+        raise NoSuchBranch
       end
 
-      `git submodule update --quiet`
+      exec "git submodule update --quiet"
 
       if bundle
-        Bundler.with_clean_env{ `bundle` }
+        Bundler.with_clean_env{ exec "bundle" }
         unless $?.success?
-          PerfCheck.logger.fatal("Problem bundling! Bailing...") && abort
+          logger.fatal("Problem bundling! Bailing...")
+          raise BundleError
         end
       end
     end
 
-    def self.stash_if_needed
+    def stash_if_needed
       if anything_to_stash?
-        PerfCheck.logger.info("Stashing your changes... ")
-        system('git stash -q >/dev/null')
+        logger.info("Stashing your changes... ")
+        exec "git stash -q >/dev/null"
 
         unless $?.success?
-          PerfCheck.logger.fatal("Problem with git stash! Bailing...") && abort
+          logger.fatal("Problem with git stash! Bailing...")
+          raise StashError
         end
 
-        at_exit do
-          Git.pop
-        end
+        @stashed = true
       end
     end
 
-    def self.anything_to_stash?
-      git_stash = `git diff`
-      git_stash << `git diff --staged`
+    def stashed?
+      !!@stashed
+    end
+
+    def anything_to_stash?
+      git_stash = exec "git diff"
+      git_stash << exec("git diff --staged")
       !git_stash.empty?
     end
 
-    def self.pop
-      PerfCheck.logger.info("Git stash applying...")
-      system('git stash pop -q')
+    def pop
+      logger.info("Git stash applying...")
+      exec "git stash pop -q"
 
       unless $?.success?
-        PerfCheck.logger.fatal("Problem with git stash! Bailing...") && abort
+        logger.fatal("Problem with git stash! Bailing...")
+        raise StashPopError
       end
     end
 
-    def self.migrations_to_run_down
-      current_migrations_not_on_master.map { |filename| File.basename(filename, '.rb').split('_').first }
+    def migrations_to_run_down
+      current_migrations_not_on_master.map do |filename|
+        File.basename(filename, '.rb').split('_').first
+      end
     end
 
-    def self.current_migrations_not_on_master
-      %x{git diff origin/master --name-only --diff-filter=A db/migrate/}.split.reverse
+    def clean_db
+      exec "git checkout db"
     end
-    private_class_method :current_migrations_not_on_master
 
-    def self.clean_db
-      `git checkout db`
+    private
+
+    def current_migrations_not_on_master
+      exec("git diff origin/master --name-only --diff-filter=A db/migrate/").
+        split.reverse
+    end
+
+    def exec(command)
+      root = Shellwords.shellescape(git_root)
+      `cd #{root} && #{command}`.strip
     end
   end
 end
