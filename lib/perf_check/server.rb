@@ -109,7 +109,7 @@ class PerfCheck
       end
 
       app_root = Shellwords.shellescape(perf_check.app_root)
-      system("cd #{app_root} && rails server -b 127.0.0.1 -d -p 3031 >/dev/null")
+      system("cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null")
       sleep(1.5)
 
       @running = true
