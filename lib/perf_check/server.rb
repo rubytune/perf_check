@@ -89,6 +89,8 @@ class PerfCheck
           result.backtrace = File.read(backtrace_file).lines.map(&:chomp)
         end
       end
+    rescue Errno::ECONNREFUSED => e
+      raise Exception.new("Couldn't connect to the rails server -- it either failed to boot or crashed")
     end
 
     def exit

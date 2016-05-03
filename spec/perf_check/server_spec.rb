@@ -115,8 +115,8 @@ RSpec.describe PerfCheck::Server do
     before do
       expect(Net::HTTP).to receive(:new){ net_http }
       expect(server).to receive(:prepare_to_profile)
-      expect(server).to receive(:mem){ 12345 }.at_least(:once)
-      expect(server).to receive(:latest_profiler_url){ "/abcxyz" }.at_least(:once)
+      allow(server).to receive(:mem){ 12345 }
+      allow(server).to receive(:latest_profiler_url){ "/abcxyz" }.at_least(:once)
     end
 
     it "should yield a Net::HTTP to block" do
@@ -150,6 +150,15 @@ RSpec.describe PerfCheck::Server do
       end
 
       expect(prof.backtrace).to eq(["one", "two"])
+    end
+
+    it "should raise a PerfCheck::Exception if it cant connect" do
+      expect do
+        server.profile do |http|
+          http.finish
+          raise Errno::ECONNREFUSED.new
+        end
+      end.to raise_error(PerfCheck::Exception)
     end
   end
 
