@@ -9,6 +9,7 @@ require 'logger'
 
 class PerfCheck
   class Exception < ::Exception; end
+  class ConfigLoadError < Exception; end
 
   attr_reader :app_root, :options, :git, :server, :test_cases
   attr_accessor :logger
@@ -47,6 +48,10 @@ class PerfCheck
       begin
         Dir.chdir(app_root)
         load "#{app_root}/config/perf_check.rb"
+      rescue ::Exception => e
+        error = ConfigLoadError.new(e.message)
+        error.set_backtrace(e.backtrace)
+        raise error
       ensure
         Dir.chdir(dir)
         Kernel.send(:remove_method, :perf_check)

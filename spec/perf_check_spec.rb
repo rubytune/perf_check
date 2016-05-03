@@ -10,10 +10,18 @@ RSpec.describe PerfCheck do
     it "should require app_root/config/perf_check" do
       config_file = "#{perf_check.app_root}/config/perf_check.rb"
       system("mkdir", "-p", File.dirname(config_file))
-      system("touch", config_file)
+      File.open(config_file, "w").close
 
       expect(perf_check).to receive(:load).with(config_file)
       perf_check.load_config
+    end
+
+    it "should rescue exceptions from the config file" do
+      config_file = "#{perf_check.app_root}/config/perf_check.rb"
+      system("mkdir", "-p", File.dirname(config_file))
+      File.open(config_file, "w"){ |f| f.write("nil.do_something_you_cant") }
+
+      expect{ perf_check.load_config }.to raise_error(PerfCheck::ConfigLoadError)
     end
   end
 
