@@ -26,7 +26,7 @@ class PerfCheck
           f.puts("#{e.class}: #{e.message}")
           f.write(e.backtrace.join("\n"))
         end
-        status, headers, body = 500, {"X-PerfCheck-StackTrace" => trace_file}, ''
+        status, headers, body = 500, {"X-PerfCheck-StackTrace" => trace_file}, ['']
       end
 
       headers['X-PerfCheck-Query-Count'] = query_count.to_s
