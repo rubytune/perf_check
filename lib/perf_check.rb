@@ -4,7 +4,6 @@ require 'fileutils'
 require 'benchmark'
 require 'ostruct'
 require 'colorize'
-require 'json'
 require 'logger'
 
 class PerfCheck

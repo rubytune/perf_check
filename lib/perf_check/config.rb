@@ -47,10 +47,6 @@ class PerfCheck
         options.headers[key.strip] = value.strip
       end
 
-      opts.on('--json', '-j') do
-        options.json = true
-      end
-
       opts.on('--input FILE', '-i') do |input|
         File.readlines(input).each do |resource|
           ARGV << resource.strip

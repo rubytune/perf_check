@@ -46,8 +46,6 @@ perf_check.run
 
 if perf_check.options.brief
   perf_check.print_brief_results
-elsif perf_check.options.json
-  perf_check.print_json_results
 else
   perf_check.print_full_results
 end

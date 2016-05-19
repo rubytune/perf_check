@@ -66,47 +66,4 @@ class PerfCheck
       print_diff_results(test.response_diff) if options.verify_responses
     end
   end
-
-  def print_json_results
-    results = []
-    test_cases.each do |test|
-      results.push(
-        route: test.resource,
-        latency: test.this_latency,
-        query_count: test.this_query_count,
-        requests: []
-      )
-
-      test.this_profiles.each do |profile|
-        results[-1][:requests].push(
-          latency: profile.latency,
-          query_count: profile.query_count,
-          server_memory: profile.server_memory,
-          response_code: profile.response_code,
-          miniprofiler_url: profile.profile_url
-        )
-      end
-
-      if options.reference
-        results[-1].merge!(
-          reference_latency: test.reference_latency,
-          latency_difference: test.latency_difference,
-          speedup_factor: test.speedup_factor,
-          reference_query_count: test.reference_query_count,
-          reference_requests: []
-        )
-
-        test.reference_profiles.each do |profile|
-          results[-1][:reference_requests].push(
-            latency: profile.latency,
-            query_count: profile.query_count,
-            server_memory: profile.server_memory,
-            response_code: profile.response_code,
-            miniprofiler_url: profile.profile_url
-          )
-        end
-      end
-    end
-    puts JSON.pretty_generate(results)
-  end
 end
