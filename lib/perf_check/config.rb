@@ -97,8 +97,8 @@ EOF
     end
   end
 
-  def self.diff_options
-    @@diff_options ||=
+  def diff_options
+    @diff_options ||=
       ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
   end
 end
