@@ -62,12 +62,12 @@ class PerfCheck
         options.brief = true
       end
 
-#      opts.on('--diff') do
-#        options.diff = true
-#        options.brief = true
-#        options.verify_responses = true
-#        options.number_of_requests = 1
-#      end
+     opts.on('--diff') do
+       options.diff = true
+       options.brief = true
+       options.verify_responses = true
+       options.number_of_requests = 1
+     end
 
       opts.separator ''
       opts.separator <<EOF
