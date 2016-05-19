@@ -96,6 +96,55 @@ RSpec.describe PerfCheck::TestCase do
     end
   end
 
+  context "options.verify_responses" do
+    describe "#response_diff" do
+      it "should return a struct with #changed?, and #file if changed" do
+        expect(test_case).to receive(:this_response){ "abc\n" }
+        expect(test_case).to receive(:reference_response){ "xyz\n" }
+
+        diff = test_case.response_diff
+        expect(diff.changed?).to eq(true)
+        expect(File.read(diff.file)).to eq("-abc\n+xyz\n")
+
+
+        expect(test_case).to receive(:this_response){ "hij\n" }
+        expect(test_case).to receive(:reference_response){ "hij\n" }
+
+        diff = test_case.response_diff
+        expect(diff.changed?).to eq(false)
+        expect(diff.file).to be_nil
+      end
+
+      it "should show 3 lines of context by default" do
+        expect(test_case).to receive(:this_response){ "a\nb\nc\nd\nabc\ne\nf\ng\nh" }
+        expect(test_case).to receive(:reference_response){"a\nb\nc\nd\nxyz\ne\nf\ng\nh"}
+
+        diff = test_case.response_diff
+        expect(diff.changed?).to eq(true)
+        expect(File.read(diff.file)).to eq(" b\n c\n d\n-abc\n+xyz\n e\n f\n g\n")
+      end
+
+      it "should by default ignore mini-profiler lines" do
+        expect(test_case).to receive(:this_response){
+          %(<script src="/mini-profiler-resources/includes.js?v=abc"></script>)
+        }
+        expect(test_case).to receive(:reference_response){
+          %(<script src="/mini-profiler-resources/includes.js?v=xyz"></script>)
+        }
+
+        expect(test_case.response_diff.changed?).to eq(false)
+      end
+
+      it "should respect perf_check.diff_options" do
+        test_case.perf_check.diff_options.push("--ignore-matching-lines=foo bar")
+        expect(test_case).to receive(:this_response){ "foo bar baz" }
+        expect(test_case).to receive(:reference_response){ "foo bar bink" }
+
+        expect(test_case.response_diff.changed?).to eq(false)
+      end
+    end
+  end
+
   describe "stats methods" do
     before do
       test_case.this_profiles = (1..10).map do |x|
