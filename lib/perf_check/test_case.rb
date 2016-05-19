@@ -85,8 +85,8 @@ class PerfCheck
       if diff.to_s.empty?
         OpenStruct.new(:changed? => false)
       else
-        FileUtils.mkdir_p("#{Rails.root}/tmp/perf_check/diffs")
-        file = `mktemp -u "#{Rails.root}/tmp/perf_check/diffs/XXXXXXXXXX"`.strip
+        FileUtils.mkdir_p("#{perf_check.app_root}/tmp/perf_check/diffs")
+        file = `mktemp -u "#{perf_check.app_root}/tmp/perf_check/diffs/XXXXXXXXX"`.strip
         [:text, :html].each do |format|
           ext = {:text => 'diff', :html => 'html'}[format]
           File.open("#{file}.#{ext}", 'w'){ |f| f.write(diff.to_s(format)) }
