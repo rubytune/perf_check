@@ -23,6 +23,10 @@ class PerfCheck
       headers: {},
       http_statuses: [200],
       verify_no_diff: false,
+      diff: false,
+      diff_options: ['-U3',
+                     '--ignore-matching-lines=/mini-profiler-resources/includes.js'],
+      brief: false,
       caching: true,
       json: false
     )

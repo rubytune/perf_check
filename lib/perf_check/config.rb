@@ -53,13 +53,13 @@ class PerfCheck
         end
       end
 
+      opts.on('--brief', '-b') do
+        options.brief = true
+      end
+
       opts.on('--verify-no-diff',
               'Check whether there is a diff between the responses of this and the reference branch') do
         options.verify_no_diff = true
-      end
-
-      opts.on('--brief', '-b') do
-        options.brief = true
       end
 
      opts.on('--diff') do
@@ -69,8 +69,12 @@ class PerfCheck
        options.number_of_requests = 1
      end
 
-      opts.separator ''
-      opts.separator <<EOF
+     opts.on("--diff-option OPT") do |opt|
+       options.diff_options << opt
+     end
+
+     opts.separator ''
+     opts.separator <<EOF
 Usage examples:
   Benchmark PostController#index against master
      perf_check /user/45/posts
@@ -95,10 +99,5 @@ EOF
 
       opts.separator ''
     end
-  end
-
-  def diff_options
-    @diff_options ||=
-      ['-U3', '--ignore-matching-lines=/mini-profiler-resources/includes.js']
   end
 end

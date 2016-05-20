@@ -135,8 +135,9 @@ RSpec.describe PerfCheck::TestCase do
         expect(test_case.response_diff.changed?).to eq(false)
       end
 
-      it "should respect perf_check.diff_options" do
-        test_case.perf_check.diff_options.push("--ignore-matching-lines=foo bar")
+      it "should respect perf_check.options.diff_options" do
+        test_case.perf_check.options.diff_options.
+          push("--ignore-matching-lines=foo bar")
         expect(test_case).to receive(:this_response){ "foo bar baz" }
         expect(test_case).to receive(:reference_response){ "foo bar bink" }
 

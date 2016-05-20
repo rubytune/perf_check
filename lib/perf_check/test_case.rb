@@ -82,7 +82,7 @@ class PerfCheck
     def response_diff
       diff = Diffy::Diff.new(reference_response, this_response,
                              include_diff_info: true,
-                             diff: perf_check.diff_options)
+                             diff: perf_check.options.diff_options)
       if diff.to_s.empty?
         OpenStruct.new(:changed? => false)
       else
