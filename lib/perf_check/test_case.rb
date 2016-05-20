@@ -88,9 +88,8 @@ class PerfCheck
       else
         FileUtils.mkdir_p("#{perf_check.app_root}/tmp/perf_check/diffs")
         file = `mktemp -u "#{perf_check.app_root}/tmp/perf_check/diffs/XXXXXXXXX"`.strip
-        [:text, :html].each do |format|
-          ext = {:text => 'diff', :html => 'html'}[format]
-          File.open("#{file}.#{ext}", 'w'){ |f| f.write(diff.to_s(format)) }
+        File.open("#{file}.diff", "w") do |f|
+          f.write(diff.to_s(:text).lines[2..-1].join)
         end
         OpenStruct.new(:changed? => true, :file => "#{file}.diff")
       end
