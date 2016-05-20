@@ -20,7 +20,7 @@ class PerfCheck
       puts && next if test.reference_profiles.empty?
 
       print(sprintf(' (%+5.1fms)', test.latency_difference).bold)
-      print_diff_results(test.response_diff) if options.verify_responses
+      print_diff_results(test.response_diff) if options.verify_no_diff
       puts
     end
   end
@@ -63,7 +63,7 @@ class PerfCheck
       puts("your branch: ".rjust(15)+ "#{this_latency}")
       puts(("change: ".rjust(15)    + "#{formatted_change}").bold.send(color))
 
-      print_diff_results(test.response_diff) if options.verify_responses
+      print_diff_results(test.response_diff) if options.verify_no_diff
     end
   end
 end

@@ -53,9 +53,9 @@ class PerfCheck
         end
       end
 
-      opts.on('--verify-responses',
+      opts.on('--verify-no-diff',
               'Check whether there is a diff between the responses of this and the reference branch') do
-        options.verify_responses = true
+        options.verify_no_diff = true
       end
 
       opts.on('--brief', '-b') do
@@ -65,7 +65,7 @@ class PerfCheck
      opts.on('--diff') do
        options.diff = true
        options.brief = true
-       options.verify_responses = true
+       options.verify_no_diff = true
        options.number_of_requests = 1
      end
 
@@ -84,7 +84,7 @@ Usage examples:
      perf_check /user/45/posts -r HEAD
 
   Benchmark and diff the output against master
-     perf_check /user/45/posts --verify-responses
+     perf_check /user/45/posts --verify-no-diff
 
   Just diff the output on your branch with master
      perf_check /user/45/posts --diff

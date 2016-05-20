@@ -51,9 +51,9 @@ RSpec.describe PerfCheck::TestCase do
       expect(test_case.this_profiles[1].response_code).to eq(500)
     end
 
-    context "options.verify_responses" do
+    context "options.verify_no_diff" do
       it "should save response bodies to this_response and reference_response" do
-        options.verify_responses = true
+        options.verify_no_diff = true
         allow(test_case).to receive(:issue_request){ profile }
 
         profile.response_body = 'abcdef'
@@ -96,7 +96,7 @@ RSpec.describe PerfCheck::TestCase do
     end
   end
 
-  context "options.verify_responses" do
+  context "options.verify_no_diff" do
     describe "#response_diff" do
       it "should return a struct with #changed?, and #file if changed" do
         expect(test_case).to receive(:this_response){ "abc\n" }

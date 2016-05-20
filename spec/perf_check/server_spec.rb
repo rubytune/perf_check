@@ -45,7 +45,7 @@ RSpec.describe PerfCheck::Server do
       expect(ENV['PERF_CHECK_VERIFICATION']).to eq('0')
       expect(ENV['PERF_CHECK_NOCACHING']).to eq('0')
 
-      server.perf_check.options.verify_responses = true
+      server.perf_check.options.verify_no_diff = true
       server.start
       expect(ENV['PERF_CHECK_VERIFICATION']).to eq('1')
       expect(ENV['PERF_CHECK_NOCACHING']).to eq('0')

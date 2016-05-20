@@ -22,7 +22,7 @@ class PerfCheck
       cookie: nil,
       headers: {},
       http_statuses: [200],
-      verify_responses: false,
+      verify_no_diff: false,
       caching: true,
       json: false
     )

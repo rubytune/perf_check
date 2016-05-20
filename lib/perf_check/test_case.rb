@@ -25,7 +25,7 @@ class PerfCheck
         profile = issue_request(server, options)
         next if i.zero? # first request just warms up the server
 
-        if options.verify_responses && i == 1
+        if options.verify_no_diff && i == 1
           response_for_comparison(profile.response_body)
         end
 

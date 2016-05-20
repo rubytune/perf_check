@@ -103,7 +103,7 @@ class PerfCheck
 
     def start
       ENV['PERF_CHECK'] = '1'
-      if perf_check.options.verify_responses
+      if perf_check.options.verify_no_diff
         ENV['PERF_CHECK_VERIFICATION'] = '1'
       end
       unless perf_check.options.caching
