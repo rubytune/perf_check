@@ -47,41 +47,4 @@ RSpec.describe "bin/perf_check" do
       expect(log.find{ |x| x =~ /change: [+-]\d+\.\d+ms/ }).not_to be_nil
     end
   end
-
-  describe "--json /posts" do
-    it "should emit valid json on stdout" do
-      out = perf_check("--json", "/posts")
-      expect{ out = JSON.parse(out) }.not_to raise_error
-
-      expect(out.class).to eq(Array)
-      expect(out.size).to eq(1)
-
-      result = out[0]
-      expect(result["route"]).to eq("/posts")
-      expect(result["latency"]).not_to be_nil
-      expect(result["query_count"]).not_to be_nil
-      expect(result["requests"].class).to eq(Array)
-      expect(result["requests"].size).to eq(20)
-      expect(result["reference_latency"]).not_to be_nil
-      expect(result["latency_difference"]).not_to be_nil
-      expect(result["speedup_factor"]).not_to be_nil
-      expect(result["reference_query_count"]).not_to be_nil
-      expect(result["reference_requests"].class).to eq(Array)
-      expect(result["reference_requests"].size).to eq(20)
-
-      req = result["requests"][0]
-      expect(req["latency"]).not_to be_nil
-      expect(req["query_count"]).not_to be_nil
-      expect(req["server_memory"]).not_to be_nil
-      expect(req["response_code"]).not_to be_nil
-      expect(req["miniprofiler_url"]).not_to be_nil
-
-      req = result["reference_requests"][0]
-      expect(req["latency"]).not_to be_nil
-      expect(req["query_count"]).not_to be_nil
-      expect(req["server_memory"]).not_to be_nil
-      expect(req["response_code"]).not_to be_nil
-      expect(req["miniprofiler_url"]).not_to be_nil
-    end
-  end
 end

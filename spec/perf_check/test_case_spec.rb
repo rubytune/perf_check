@@ -104,7 +104,7 @@ RSpec.describe PerfCheck::TestCase do
 
         diff = test_case.response_diff
         expect(diff.changed?).to eq(true)
-        expect(File.read(diff.file)).to eq("-abc\n+xyz\n")
+        expect(File.read(diff.file)).to eq("@@ -1 +1 @@\n-xyz\n+abc\n")
 
 
         expect(test_case).to receive(:this_response){ "hij\n" }
@@ -121,7 +121,7 @@ RSpec.describe PerfCheck::TestCase do
 
         diff = test_case.response_diff
         expect(diff.changed?).to eq(true)
-        expect(File.read(diff.file)).to eq(" b\n c\n d\n-abc\n+xyz\n e\n f\n g\n")
+        expect(File.read(diff.file)).to eq("@@ -2,7 +2,7 @@\n b\n c\n d\n-xyz\n+abc\n e\n f\n g\n")
       end
 
       it "should by default ignore mini-profiler lines" do
