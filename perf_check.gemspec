@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'perf_check'
-  s.version = '0.6.1'
+  s.version = '0.7.0'
   s.date = '2016-03-30'
   s.summary = 'PERF CHECKKK!'
   s.authors = ['rubytune']
@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
 
   s.add_development_dependency 'rspec'
+  s.add_development_dependency 'pry'
   s.add_runtime_dependency 'colorize', '= 0.7.3'
   s.add_runtime_dependency 'diffy', '= 3.0.5'
 
