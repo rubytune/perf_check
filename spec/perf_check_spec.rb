@@ -93,6 +93,33 @@ RSpec.describe PerfCheck do
 
       perf_check.send :profile_requests
     end
+
+    it "should trigger when_finished callbacks after the run is over" do
+      perf_check.add_test_case("/a")
+
+      perf_check.when_finished do
+      end
+
+      callback = perf_check.when_finished_callbacks[0]
+      expect(callback).to receive(:call).exactly(:once)
+
+      perf_check.options.reference = nil
+      allow(perf_check).to receive(:profile_requests)
+      allow(perf_check.server).to receive(:exit)
+
+      perf_check.run
+
+      perf_check.when_finished_callbacks.clear
+
+      error_message = nil
+      perf_check.when_finished do |_, payload|
+        error_message = payload[:error_message]
+      end
+
+      allow(perf_check).to receive(:profile_requests){ raise Exception.new }
+      expect{ perf_check.run }.to raise_error(Exception)
+      expect(error_message).not_to be_nil
+    end
   end
 
   describe "#run_migrations_up" do

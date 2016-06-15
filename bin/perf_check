@@ -23,17 +23,6 @@ end
 
 perf_check = PerfCheck.new(app_root).tap(&:load_config)
 
-at_exit do
-  cbdata = {}
-
-  if $!
-    cbdata[:error_message] = "#{$!.class}: #{$!.message}\n"
-    cbdata[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
-  end
-
-  perf_check.trigger_when_finished_callbacks(cbdata)
-end
-
 perf_check.option_parser.parse(ARGV).each do |route|
   perf_check.add_test_case(route)
 end

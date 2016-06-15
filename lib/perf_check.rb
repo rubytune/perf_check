@@ -83,6 +83,15 @@ class PerfCheck
         git.checkout_current_branch(false) rescue nil
         (git.pop rescue nil) if git.stashed?
       end
+
+      cbdata = {}
+
+      if $!
+        cbdata[:error_message] = "#{$!.class}: #{$!.message}\n"
+        cbdata[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
+      end
+
+      trigger_when_finished_callbacks(cbdata)
     end
   end
 
