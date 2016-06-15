@@ -22,10 +22,7 @@ if File.exists?("#{app_root}/tmp/pids/server.pid")
 end
 
 perf_check = PerfCheck.new(app_root).tap(&:load_config)
-
-perf_check.option_parser.parse(ARGV).each do |route|
-  perf_check.add_test_case(route)
-end
+perf_check.parse_arguments(ARGV)
 
 if perf_check.test_cases.empty?
   abort(perf_check.option_parser.help)

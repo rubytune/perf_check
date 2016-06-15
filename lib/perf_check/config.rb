@@ -1,6 +1,14 @@
-require 'optparse'
+require "optparse"
+require "shellwords"
 
 class PerfCheck
+  def parse_arguments(argv)
+    options.argv = argv.is_a?(String) ? Shellwords.shellsplit(argv) : argv
+    option_parser.parse(options.argv).each do |route|
+      add_test_case(route.strip)
+    end
+  end
+
   def option_parser
     @optparse ||= OptionParser.new do |opts|
       opts.banner = "Usage: perf_check [options] [route ...]"
