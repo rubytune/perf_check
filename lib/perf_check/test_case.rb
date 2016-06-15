@@ -83,7 +83,7 @@ class PerfCheck
       diff = Diffy::Diff.new(reference_response, this_response,
                              include_diff_info: true,
                              diff: perf_check.options.diff_options)
-      if diff.to_s.empty?
+      if diff.to_s(:text).lines.length < 3
         OpenStruct.new(:changed? => false)
       else
         FileUtils.mkdir_p("#{perf_check.app_root}/tmp/perf_check/diffs")
