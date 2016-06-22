@@ -123,12 +123,44 @@ RSpec.describe PerfCheck do
   end
 
   describe "#run_migrations_up" do
-    it "should bundle exec rake db:migrate"
+    it "should bundle exec rake db:migrate" do
+      expect(perf_check).to receive(:"`") do |cmd|
+        expect(cmd.scan("bundle exec rake db:migrate")).not_to be_empty
+      end
+
+      perf_check.send :run_migrations_up
+    end
+
+    it "should git.clean_db" do
+      expect(perf_check).to receive(:"`")
+      expect(perf_check.git).to receive(:clean_db)
+
+      perf_check.send :run_migrations_up
+    end
   end
 
   describe "#run_migrations_down" do
-    it "should bundle exec rake db:migrate:down each migration on the test branch"
+    it "should not do much if there are no migrations" do
+      expect(perf_check.git).to receive(:migrations_to_run_down){ [] }
+      expect(perf_check).not_to receive(:"`")
 
-    it "should git.clean_db"
+      perf_check.send :run_migrations_down
+    end
+
+    it "should bundle exec rake db:migrate:down each migration on the test branch" do
+      expect(perf_check.git).to receive(:migrations_to_run_down){ ["123"] }
+      expect(perf_check).to receive(:"`") do |cmd|
+        expect(cmd.scan("bundle exec rake db:migrate:down VERSION=123")).not_to be_empty
+      end
+
+      perf_check.send :run_migrations_down
+    end
+
+    it "should git.clean_db" do
+      expect(perf_check.git).to receive(:migrations_to_run_down){ [] }
+      expect(perf_check.git).to receive(:clean_db)
+
+      perf_check.send :run_migrations_down
+    end
   end
 end

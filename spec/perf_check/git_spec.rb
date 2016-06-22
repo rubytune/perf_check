@@ -126,6 +126,17 @@ RSpec.describe PerfCheck::Git do
   end
 
   describe "#migrations_to_run_down" do
-    it "should list those migrations on current_branch which are not on master"
+    before { system("cd #{repo} && git checkout -b a_branch") }
+    after { system("cd #{repo} && git checkout master") }
+    it "should list those versions on current_branch which are not on master" do
+      system("mkdir", "-p", "#{repo}/db/migrate")
+
+      git = PerfCheck::Git.new(perf_check)
+      expect(git.migrations_to_run_down).to be_empty
+
+      File.open("#{repo}/db/migrate/12345_xyz.rb", "w"){ }
+      system("cd #{repo} && git add db/migrate/12345_xyz.rb && git commit -m '.'")
+      expect(git.migrations_to_run_down).to eq(["12345"])
+    end
   end
 end
