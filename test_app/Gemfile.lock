@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    perf_check (0.7.3)
+    perf_check (0.7.4)
       colorize (= 0.7.3)
       diffy (= 3.0.5)
 
