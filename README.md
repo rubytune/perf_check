@@ -109,7 +109,7 @@ Usage examples:
      perf_check /user/45/posts -r HEAD
 
   Benchmark and diff the output against master 
-     perf_check /user/45/posts --verify-responses
+     perf_check /user/45/posts --verify-no-diff
         
   Diff the output on your branch with master
      perf_check /user/45/posts --diff
