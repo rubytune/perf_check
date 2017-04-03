@@ -120,6 +120,15 @@ Usage examples:
 
 ## Troubleshooting
 
+
+### Perf Check 
+
+Setting the `PERF_CHECK` env variable will start up your app with the [middleware](https://github.com/rubytune/perf_check/blob/master/lib/perf_check/middleware.rb) which does things like capture backtraces and count sql queries
+
+```
+PERF_CHECK=true bundle exec rails s
+```
+
 ### Redis
 
 Certain versions of redis might need the following snippet to fork properly:

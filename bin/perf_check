@@ -18,7 +18,7 @@ app_root =
 
 
 if File.exists?("#{app_root}/tmp/pids/server.pid")
-  abort("It looks like a rails server is already running. Shut it down before continuing with perf_check.")
+  abort("It looks like a rails server is already running. Shut it down or remove the pid in tmp/pids/server.pid before continuing with perf_check.")
 end
 
 perf_check = PerfCheck.new(app_root).tap(&:load_config)

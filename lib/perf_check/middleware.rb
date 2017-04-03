@@ -17,7 +17,7 @@ class PerfCheck
 
       begin
         status, headers, body = app.call(env)
-      rescue ::Exception => e
+      rescue => e
         trace_file = "#{Rails.root}/tmp/perf_check_traces" <<
                      "/trace-#{SecureRandom.hex(16)}.txt"
         FileUtils.mkdir_p(File.dirname(trace_file))

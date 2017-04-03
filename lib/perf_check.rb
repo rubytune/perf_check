@@ -51,7 +51,7 @@ class PerfCheck
       begin
         Dir.chdir(app_root)
         load "#{app_root}/config/perf_check.rb"
-      rescue ::Exception => e
+      rescue => e
         error = ConfigLoadError.new(e.message)
         error.set_backtrace(e.backtrace)
         raise error
@@ -84,14 +84,14 @@ class PerfCheck
         (git.pop rescue nil) if git.stashed?
       end
 
-      cbdata = {}
+      callbacks = {}
 
       if $!
-        cbdata[:error_message] = "#{$!.class}: #{$!.message}\n"
-        cbdata[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
+        callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
+        callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
       end
 
-      trigger_when_finished_callbacks(cbdata)
+      trigger_when_finished_callbacks(callbacks)
     end
   end
 

@@ -76,7 +76,7 @@ class PerfCheck
     end
 
     def speedup_factor
-      reference_latency / this_latency
+      reference_latency.to_f / this_latency.to_f
     end
 
     def response_diff
