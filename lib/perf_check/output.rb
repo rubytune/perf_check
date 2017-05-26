@@ -25,6 +25,44 @@ class PerfCheck
     end
   end
 
+  def print_full_results_compare_paths
+    first_test = test_cases[0]
+    second_test = test_cases[1]
+    puts("first path:" + first_test.resource.bold)
+
+    first_test_latency = sprintf('%.1fms', first_test.this_latency)
+
+    puts("second path:" +second_test.resource.bold)
+
+    second_test_latency = sprintf('%.1fms', second_test.reference_latency)
+    latency_difference = first_test.this_latency - second_test.reference_latency
+    difference = sprintf('%+.1fms', latency_difference)
+
+    if latency_difference < 0
+      change_factor = second_test.reference_latency / first_test.this_latency
+    else
+      change_factor = first_test.this_latency / second_test.reference_latency
+    end
+    formatted_change = sprintf('%.1fx', change_factor)
+
+    percent_change = 100*(latency_difference / second_test.reference_latency).abs
+    if percent_change < 10
+      formatted_change = "yours is about the same"
+      color = :blue
+    elsif latency_difference < 0
+      formatted_change = "yours is #{formatted_change} faster!"
+      color = :green
+    else
+      formatted_change = "yours is #{formatted_change} slower!!!"
+      color = :light_red
+    end
+    formatted_change = difference + " (#{formatted_change})"
+
+    puts("second path: ".rjust(15)  + "#{second_test_latency}")
+    puts("first path: ".rjust(15)+ "#{first_test_latency}")
+    puts(("change: ".rjust(15)    + "#{formatted_change}").bold.send(color))
+  end
+
   def print_full_results
     puts("==== Results ====")
     test_cases.each do |test|

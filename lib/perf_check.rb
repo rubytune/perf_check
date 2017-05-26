@@ -68,14 +68,17 @@ class PerfCheck
 
   def run
     begin
-      profile_requests
-
-      if options.reference
-        git.stash_if_needed
-        git.checkout_reference(options.reference)
-        test_cases.each{ |x| x.switch_to_reference_context }
-
+      if options.compare_paths?
+        profile_requests_compare_paths
+      else
         profile_requests
+        if options.reference
+          git.stash_if_needed
+          git.checkout_reference(options.reference)
+          test_cases.each{ |x| x.switch_to_reference_context }
+
+          profile_requests
+        end
       end
     ensure
       server.exit rescue nil
@@ -96,6 +99,38 @@ class PerfCheck
   end
 
   private
+
+  def profile_requests_compare_paths
+    raise if test_cases.count != 2
+    run_migrations_up if options.run_migrations?
+
+    server.restart
+
+    first = test_cases[0]
+    profile_test_case_request(first)
+    second = test_cases[1]
+    second.switch_to_reference_context
+    profile_test_case_request(second)
+
+  ensure
+    run_migrations_down if options.run_migrations?
+  end
+
+  def profile_test_case_request(test)
+    trigger_before_start_callbacks(test)
+    server.restart unless options.diff
+
+    test.cookie = options.cookie
+
+    if options.diff
+      logger.info("Issuing #{test.resource}")
+    else
+      logger.info ''
+      logger.info("Benchmarking #{test.resource}:")
+    end
+
+    test.run(server, options)
+  end
 
   def profile_requests
     run_migrations_up if options.run_migrations?
