@@ -31,7 +31,7 @@ end
 perf_check.run
 
 if perf_check.options.compare_paths?
-  perf_check.print_full_results_compare_paths
+  perf_check.print_results_of_compared_paths
 elsif perf_check.options.brief
   perf_check.print_brief_results
 else

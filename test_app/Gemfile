@@ -28,7 +28,6 @@ gem 'sdoc', '~> 0.4.0',          group: :doc
 gem 'test_engine', :path => './test_engine'
 
 gem 'perf_check', :path => '../'
-gem 'pry'
 
 gem 'rack-mini-profiler'
 
