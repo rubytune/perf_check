@@ -72,6 +72,16 @@ RSpec.describe PerfCheck do
       allow(perf_check.server).to receive(:restart){ raise Exception.new }
       expect{ perf_check.send :run }.to raise_error(Exception)
     end
+
+    context "option compare_paths is on" do
+      it do
+        perf_check.options[:compare_paths?] = true
+        perf_check.add_test_case('/xyz')
+        perf_check.add_test_case('/xyz')
+        expect(perf_check).to receive(:profile_compare_paths_requests)
+        perf_check.send :run
+      end
+    end
   end
 
   describe "#profile_requests" do
