@@ -50,16 +50,10 @@ RSpec.describe PerfCheck do
     it "should ensure that current branch is checked out"
 
     it "should ensure that anything stashed is popped"
-  end
-
-  describe "#profile_requests" do
-    before do
-      allow(perf_check.server).to receive(:restart)
-    end
 
     it "should not run migrations_up if !options.run_migrations?" do
       expect(perf_check).not_to receive(:run_migrations_up)
-      perf_check.send :profile_requests
+      perf_check.send :run
     end
 
     it "should run migrations if options.run_migrations" do
@@ -67,7 +61,7 @@ RSpec.describe PerfCheck do
 
       expect(perf_check).to receive(:run_migrations_up)
       expect(perf_check).to receive(:run_migrations_down)
-      perf_check.send :profile_requests
+      perf_check.send :run
     end
 
     it "should ensure to run migrations down if options.run_migrations?" do
@@ -76,7 +70,13 @@ RSpec.describe PerfCheck do
       expect(perf_check).to receive(:run_migrations_up)
       expect(perf_check).to receive(:run_migrations_down)
       allow(perf_check.server).to receive(:restart){ raise Exception.new }
-      expect{ perf_check.send :profile_requests }.to raise_error(Exception)
+      expect{ perf_check.send :run }.to raise_error(Exception)
+    end
+  end
+
+  describe "#profile_requests" do
+    before do
+      allow(perf_check.server).to receive(:restart)
     end
 
     it "should trigger before start callbacks and run each test case" do
