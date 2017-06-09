@@ -109,7 +109,7 @@ class PerfCheck
     first = test_cases[0]
     reference_test = test_cases[1]
     profile_test_case(first)
-    second.switch_to_reference_context
+    reference_test.switch_to_reference_context
     profile_test_case(reference_test)
   end
 
