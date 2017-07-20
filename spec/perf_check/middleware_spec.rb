@@ -29,7 +29,7 @@ RSpec.describe PerfCheck::Middleware do
 
     context "when backend raises exception" do
       it "should insert X-PerfCheck-StackTrace header with path to backtrace" do
-        expect(middleware.app).to receive(:call).with(env){ raise Exception.new }
+        expect(middleware.app).to receive(:call).with(env){ raise NoMethodError.new }
         status, headers, body = middleware.call(env)
 
         expect(headers['X-PerfCheck-StackTrace']).to match(/^#{Rails.root}/)

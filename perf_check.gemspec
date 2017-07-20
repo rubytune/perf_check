@@ -9,8 +9,9 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'pry'
-  s.add_runtime_dependency 'colorize', '= 0.7.3'
-  s.add_runtime_dependency 'diffy', '= 3.0.5'
+  s.add_runtime_dependency 'colorize'
+  s.add_runtime_dependency 'diffy'
+  s.add_runtime_dependency 'rake'
 
   s.files = ['lib/perf_check.rb',
              'lib/perf_check/callbacks.rb',

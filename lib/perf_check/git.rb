@@ -93,7 +93,7 @@ class PerfCheck
     private
 
     def current_migrations_not_on_master
-      exec("git diff origin/master --name-only --diff-filter=A db/migrate/").
+      exec("git diff master --name-only --diff-filter=A db/migrate/").
         split.reverse
     end
 

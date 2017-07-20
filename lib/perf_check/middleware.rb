@@ -1,3 +1,5 @@
+require 'securerandom'
+
 class PerfCheck
   class Middleware
     attr_reader :app
@@ -18,8 +20,7 @@ class PerfCheck
       begin
         status, headers, body = app.call(env)
       rescue => error
-        status, body = 500, ['']
-        headers << { "X-PerfCheck-StackTrace" => stacktrace_for(error) }
+        status, headers, body = 500, { "X-PerfCheck-StackTrace" => stacktrace_for(error) }, ['']
       end
       headers['X-PerfCheck-Query-Count'] = query_count.to_s
       [status, headers, body]

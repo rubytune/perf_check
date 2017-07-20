@@ -51,7 +51,7 @@ class PerfCheck
       begin
         Dir.chdir(app_root)
         load "#{app_root}/config/perf_check.rb"
-      rescue => e
+      rescue LoadError => e
         error = ConfigLoadError.new(e.message)
         error.set_backtrace(e.backtrace)
         raise error

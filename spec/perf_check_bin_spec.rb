@@ -1,4 +1,3 @@
-
 require 'spec_helper'
 require 'json'
 
@@ -12,6 +11,13 @@ RSpec.describe "bin/perf_check" do
 
   before do
     system("cd test_app && git checkout . && git checkout -q test_branch")
+  end
+
+  describe 'bundler' do
+    it 'should not fail on the test app' do
+      out = perf_check(stderr:true)
+      expect(out).not_to include('bundler')
+    end
   end
 
   describe "-q /posts" do
