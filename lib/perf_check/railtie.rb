@@ -24,7 +24,7 @@ class PerfCheck
       end
 
       require 'perf_check/middleware'
-      app.middleware.use PerfCheck::Middleware
+      app.middleware.insert_before 0, PerfCheck::Middleware
     end
   end
 end

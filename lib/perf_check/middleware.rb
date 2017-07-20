@@ -17,21 +17,27 @@ class PerfCheck
 
       begin
         status, headers, body = app.call(env)
-      rescue => e
-        trace_file = "#{Rails.root}/tmp/perf_check_traces" <<
-                     "/trace-#{SecureRandom.hex(16)}.txt"
-        FileUtils.mkdir_p(File.dirname(trace_file))
-
-        File.open(trace_file, 'w') do |f|
-          f.puts("#{e.class}: #{e.message}")
-          f.write(e.backtrace.join("\n"))
-        end
-        status, headers, body = 500, {"X-PerfCheck-StackTrace" => trace_file}, ['']
+      rescue => error
+        status, body = 500, ['']
+        headers << { "X-PerfCheck-StackTrace" => stacktrace_for(error) }
       end
-
       headers['X-PerfCheck-Query-Count'] = query_count.to_s
-
       [status, headers, body]
     end
+
+    # These files are used by the perf_check daemon app
+    def stacktrace_for(e)
+      trace_file = "#{Rails.root}/tmp/perf_check_traces" <<
+                   "/trace-#{SecureRandom.hex(16)}.txt"
+      FileUtils.mkdir_p(File.dirname(trace_file))
+
+      File.open(trace_file, 'w') do |f|
+        f.puts("#{e.class}: #{e.message}")
+        f.write(e.backtrace.join("\n"))
+      end
+      trace_file
+    end
+
+
   end
 end
