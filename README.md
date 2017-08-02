@@ -1,3 +1,4 @@
+![](https://api.travis-ci.org/rubytune/perf_check.svg)
 ## What is perf check
 
 `perf_check` is a quick-n-dirty way to benchmark branches of your rails app.
@@ -21,7 +22,7 @@ You will actually have to commit this. Preferably to master, which will make lif
 In it's simplest incarnation, just feed an url to it
 
 ```
-$ bundle exec perf_check /notes/browse 
+$ bundle exec perf_check /notes/browse
 =============================================================================
 PERRRRF CHERRRK! Grab a coffee and don't touch your working tree (we automate git)
 =============================================================================
@@ -73,9 +74,9 @@ In the above example, `perf_check`
 
 ### We automate git
 
-**Do not edit the working tree while `perf_check` is running!** 
+**Do not edit the working tree while `perf_check` is running!**
 
-This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise. 
+This program performs git checkouts and stashes, which are undone after the benchmark completes. If the working tree changes after the reference commit is checked out, numerous problems may arise.
 
 ### Caching is forced on (by default)
 
@@ -108,12 +109,12 @@ Usage examples:
   Benchmark the changes in the working tree
      perf_check /user/45/posts -r HEAD
 
-  Benchmark and diff the output against master 
+  Benchmark and diff the output against master
      perf_check /user/45/posts --verify-no-diff
-        
+
   Diff the output on your branch with master
      perf_check /user/45/posts --diff
-    
+
   Diff a bunch of urls listed in a file (newline seperated)
      perf_check --diff --input FILE
 ```
@@ -121,7 +122,7 @@ Usage examples:
 ## Troubleshooting
 
 
-### Perf Check 
+### Perf Check
 
 Setting the `PERF_CHECK` env variable will start up your app with the [middleware](https://github.com/rubytune/perf_check/blob/master/lib/perf_check/middleware.rb) which does things like capture backtraces and count sql queries
 

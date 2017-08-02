@@ -9,7 +9,7 @@ RSpec.describe PerfCheck::TestCase do
   end
 
   after(:all) do
-    FileUtils.rm_rf('tmp/spec/app')
+    FileUtils.rm_rf('tmp/spec')
   end
 
   describe "#run(server, options)" do

@@ -11,7 +11,7 @@ RSpec.describe PerfCheck::Server do
   end
 
   after(:all) do
-    FileUtils.rm_rf('tmp/spec/app')
+    FileUtils.rm_rf('tmp/spec')
   end
 
   describe "#start" do
