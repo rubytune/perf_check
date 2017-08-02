@@ -4,9 +4,14 @@ require 'shellwords'
 
 RSpec.describe PerfCheck::Server do
   let(:server) do
+    system("mkdir", "-p", "tmp/spec/app")
     perf_check = PerfCheck.new('tmp/spec/app')
     perf_check.logger = Logger.new('/dev/null')
     PerfCheck::Server.new(perf_check)
+  end
+
+  after(:all) do
+    FileUtils.rm_rf('tmp/spec/app')
   end
 
   describe "#start" do

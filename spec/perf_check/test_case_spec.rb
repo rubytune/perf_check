@@ -8,6 +8,10 @@ RSpec.describe PerfCheck::TestCase do
     PerfCheck::TestCase.new(perf_check, '/xyz')
   end
 
+  after(:all) do
+    FileUtils.rm_rf('tmp/spec/app')
+  end
+
   describe "#run(server, options)" do
     let(:server){ double() }
     let(:options){ OpenStruct.new(number_of_requests: 3, http_statuses: [200]) }

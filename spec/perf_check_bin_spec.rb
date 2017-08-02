@@ -10,7 +10,7 @@ RSpec.describe "bin/perf_check" do
   end
 
   before do
-    system("cd test_app && git checkout . && git checkout -q test_branch")
+    system("cd test_app") # && git checkout . && git checkout -q test_branch
   end
 
   describe 'bundler' do
