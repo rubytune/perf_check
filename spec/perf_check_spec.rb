@@ -6,6 +6,10 @@ RSpec.describe PerfCheck do
     PerfCheck.new('tmp/spec').tap{ |x| x.logger = Logger.new('/dev/null') }
   end
 
+  after(:all) do
+    FileUtils.rm_rf('tmp/spec')
+  end
+
   describe "#load_config" do
     it "should require app_root/config/perf_check" do
       config_file = "#{perf_check.app_root}/config/perf_check.rb"

@@ -19,7 +19,7 @@ RSpec.describe PerfCheck::Git do
   end
 
   after(:all) do
-    FileUtils.rm_rf('tmp/spec')
+    FileUtils.rm_rf(File.join(__dir__,'tmp/'))
   end
 
   let(:perf_check){ double(app_root: repo, logger: Logger.new('/dev/null')) }
