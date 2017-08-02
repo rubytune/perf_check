@@ -16,7 +16,7 @@ RSpec.describe "bin/perf_check" do
   describe 'bundler' do
     it 'should not fail on the test app' do
       out = perf_check(stderr:true)
-      expect(out).not_to include('bundler')
+      expect(out).to include('Usage: perf_check')
     end
   end
 
