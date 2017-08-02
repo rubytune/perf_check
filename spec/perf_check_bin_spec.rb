@@ -9,6 +9,10 @@ RSpec.describe "bin/perf_check" do
     end
   end
 
+  before(:all) do
+    system("cd test_app && bundle install")
+  end
+
   before do
     system("cd test_app") # && git checkout . && git checkout -q test_branch
   end
