@@ -10,7 +10,9 @@ RSpec.describe "bin/perf_check" do
   end
 
   before(:all) do
-    system("cd test_app && bundle install")
+    Bundler.with_clean_env do
+      system("cd test_app && bundle install && bundle exec rake db:setup")
+    end
   end
 
   before do
