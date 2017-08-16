@@ -68,16 +68,24 @@ class PerfCheck
 
   def run
     begin
-      profile_requests
+      run_migrations_up if options.run_migrations?
+      server.restart
 
-      if options.reference
-        git.stash_if_needed
-        git.checkout_reference(options.reference)
-        test_cases.each{ |x| x.switch_to_reference_context }
-
+      if options.compare_paths?
+        raise "Must have two paths" if test_cases.count != 2
+        profile_compare_paths_requests
+      else
         profile_requests
+        if options.reference
+          git.stash_if_needed
+          git.checkout_reference(options.reference)
+          test_cases.each{ |x| x.switch_to_reference_context }
+
+          profile_requests
+        end
       end
     ensure
+      run_migrations_down if options.run_migrations?
       server.exit rescue nil
       if options.reference
         git.checkout_current_branch(false) rescue nil
@@ -97,27 +105,34 @@ class PerfCheck
 
   private
 
-  def profile_requests
-    run_migrations_up if options.run_migrations?
+  def profile_compare_paths_requests
+    first = test_cases[0]
+    reference_test = test_cases[1]
+    profile_test_case(first)
+    reference_test.switch_to_reference_context
+    profile_test_case(reference_test)
+  end
 
-    server.restart
-    test_cases.each_with_index do |test, i|
-      trigger_before_start_callbacks(test)
-      server.restart unless i.zero? || options.diff
+  def profile_test_case(test, index = nil)
+    trigger_before_start_callbacks(test)
+    server.restart unless index == 0 || options.diff
 
-      test.cookie = options.cookie
+    test.cookie = options.cookie
 
-      if options.diff
-        logger.info("Issuing #{test.resource}")
-      else
-        logger.info ''
-        logger.info("Benchmarking #{test.resource}:")
-      end
-
-      test.run(server, options)
+    if options.diff
+      logger.info("Issuing #{test.resource}")
+    else
+      logger.info ''
+      logger.info("Benchmarking #{test.resource}:")
     end
-  ensure
-    run_migrations_down if options.run_migrations?
+
+    test.run(server, options)
+  end
+
+  def profile_requests
+    test_cases.each_with_index do |test, i|
+      profile_test_case(test, i)
+    end
   end
 
   def run_migrations_up
