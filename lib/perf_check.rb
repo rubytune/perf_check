@@ -69,7 +69,6 @@ class PerfCheck
   def run
     begin
       run_migrations_up if options.run_migrations?
-      server.restart
 
       if options.compare_paths?
         raise "Must have two paths" if test_cases.count != 2
@@ -113,9 +112,9 @@ class PerfCheck
     profile_test_case(reference_test)
   end
 
-  def profile_test_case(test, index = nil)
+  def profile_test_case(test)
     trigger_before_start_callbacks(test)
-    server.restart unless index == 0 || options.diff
+    server.restart
 
     test.cookie = options.cookie
 
@@ -130,8 +129,8 @@ class PerfCheck
   end
 
   def profile_requests
-    test_cases.each_with_index do |test, i|
-      profile_test_case(test, i)
+    test_cases.each do |test|
+      profile_test_case(test)
     end
   end
 
