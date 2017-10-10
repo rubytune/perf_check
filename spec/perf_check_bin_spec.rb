@@ -56,7 +56,7 @@ RSpec.describe "bin/perf_check" do
       log = out.lines.drop_while{ |x| x !~ /^=+ Results/ }
       expect(log.find{ |x| x =~ /reference: \d+\.\d+ms/ }).not_to be_nil
       expect(log.find{ |x| x =~ /your branch: \d+\.\d+ms/ }).not_to be_nil
-      expect(log.find{ |x| x =~ /change: [+-]\d+\.\d+ms/ }).not_to be_nil
+      expect(log.find{ |x| x =~ /change: -?\d+\.\d+ms/ }).not_to be_nil
     end
   end
 end
