@@ -70,6 +70,7 @@ RSpec.describe PerfCheck do
     end
 
     it "should ensure to run migrations down if options.run_migrations?" do
+      perf_check.add_test_case('/xyz')
       perf_check.options[:run_migrations?] = true
 
       expect(perf_check).to receive(:run_migrations_up)
