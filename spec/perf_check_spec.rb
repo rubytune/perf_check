@@ -57,13 +57,19 @@ RSpec.describe PerfCheck do
     it "should ensure that anything stashed is popped"
 
     it "should not run migrations_up if !options.run_migrations?" do
+      perf_check.add_test_case('/xyz')
+
+      allow(perf_check.test_cases.first).to receive(:run)
       expect(perf_check).not_to receive(:run_migrations_up)
       perf_check.send :run
     end
 
     it "should run migrations if options.run_migrations" do
+      perf_check.add_test_case('/xyz')
       perf_check.options[:run_migrations?] = true
+      perf_check.options[:reference] = nil
 
+      allow(perf_check.test_cases.first).to receive(:run)
       expect(perf_check).to receive(:run_migrations_up)
       expect(perf_check).to receive(:run_migrations_down)
       perf_check.send :run
@@ -72,6 +78,7 @@ RSpec.describe PerfCheck do
     it "should ensure to run migrations down if options.run_migrations?" do
       perf_check.add_test_case('/xyz')
       perf_check.options[:run_migrations?] = true
+      perf_check.options[:reference] = nil
 
       expect(perf_check).to receive(:run_migrations_up)
       expect(perf_check).to receive(:run_migrations_down)
