@@ -56,34 +56,77 @@ RSpec.describe PerfCheck do
 
     it "should ensure that anything stashed is popped"
 
-    it "should not run migrations_up if !options.run_migrations?" do
-      perf_check.add_test_case('/xyz')
+    context 'when run_migrations is false' do
+      before { perf_check.options[:run_migrations?] = false }
 
-      allow(perf_check.test_cases.first).to receive(:run)
-      expect(perf_check).not_to receive(:run_migrations_up)
-      perf_check.send :run
+      it "should not run migrations" do
+        perf_check.add_test_case('/xyz')
+
+        allow(perf_check.test_cases.first).to receive(:run)
+        expect(perf_check).not_to receive(:run_migrations_up)
+        expect(perf_check).not_to receive(:run_migrations_down)
+        perf_check.send :run
+      end
     end
 
-    it "should run migrations if options.run_migrations" do
-      perf_check.add_test_case('/xyz')
-      perf_check.options[:run_migrations?] = true
-      perf_check.options[:reference] = nil
+    context 'when run_migrations is true' do
+      before { perf_check.options[:run_migrations?] = true }
 
-      allow(perf_check.test_cases.first).to receive(:run)
-      expect(perf_check).to receive(:run_migrations_up)
-      expect(perf_check).to receive(:run_migrations_down)
-      perf_check.send :run
-    end
+      context 'with a reference branch' do
+        before { perf_check.options[:reference] = :master }
 
-    it "should ensure to run migrations down if options.run_migrations?" do
-      perf_check.add_test_case('/xyz')
-      perf_check.options[:run_migrations?] = true
-      perf_check.options[:reference] = nil
+        context 'when things go smoothly' do
+          before do
+            perf_check.add_test_case('/xyz')
+            allow(perf_check.test_cases.first).to receive(:run)
+          end
 
-      expect(perf_check).to receive(:run_migrations_up)
-      expect(perf_check).to receive(:run_migrations_down)
-      allow(perf_check.server).to receive(:restart){ raise Exception.new }
-      expect{ perf_check.send :run }.to raise_error(Exception)
+          it "should run migrations twice" do
+            expect(perf_check).to receive(:run_migrations_up).twice
+            expect(perf_check).to receive(:run_migrations_down).twice
+            perf_check.send :run
+          end
+        end
+
+        context 'when things go south' do
+          before { allow(perf_check.server).to receive(:restart){ raise Exception.new } }
+
+          it "should ensure to run migrations down" do
+            perf_check.add_test_case('/xyz')
+
+            expect(perf_check).to receive(:run_migrations_down)
+            expect{ perf_check.send :run }.to raise_error(Exception)
+          end
+        end
+      end
+
+      context 'without a reference branch' do
+        before { perf_check.options[:reference] = nil }
+
+        context 'when things go smoothly' do
+          before do
+            perf_check.add_test_case('/xyz')
+            allow(perf_check.test_cases.first).to receive(:run)
+          end
+
+          it "should run migrations once" do
+            expect(perf_check).to receive(:run_migrations_up).once
+            expect(perf_check).to receive(:run_migrations_down).once
+            perf_check.send :run
+          end
+        end
+
+        context 'when things go south' do
+          before { allow(perf_check.server).to receive(:restart){ raise Exception.new } }
+
+          it "should ensure to run migrations down" do
+            perf_check.add_test_case('/xyz')
+
+            expect(perf_check).to receive(:run_migrations_down)
+            expect{ perf_check.send :run }.to raise_error(Exception)
+          end
+        end
+      end
     end
 
     context "option compare_paths is on" do
