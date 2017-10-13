@@ -115,7 +115,7 @@ class PerfCheck
 
   def profile_test_case(test, index: nil, reference: false)
     trigger_before_start_callbacks(test)
-    server.restart(reference: reference) unless index == 0 || options.diff
+    server.restart(reference: reference) unless index == 0
 
     test.cookie = options.cookie
 
