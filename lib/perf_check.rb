@@ -69,18 +69,19 @@ class PerfCheck
   def run
     begin
       run_migrations_up if options.run_migrations?
+      server.restart(reference: false)
 
       if options.compare_paths?
         raise "Must have two paths" if test_cases.count != 2
         profile_compare_paths_requests
       else
-        profile_requests
+        profile_requests(reference: false)
         if options.reference
           git.stash_if_needed
           git.checkout_reference(options.reference)
           test_cases.each{ |x| x.switch_to_reference_context }
 
-          profile_requests
+          profile_requests(reference: true)
         end
       end
     ensure
@@ -107,14 +108,14 @@ class PerfCheck
   def profile_compare_paths_requests
     first = test_cases[0]
     reference_test = test_cases[1]
-    profile_test_case(first)
+    profile_test_case(first, reference: false)
     reference_test.switch_to_reference_context
-    profile_test_case(reference_test)
+    profile_test_case(reference_test, reference: true)
   end
 
-  def profile_test_case(test)
+  def profile_test_case(test, index: nil, reference: false)
     trigger_before_start_callbacks(test)
-    server.restart
+    server.restart(reference: reference) unless index == 0 || options.diff
 
     test.cookie = options.cookie
 
@@ -128,9 +129,9 @@ class PerfCheck
     test.run(server, options)
   end
 
-  def profile_requests
-    test_cases.each do |test|
-      profile_test_case(test)
+  def profile_requests(reference: false)
+    test_cases.each_with_index do |test, i|
+      profile_test_case(test, index: i, reference: reference)
     end
   end
 

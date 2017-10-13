@@ -13,6 +13,9 @@ class PerfCheck
     @optparse ||= OptionParser.new do |opts|
       opts.banner = "Usage: perf_check [options] [route ...]"
 
+      options.branch_envs = {}
+      options.reference_envs = {}
+
       opts.separator "\nBenchmark options:"
       opts.on('--requests N', '-n',
               'Use N requests in benchmark, defaults to 20') do |n|
@@ -33,12 +36,22 @@ class PerfCheck
         options.caching = false
       end
 
-      opts.on('--run-migrations', 'Run migrations on the branch and unmigrate at the end') do
+      opts.on('--run-migrations', '-M', 'Run migrations on the branch and unmigrate at the end') do
         options[:run_migrations?] = true
       end
 
       opts.on('--compare-paths', 'Compare two paths against each other on the same branch') do
         options[:compare_paths?] = true
+      end
+
+      opts.on('--branch-env VAR=VALUE', '-e', 'Set a branch-test environment variable') do |var_value|
+        var, value = var_value.split('=').map(&:strip)
+        options.branch_envs[var] = value
+      end
+
+      opts.on('--reference-env VAR=VALUE', '-E', 'Set a reference-test environment variable') do |var_value|
+        var, value = var_value.split('=').map(&:strip)
+        options.reference_envs[var] = value
       end
 
       opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
@@ -107,6 +120,9 @@ Usage examples:
 
   Diff a bunch of urls listed in a file (newline seperated)
     perf_check --diff --input FILE
+
+  Set/clear an envar for the comparison:
+    perf_check -e QUERY_CACHE_ENABLED=true -E QUERY_CACHE_ENABLED=false /1234/project/home
 EOF
 
       opts.separator ''

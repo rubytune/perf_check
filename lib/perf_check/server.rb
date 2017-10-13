@@ -45,7 +45,7 @@ class PerfCheck
     end
 
     def mem
-      mem = `ps -o rss= -p #{pid}`.strip.to_f / 1024
+      `ps -o rss= -p #{pid}`.strip.to_f / 1024
     end
 
     def prepare_to_profile
@@ -66,7 +66,7 @@ class PerfCheck
     end
 
     def profile
-      http = Net::HTTP.new(host, port).tap{ |http| http.read_timeout = 1000 }
+      http = Net::HTTP.new(host, port).tap{ |ht| ht.read_timeout = 1000 }
       response = nil
       prepare_to_profile
 
@@ -89,7 +89,7 @@ class PerfCheck
           result.backtrace = File.read(backtrace_file).lines.map(&:chomp)
         end
       end
-    rescue Errno::ECONNREFUSED => e
+    rescue Errno::ECONNREFUSED
       raise Exception.new("Couldn't connect to the rails server -- it either failed to boot or crashed")
     end
 
@@ -101,7 +101,13 @@ class PerfCheck
       end
     end
 
-    def start
+    # start and restart now accepts a reference argument:
+    #
+    #   true  -- start with the reference envars set
+    #   false -- start with the test branch envars set
+    #   nil   -- start with the previously set reference set, or default to false
+
+    def start(reference: nil)
       ENV['PERF_CHECK'] = '1'
       if perf_check.options.verify_no_diff
         ENV['PERF_CHECK_VERIFICATION'] = '1'
@@ -110,6 +116,16 @@ class PerfCheck
         ENV['PERF_CHECK_NOCACHING'] = '1'
       end
 
+      # setup envars appropriate to the branch or the reference
+      if reference.nil?
+        reference = @last_reference || false
+      else
+        @last_reference = reference
+      end
+      envs = reference ? perf_check.options.reference_envs : perf_check.options.branch_envs
+      @last_reference = reference
+      (envs || {}).each_pair { |var, val| ENV[var] = val }
+
       app_root = Shellwords.shellescape(perf_check.app_root)
       system("cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null")
       sleep(1.5)
@@ -117,14 +133,14 @@ class PerfCheck
       @running = true
     end
 
-    def restart
+    def restart(reference: nil)
       if !running?
         perf_check.logger.info("starting rails...")
-        start
+        start(reference: reference)
       else
         perf_check.logger.info("re-starting rails...")
         exit
-        start
+        start(reference: reference)
       end
     end
 
