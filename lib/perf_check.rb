@@ -68,9 +68,6 @@ class PerfCheck
 
   def run
     begin
-      run_migrations_up if options.run_migrations?
-      server.restart(reference: false)
-
       if options.compare_paths?
         raise "Must have two paths" if test_cases.count != 2
         profile_compare_paths_requests
@@ -85,7 +82,6 @@ class PerfCheck
         end
       end
     ensure
-      run_migrations_down if options.run_migrations?
       server.exit rescue nil
       if options.reference
         git.checkout_current_branch(false) rescue nil
@@ -115,7 +111,8 @@ class PerfCheck
 
   def profile_test_case(test, index: nil, reference: false)
     trigger_before_start_callbacks(test)
-    server.restart(reference: reference) unless index == 0
+    run_migrations_up if options.run_migrations?
+    server.restart(reference: reference)
 
     test.cookie = options.cookie
 
@@ -127,6 +124,8 @@ class PerfCheck
     end
 
     test.run(server, options)
+  ensure
+    run_migrations_down if options.run_migrations?
   end
 
   def profile_requests(reference: false)

@@ -63,6 +63,10 @@ class PerfCheck
       end
 
       opts.separator "\nMisc"
+      opts.on('-h', 'Display this help') do
+        # Do nothing, just don't error
+      end
+
       opts.on('--cookie COOKIE', '-c') do |cookie|
         options.cookie = cookie
       end
