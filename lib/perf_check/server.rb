@@ -107,25 +107,8 @@ class PerfCheck
     #   false -- start with the test branch envars set
     #   nil   -- start with the previously set reference set, or default to false
 
-    def start(reference: nil)
-      ENV['PERF_CHECK'] = '1'
-      if perf_check.options.verify_no_diff
-        ENV['PERF_CHECK_VERIFICATION'] = '1'
-      end
-      unless perf_check.options.caching
-        ENV['PERF_CHECK_NOCACHING'] = '1'
-      end
-
-      # setup envars appropriate to the branch or the reference
-      if reference.nil?
-        reference = @last_reference || false
-      else
-        @last_reference = reference
-      end
-      envs = reference ? perf_check.options.reference_envs : perf_check.options.branch_envs
-      @last_reference = reference
-      (envs || {}).each_pair { |var, val| ENV[var] = val }
-
+    def start(envars = nil)
+      set_envars(envars)
       app_root = Shellwords.shellescape(perf_check.app_root)
       system("cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null")
       sleep(1.5)
@@ -133,14 +116,20 @@ class PerfCheck
       @running = true
     end
 
-    def restart(reference: nil)
+    def restart(envars = nil)
       if !running?
         perf_check.logger.info("starting rails...")
       else
         perf_check.logger.info("re-starting rails...")
         exit
       end
-      start(reference: reference)
+      start(envars)
+    end
+
+    def set_envars(envars = nil)
+      (envars || {}).each_pair do |var, val|
+        ENV[var] = val
+      end
     end
 
     def host

@@ -112,7 +112,8 @@ class PerfCheck
   def profile_test_case(test, reference: false)
     trigger_before_start_callbacks(test)
     run_migrations_up if options.run_migrations?
-    server.restart(reference: reference)
+    envars = envars_for(reference: reference)
+    server.restart(envars)
 
     test.cookie = options.cookie
 
@@ -126,6 +127,30 @@ class PerfCheck
     test.run(server, options)
   ensure
     run_migrations_down if options.run_migrations?
+  end
+
+  def envars_for(reference: nil)
+    env = {}
+    env['PERF_CHECK'] = '1'
+
+    if options.verify_no_diff
+      env['PERF_CHECK_VERIFICATION'] = '1'
+    end
+
+    unless options.caching
+      env['PERF_CHECK_NOCACHING'] = '1'
+    end
+
+    # setup envars appropriate to the branch or the reference
+    if reference.nil?
+      reference = @last_reference || false
+    else
+      @last_reference = reference
+    end
+    test_envs = reference ? options.reference_envs : options.branch_envs
+    @last_reference = reference
+    (test_envs || {}).each_pair { |var, val| env[var] = val }
+    env
   end
 
   def profile_requests(reference: false)

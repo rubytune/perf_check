@@ -26,7 +26,7 @@ RSpec.describe PerfCheck::Server do
 
       allow(server).to receive(:sleep)
 
-      server.start(reference: false)
+      server.start
     end
 
     it "should cause the server to go running?" do
@@ -34,43 +34,31 @@ RSpec.describe PerfCheck::Server do
       allow(server).to receive(:sleep)
 
       expect(server.running?).to be_falsey
-      server.start(reference: false)
+      server.start
       expect(server.running?).to be true
     end
 
-    it "should set env variables depending on perf_check options" do
-      ENV['PERF_CHECK'] = '0'
-      ENV['PERF_CHECK_VERIFICATION'] = '0'
-      ENV['PERF_CHECK_NOCACHING'] = '0'
+    it "should set env variables based on envars argument" do
+      ENV['PERF_CHECK']              = 'nope'
+      ENV['PERF_CHECK_VERIFICATION'] = 'nope'
+      ENV['PERF_CHECK_NOCACHING']    = 'nope'
+      ENV['TEST_VAR']                = 'nope'
+
+      envars = {
+          'PERF_CHECK'              => '1',
+          'PERF_CHECK_VERIFICATION' => '1',
+          'PERF_CHECK_NOCACHING'    => '0',
+          'TEST_VAR'                => 'okay'
+      }
       allow(server).to receive(:system)
       allow(server).to receive(:sleep)
+      expect(server).to receive(:start).with(any_args).and_call_original
 
-      server.start(reference: false)
-      expect(ENV['PERF_CHECK']).to eq('1')
-      expect(ENV['PERF_CHECK_VERIFICATION']).to eq('0')
-      expect(ENV['PERF_CHECK_NOCACHING']).to eq('0')
-
-      server.perf_check.options.verify_no_diff = true
-      server.start(reference: false)
-      expect(ENV['PERF_CHECK_VERIFICATION']).to eq('1')
-      expect(ENV['PERF_CHECK_NOCACHING']).to eq('0')
-
-      server.perf_check.options.caching = false
-      server.start(reference: false)
-      expect(ENV['PERF_CHECK_NOCACHING']).to eq('1')
-    end
-
-    it "should use the correct set of envars for the reference argument" do
-      server.perf_check.options.branch_envs    = { 'TEST_ENV' => 'yes' , 'TEST_ENV2' => 'no' }
-      server.perf_check.options.reference_envs = { 'TEST_ENV' => 'no'  , 'TEST_ENV2' => 'yes' }
-
-      server.start(reference: false)
-      expect(ENV['TEST_ENV']).to eq 'yes'
-      expect(ENV['TEST_ENV2']).to eq 'no'
-
-      server.restart(reference: true)
-      expect(ENV['TEST_ENV']).to eq 'no'
-      expect(ENV['TEST_ENV2']).to eq 'yes'
+      server.start(envars)
+      expect(ENV['PERF_CHECK']).to              eq '1'
+      expect(ENV['PERF_CHECK_VERIFICATION']).to eq '1'
+      expect(ENV['PERF_CHECK_NOCACHING']).to    eq '0'
+      expect(ENV['TEST_VAR']).to                eq 'okay'
     end
   end
 
@@ -97,8 +85,8 @@ RSpec.describe PerfCheck::Server do
       it "should exit then start" do
         expect(server).to receive(:running?){ true }.ordered
         expect(server).to receive(:exit).ordered
-        expect(server).to receive(:start).with({reference: boolean}).ordered
-        server.restart(reference: false)
+        expect(server).to receive(:start).ordered
+        server.restart
       end
     end
 
@@ -106,8 +94,8 @@ RSpec.describe PerfCheck::Server do
       it "should start" do
         expect(server).to receive(:running?){ false }.ordered
         expect(server).not_to receive(:exit)
-        expect(server).to receive(:start).with({reference: boolean}).ordered
-        server.restart(reference: false)
+        expect(server).to receive(:start).ordered
+        server.restart
       end
     end
   end
@@ -115,8 +103,7 @@ RSpec.describe PerfCheck::Server do
   describe "#profile(&block)" do
     let(:net_http) do
       http = double()
-      allow(http).to receive(:start).with({reference: boolean})
-      allow(http).to receive(:start).with(no_args)
+      allow(http).to  receive(:start).with(no_args)
       expect(http).to receive(:finish).ordered
       expect(http).to receive(:read_timeout=)
       http
@@ -136,8 +123,7 @@ RSpec.describe PerfCheck::Server do
       expect(server).to receive(:prepare_to_profile)
       allow(server).to receive(:mem){ 12345 }
       allow(server).to receive(:latest_profiler_url){ "/abcxyz" }.at_least(:once)
-      allow(server).to receive(:start).with({reference: boolean})
-      allow(server).to receive(:start).with(no_args)
+      allow(server).to receive(:start)
     end
 
     it "should yield a Net::HTTP to block" do
