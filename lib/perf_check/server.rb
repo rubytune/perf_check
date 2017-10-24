@@ -136,12 +136,11 @@ class PerfCheck
     def restart(reference: nil)
       if !running?
         perf_check.logger.info("starting rails...")
-        start(reference: reference)
       else
         perf_check.logger.info("re-starting rails...")
         exit
-        start(reference: reference)
       end
+      start(reference: reference)
     end
 
     def host
