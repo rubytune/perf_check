@@ -109,7 +109,7 @@ class PerfCheck
     profile_test_case(reference_test, reference: true)
   end
 
-  def profile_test_case(test, index: nil, reference: false)
+  def profile_test_case(test, reference: false)
     trigger_before_start_callbacks(test)
     run_migrations_up if options.run_migrations?
     server.restart(reference: reference)
@@ -129,8 +129,8 @@ class PerfCheck
   end
 
   def profile_requests(reference: false)
-    test_cases.each_with_index do |test, i|
-      profile_test_case(test, index: i, reference: reference)
+    test_cases.each do |test|
+      profile_test_case(test, reference: reference)
     end
   end
 
