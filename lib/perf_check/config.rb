@@ -1,6 +1,8 @@
 require "optparse"
 require "shellwords"
 
+require_relative 'version'
+
 class PerfCheck
   def parse_arguments(argv)
     options.argv = argv.is_a?(String) ? Shellwords.shellsplit(argv) : argv
@@ -83,6 +85,11 @@ class PerfCheck
 
      opts.on("--diff-option OPT") do |opt|
        options.diff_options << opt
+     end
+
+     opts.on("--version") do
+       $stderr.puts "Perf-Check version #{PerfCheck::VERSION}"
+       exit
      end
 
      opts.separator ''
