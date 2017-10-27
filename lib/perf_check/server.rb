@@ -40,8 +40,18 @@ class PerfCheck
     end
 
     def pid
-      pidfile = "#{perf_check.app_root}/tmp/pids/server.pid"
-      File.read(pidfile).to_i if File.exists?(pidfile)
+      @pid ||= (File.read(pid_file).to_i if File.exists?(pid_file))
+    end
+
+    def pid_file
+      @pid_file ||= File.join(perf_check.app_root, "/tmp/pids/server.pid")
+    end
+
+    def remove_pid_file
+      if pid_file
+        File.unlink(pid_file) if File.exist?(pid_file)
+        @pid_file = nil
+      end
     end
 
     def mem
@@ -94,35 +104,62 @@ class PerfCheck
     end
 
     def exit
-      p = pid
-      if p
-        Process.kill('QUIT', pid)
-        sleep(1.5)
+      if pid && is_live_pid?(pid)
+        kill_process(pid) do
+          remove_pid_file
+        end
+      else
+        perf_check.logger.warn "Server PID=#{pid} is no longer running; cleaning up."
+        remove_pid_file
+      end
+      if pid
+        abort "Could not kill server PID=#{pid}!"
+      end
+      @running = false
+    end
+
+    def is_live_pid?(pid)
+      begin
+        Process.getpgid(pid)
+        true
+      rescue Errno::ESRCH
+        false
       end
     end
 
-    # start and restart now accepts a reference argument:
-    #
-    #   true  -- start with the reference envars set
-    #   false -- start with the test branch envars set
-    #   nil   -- start with the previously set reference set, or default to false
+    # kill a process, first with QUIT, then with KILL
+
+    def kill_process(pid)
+      %w( QUIT KILL ).each do |signal|
+        kill_pid(signal, pid)
+        if wait_pid(pid)
+          yield if block_given?
+          break
+        end
+      end
+    end
+
+    def kill_pid(signal, pid)
+      Process.kill(signal, pid) rescue nil
+    end
+
+    def wait_pid(pid)
+      Process.waitpid(pid) rescue nil
+    end
+
+    # start and restart accepts a hash of envar names and values
 
     def start(envars = nil)
       set_envars(envars)
       app_root = Shellwords.shellescape(perf_check.app_root)
-      system("cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null")
+      system("cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 > 2>&1 log/perf_check.log")
       sleep(1.5)
-
       @running = true
     end
 
     def restart(envars = nil)
-      if !running?
-        perf_check.logger.info("starting rails...")
-      else
-        perf_check.logger.info("re-starting rails...")
-        exit
-      end
+      perf_check.logger.info("#{running? ? 're-' : ''}starting rails...")
+      exit if running?
       start(envars)
     end
 
