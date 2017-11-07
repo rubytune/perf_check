@@ -149,7 +149,7 @@ class PerfCheck
     end
     test_envs = reference ? options.reference_envs : options.branch_envs
     @last_reference = reference
-    (test_envs || {}).each_pair { |var, val| env[var] = val }
+    test_envs.each_pair {|var, val| env[var] = val}
     env
   end
 

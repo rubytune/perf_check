@@ -50,8 +50,9 @@ class PerfCheck
     def remove_pid_file
       if pid_file
         File.unlink(pid_file) if File.exist?(pid_file)
-        @pid_file = nil
       end
+      @pid_file = nil
+      @pid = nil
     end
 
     def mem
@@ -152,7 +153,7 @@ class PerfCheck
     def start(envars = nil)
       set_envars(envars)
       app_root = Shellwords.shellescape(perf_check.app_root)
-      system("cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 > 2>&1 log/perf_check.log")
+      system("( cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031) | 2>&1 tee -a perf_check_debug.log")
       sleep(1.5)
       @running = true
     end

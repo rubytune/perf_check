@@ -19,6 +19,11 @@ RSpec.describe "bin/perf_check" do
     system("cd test_app") # && git checkout . && git checkout -q test_branch
   end
 
+  after do
+    pid_file = "test_app/tmp/pids/server.pid"
+    File.unlink(pid_file) if File.exist?(pid_file)
+  end
+
   describe 'bundler' do
     it 'should not fail on the test app' do
       out = perf_check(stderr:true)

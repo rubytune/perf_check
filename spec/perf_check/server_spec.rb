@@ -10,6 +10,9 @@ RSpec.describe PerfCheck::Server do
     PerfCheck::Server.new(perf_check)
   end
 
+  TEST_PID = 123456789
+  TEST_MEM = 54321
+
   after(:all) do
     FileUtils.rm_rf('tmp/spec')
   end
@@ -63,27 +66,47 @@ RSpec.describe PerfCheck::Server do
   end
 
   describe "#exit" do
+
+    before do
+      FileUtils.mkdir_p(File.dirname(server.pid_file)) unless File.exist?(server.pid_file)
+      File.open(server.pid_file, 'w+') { |file| file.puts TEST_PID }
+    end
+
     it "should kill -QUIT pid" do
-      expect(server).to receive(:pid){ 12345 }.at_least(:once)
-      expect(Process).to receive(:kill).with('QUIT', 12345)
+      server.start
       allow(server).to receive(:sleep)
+      expect(server).to receive(:pid).at_least(:once).and_call_original
+      expect(server).to receive(:is_live_pid?).at_least(:once).and_return(true)
+      expect(server).to receive(:kill_process).with(TEST_PID).and_call_original
+      expect(server).to receive(:kill_pid).at_least(:once).with('QUIT', TEST_PID)
+      expect(server).to receive(:kill_pid).at_least(:once).with('KILL', TEST_PID)
+      expect(server).to receive(:wait_pid).with(TEST_PID).and_return(false, true)
+      expect(server).to receive(:remove_pid_file).and_call_original
       server.exit
     end
   end
 
-  describe "#pid" do
-    it "should read app_root/tmp/pids/server.pid" do
-      system("mkdir", "-p", "#{server.perf_check.app_root}/tmp/pids")
-      system("echo 12345 >#{server.perf_check.app_root}/tmp/pids/server.pid")
+  describe "#pid_file" do
+    let(:pid_dir) { File.join(server.perf_check.app_root, "/tmp/pids") }
+    it "should return a path to the file holding the server pid" do
+      expect(server.pid_file).to eq File.join(pid_dir, 'server.pid')
+    end
+  end
 
-      expect(server.pid).to eq(12345)
+  describe "#pid" do
+    after { server.remove_pid_file }
+    it "should read the number at pid_file" do
+      pid_dir = File.dirname(server.pid_file)
+      File.mkdir_p(File.dirname(pid_dir)) unless Dir.exist?(pid_dir)
+      File.open(server.pid_file, 'w+') {|file| file.puts TEST_PID }
+      expect(server.pid).to eq(TEST_PID)
     end
   end
 
   describe "#restart" do
     context "already running" do
       it "should exit then start" do
-        expect(server).to receive(:running?){ true }.ordered
+        expect(server).to receive(:running?).at_least(:once){ true }.ordered
         expect(server).to receive(:exit).ordered
         expect(server).to receive(:start).ordered
         server.restart
@@ -92,7 +115,7 @@ RSpec.describe PerfCheck::Server do
 
     context "not running yet" do
       it "should start" do
-        expect(server).to receive(:running?){ false }.ordered
+        expect(server).to receive(:running?).at_least(:once){ false }.ordered
         expect(server).not_to receive(:exit)
         expect(server).to receive(:start).ordered
         server.restart
@@ -121,7 +144,7 @@ RSpec.describe PerfCheck::Server do
     before do
       expect(Net::HTTP).to receive(:new){ net_http }
       expect(server).to receive(:prepare_to_profile)
-      allow(server).to receive(:mem){ 12345 }
+      allow(server).to receive(:mem){ TEST_MEM }
       allow(server).to receive(:latest_profiler_url){ "/abcxyz" }.at_least(:once)
       allow(server).to receive(:start)
     end
