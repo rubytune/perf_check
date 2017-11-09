@@ -86,7 +86,7 @@ class PerfCheck
     end
 
     def bundle
-      Bundler.with_clean_env{ exec "bundle" }
+      Bundler.with_original_env{ exec "bundle" }
       unless $?.success?
         logger.fatal("Problem bundling! Bailing...")
         raise BundleError

@@ -3,14 +3,14 @@ require 'json'
 
 RSpec.describe "bin/perf_check" do
   def perf_check(*args, stderr: false)
-    Bundler.with_clean_env do
+    Bundler.with_original_env do
       tail = stderr ? " 2>&1" : "2>/dev/null"
       `cd test_app && bundle exec perf_check #{args.join(' ')} #{tail}`
     end
   end
 
   before(:all) do
-    Bundler.with_clean_env do
+    Bundler.with_original_env do
       system("cd test_app && bundle install && bundle exec rake db:setup")
     end
   end
