@@ -15,7 +15,6 @@ class PerfCheck
 
   def initialize(app_root)
     @app_root = app_root
-
     @options = OpenStruct.new(
       number_of_requests: 20,
       reference: 'master',
@@ -44,6 +43,7 @@ class PerfCheck
   end
 
   def load_config
+    File.stat(File.join(app_root,'Gemfile')).file?
     if File.exists?("#{app_root}/config/perf_check.rb")
       this = self
       Kernel.send(:define_method, :perf_check){ this }
@@ -137,14 +137,18 @@ class PerfCheck
 
   def run_migrations_up
     logger.info "Running db:migrate"
-    logger.info `cd #{app_root} && bundle exec rake db:migrate`
+    Bundler.with_original_env do
+      logger.info `cd #{app_root} && bundle exec rake db:migrate`
+    end
     git.clean_db
   end
 
   def run_migrations_down
-    git.migrations_to_run_down.each do |version|
-      logger.info "Running db:migrate:down VERSION=#{version}"
-      logger.info `cd #{app_root} && bundle exec rake db:migrate:down VERSION=#{version}`
+    Bundler.with_original_env do
+      git.migrations_to_run_down.each do |version|
+        logger.info "Running db:migrate:down VERSION=#{version}"
+        logger.info `cd #{app_root} && bundle exec rake db:migrate:down VERSION=#{version}`
+      end
     end
     git.clean_db
   end
