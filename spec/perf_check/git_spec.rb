@@ -2,8 +2,9 @@ require 'spec_helper'
 require 'securerandom'
 
 RSpec.describe PerfCheck::Git do
-  repo = File.join(__dir__, "tmp/spec/repo")
+  repo = File.join(__dir__, "../../tmp/spec/repo")
   repo_file = "file"
+  reference = "master"
   feature_branch = "another_branch"
   before do
     system("
@@ -19,7 +20,7 @@ RSpec.describe PerfCheck::Git do
   end
 
   after(:all) do
-    FileUtils.rm_rf(File.join(__dir__,'tmp/'))
+    FileUtils.rm_rf(File.join(__dir__,'../../tmp/spec/'))
   end
 
   let(:perf_check){ double(app_root: repo, logger: Logger.new('/dev/null')) }
@@ -35,10 +36,9 @@ RSpec.describe PerfCheck::Git do
     end
   end
 
-  describe "#checkout(branch, bundle)" do
+  describe "#checkout" do
     it "should checkout the branch" do
       git.checkout(feature_branch)
-
       branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
       expect(branch).to eq(feature_branch)
     end
@@ -51,23 +51,32 @@ RSpec.describe PerfCheck::Git do
           to raise_error(PerfCheck::Git::NoSuchBranch)
       end
     end
-  end
 
-  describe "#checkout_reference(ref)" do
+    it "should use hard reset from origin when deployed on a server" do
+      # Give our test repo the perf_check origin to fetch from
+      # This means the feature branch must exist in this remote git repo
+      system "cd #{repo};git remote add origin git@github.com:rubytune/perf_check.git"
+      git.checkout(feature_branch, hard_reset: true)
+      branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
+
+      # This file is only present on the "another_branch" branch
+      expect(File.file?(repo + '/' + repo_file)).to be_truthy
+    end
+
     it "should checkout master by default" do
       `cd #{repo} && git checkout #{feature_branch}`
 
-      git.checkout_reference
+      git.checkout(reference)
 
       branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
       expect(branch).to eq("master")
     end
-  end
 
-  describe "#checkout_current_branch" do
-    it "is an alias for checkout(current_branch)" do
-      expect(git).to receive(:checkout).with(git.current_branch, true)
-      git.checkout_current_branch
+    it "should be happy to checkout git.current_branch" do
+      `cd #{repo} && git checkout #{feature_branch}`
+      git.checkout(git.current_branch)
+      branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
+      expect(branch).to eq(feature_branch)
     end
   end
 

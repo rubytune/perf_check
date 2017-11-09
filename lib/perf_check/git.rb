@@ -18,32 +18,21 @@ class PerfCheck
       @current_branch = exec "git rev-parse --abbrev-ref HEAD"
     end
 
-    def checkout_reference(reference='master')
-      checkout(reference)
-    end
-
-    def checkout_current_branch(bundle=true)
-      checkout(@current_branch, bundle)
-    end
-
-    def checkout(branch, bundle=true)
+    def checkout(branch, bundle_after_checkout: true, hard_reset: false)
       logger.info("Checking out #{branch} and bundling... ")
-      exec "git checkout #{branch} --quiet"
+      if hard_reset
+        exec "git fetch --quiet && git reset --hard origin/#{branch} --quiet"
+      else
+        exec "git checkout #{branch} --quiet"
+      end
 
       unless $?.success?
         logger.fatal("Problem with git checkout! Bailing...")
         raise NoSuchBranch
       end
 
-      exec "git submodule update --quiet"
-
-      if bundle
-        Bundler.with_clean_env{ exec "bundle" }
-        unless $?.success?
-          logger.fatal("Problem bundling! Bailing...")
-          raise BundleError
-        end
-      end
+      update_submodules
+      bundle if bundle_after_checkout
     end
 
     def stash_if_needed
@@ -91,6 +80,18 @@ class PerfCheck
     end
 
     private
+
+    def update_submodules
+      exec "git submodule update --quiet"
+    end
+
+    def bundle
+      Bundler.with_original_env{ exec "bundle" }
+      unless $?.success?
+        logger.fatal("Problem bundling! Bailing...")
+        raise BundleError
+      end
+    end
 
     def current_migrations_not_on_master
       exec("git diff master --name-only --diff-filter=A db/migrate/").

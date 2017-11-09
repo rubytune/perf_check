@@ -15,7 +15,6 @@ class PerfCheck
 
   def initialize(app_root)
     @app_root = app_root
-
     @options = OpenStruct.new(
       number_of_requests: 20,
       reference: 'master',
@@ -28,7 +27,8 @@ class PerfCheck
                      '--ignore-matching-lines=/mini-profiler-resources/includes.js'],
       brief: false,
       caching: true,
-      json: false
+      json: false,
+      hard_reset: false
     )
 
     @logger = Logger.new(STDERR).tap do |logger|
@@ -43,6 +43,7 @@ class PerfCheck
   end
 
   def load_config
+    File.stat(File.join(app_root,'Gemfile')).file?
     if File.exists?("#{app_root}/config/perf_check.rb")
       this = self
       Kernel.send(:define_method, :perf_check){ this }
@@ -68,8 +69,6 @@ class PerfCheck
 
   def run
     begin
-      run_migrations_up if options.run_migrations?
-
       if options.compare_paths?
         raise "Must have two paths" if test_cases.count != 2
         profile_compare_paths_requests
@@ -77,18 +76,17 @@ class PerfCheck
         profile_requests
         if options.reference
           git.stash_if_needed
-          git.checkout_reference(options.reference)
+          git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
           test_cases.each{ |x| x.switch_to_reference_context }
 
           profile_requests
         end
       end
     ensure
-      run_migrations_down if options.run_migrations?
-      server.exit rescue nil
+      server.exit
       if options.reference
-        git.checkout_current_branch(false) rescue nil
-        (git.pop rescue nil) if git.stashed?
+        git.checkout(git.current_branch, bundle_after_checkout: true, hard_reset: options.hard_reset)
+        git.pop if git.stashed?
       end
 
       callbacks = {}
@@ -114,6 +112,7 @@ class PerfCheck
 
   def profile_test_case(test)
     trigger_before_start_callbacks(test)
+    run_migrations_up if options.run_migrations?
     server.restart
 
     test.cookie = options.cookie
@@ -126,6 +125,8 @@ class PerfCheck
     end
 
     test.run(server, options)
+  ensure
+    run_migrations_down if options.run_migrations?
   end
 
   def profile_requests
@@ -136,14 +137,18 @@ class PerfCheck
 
   def run_migrations_up
     logger.info "Running db:migrate"
-    logger.info `cd #{app_root} && bundle exec rake db:migrate`
+    Bundler.with_original_env do
+      logger.info `cd #{app_root} && bundle exec rake db:migrate`
+    end
     git.clean_db
   end
 
   def run_migrations_down
-    git.migrations_to_run_down.each do |version|
-      logger.info "Running db:migrate:down VERSION=#{version}"
-      logger.info `cd #{app_root} && bundle exec rake db:migrate:down VERSION=#{version}`
+    Bundler.with_original_env do
+      git.migrations_to_run_down.each do |version|
+        logger.info "Running db:migrate:down VERSION=#{version}"
+        logger.info `cd #{app_root} && bundle exec rake db:migrate:down VERSION=#{version}`
+      end
     end
     git.clean_db
   end
