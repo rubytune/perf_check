@@ -16,10 +16,13 @@ app_root =
     dir
   end
 
+def perf_check_server_processes
+  `ps axuww`.split(/\n/).grep(/perf_check/).join('\n')
+end
 
 if File.exists?("#{app_root}/tmp/pids/server.pid")
   $stderr.puts "It looks like a rails server is already running. Shut it down or remove the pid in tmp/pids/server.pid before continuing with perf_check."
-  $stderr.puts `ps axuww`.split(/\n/).grep(/perf_check/).join('\n')
+  $stderr.puts perf_check_server_processes
   abort("Aborting!")
 end
 
