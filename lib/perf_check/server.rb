@@ -153,7 +153,9 @@ class PerfCheck
     def start(envars = nil)
       set_envars(envars)
       app_root = Shellwords.shellescape(perf_check.app_root)
-      system("( cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031) | 2>&1 tee -a perf_check_debug.log")
+      Bundler.with_original_env do
+        `cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 | 2>&1 tee -a perf_check_debug.log`
+      end
       sleep(1.5)
       @running = true
     end

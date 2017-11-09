@@ -4,7 +4,7 @@ require 'spec_helper'
 RSpec.describe PerfCheck do
   let(:perf_check) do
     FileUtils.mkdir_p("tmp/spec")
-    PerfCheck.new('tmp/spec').tap{ |x| x.logger = Logger.new('/dev/null') }
+    PerfCheck.new('test_app').tap{ |x| x.logger = Logger.new('/dev/null') }
   end
 
   after(:all) do
