@@ -25,11 +25,11 @@ class PerfCheck
       end
 
       opts.on('--quick', '-q',
-              'Fire off 20 requests just on this branch (no comparison with master)') do
+              '20 requests just on this branch (no comparison with master)') do
         options.reference = nil
       end
 
-      opts.on('--no-caching', 'Do not enable fragment caching') do
+      opts.on('--no-caching', 'Do not enable fragment caching (Rails.cache will still work)') do
         options.caching = false
       end
 
@@ -52,6 +52,10 @@ class PerfCheck
       opts.separator "\nMisc"
       opts.on('-h', 'Display this help') do
         # Do nothing, just don't error
+      end
+
+      opts.on('--deployment','Use git fetch/reset instead of the safe/friendly checkout') do
+        options.hard_reset = true
       end
 
       opts.on('--cookie COOKIE', '-c') do |cookie|

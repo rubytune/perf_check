@@ -28,7 +28,8 @@ class PerfCheck
                      '--ignore-matching-lines=/mini-profiler-resources/includes.js'],
       brief: false,
       caching: true,
-      json: false
+      json: false,
+      hard_reset: false
     )
 
     @logger = Logger.new(STDERR).tap do |logger|
@@ -75,17 +76,17 @@ class PerfCheck
         profile_requests
         if options.reference
           git.stash_if_needed
-          git.checkout_reference(options.reference)
+          git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
           test_cases.each{ |x| x.switch_to_reference_context }
 
           profile_requests
         end
       end
     ensure
-      server.exit rescue nil
+      server.exit
       if options.reference
-        git.checkout_current_branch(false) rescue nil
-        (git.pop rescue nil) if git.stashed?
+        git.checkout(git.current_branch, bundle_after_checkout: true, hard_reset: options.hard_reset)
+        git.pop if git.stashed?
       end
 
       callbacks = {}
