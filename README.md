@@ -1,7 +1,7 @@
 ![](https://api.travis-ci.org/rubytune/perf_check.svg?branch=master)
 ## What is perf check
 
-`perf_check` is a quick-n-dirty way to benchmark branches of your rails app.
+`perf_check` is a quick-n-dirty way to benchmark git branches of your rails app.
 
 Imagine a rails-aware [apache ab](http://httpd.apache.org/docs/2.2/programs/ab.html).
 
@@ -9,17 +9,17 @@ We typically run it locally or on staging, to get a general idea of how our bran
 
 ## How to install
 
-Add it to your Gemfile, probably just in the `:development` group
+Add it to your Gemfile, stick it just in the `:development` group
 
 ```
 gem 'perf_check'
 ```
 
-You will actually have to commit this. Preferably to master, which will make life easiest. Basically, as long as the gem exists on whatever reference branch you are benchmarking against, you are good to go.
+You will actually have to commit this to git. Preferably to master, this will make life easiest. However, as long as the gem exists on whatever reference branch you are benchmarking against, you are good to go.
 
 ## How to use
 
-In it's simplest incarnation, just feed an url to it
+In it's simplest incarnation, just feed it an url:
 
 ```
 $ bundle exec perf_check /notes/browse
