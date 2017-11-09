@@ -1,4 +1,4 @@
-![](https://api.travis-ci.org/rubytune/perf_check.svg)
+![](https://api.travis-ci.org/rubytune/perf_check.svg?branch=master)
 ## What is perf check
 
 `perf_check` is a quick-n-dirty way to benchmark branches of your rails app.
