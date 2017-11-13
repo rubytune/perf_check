@@ -1,6 +1,8 @@
 require "optparse"
 require "shellwords"
 
+require_relative 'version'
+
 class PerfCheck
   def parse_arguments(argv)
     options.argv = argv.is_a?(String) ? Shellwords.shellsplit(argv) : argv
@@ -33,7 +35,7 @@ class PerfCheck
         options.caching = false
       end
 
-      opts.on('--run-migrations', 'Run migrations on the branch and unmigrate at the end') do
+      opts.on('--run-migrations', '-M', 'Run migrations on the branch and unmigrate at the end') do
         options[:run_migrations?] = true
       end
 
@@ -91,6 +93,11 @@ class PerfCheck
 
      opts.on("--diff-option OPT") do |opt|
        options.diff_options << opt
+     end
+
+     opts.on("--version") do
+       $stderr.puts "Perf-Check version #{PerfCheck::VERSION}"
+       exit
      end
 
      opts.separator ''
