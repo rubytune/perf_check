@@ -12,9 +12,13 @@ RSpec.describe PerfCheck do
   end
 
   describe "#load_config" do
+    let!(:config_dir)  { File.join(perf_check.app_root, 'config') }
+    let!(:config_file) { File.join(config_dir, 'perf_check.rb') }
+
+    before { FileUtils.mkdir_p(config_dir) }
+    after  { FileUtils.rm(config_file) }
+
     it "should require app_root/config/perf_check" do
-      config_file = "#{perf_check.app_root}/config/perf_check.rb"
-      system("mkdir", "-p", File.dirname(config_file))
       File.open(config_file, "w").close
 
       expect(perf_check).to receive(:load).with(config_file)
@@ -22,8 +26,6 @@ RSpec.describe PerfCheck do
     end
 
     it "should rescue exceptions from the config file" do
-      config_file = "#{perf_check.app_root}/config/perf_check.rb"
-      system("mkdir", "-p", File.dirname(config_file))
       File.open(config_file, "w"){ |f| f.write("nil.do_something_you_cant") }
 
       expect{ perf_check.load_config }.to raise_error(PerfCheck::ConfigLoadError)
