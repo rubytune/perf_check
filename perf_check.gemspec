@@ -8,6 +8,8 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
 
   s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rails', '>= 4.2'
+  s.add_development_dependency 'railties'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'fuubar'
   s.add_runtime_dependency 'colorize'
