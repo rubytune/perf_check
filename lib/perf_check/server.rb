@@ -37,10 +37,12 @@ class PerfCheck
 
     def initialize(perf_check)
       @perf_check = perf_check
+      @app_root   = perf_check.app_root
+      @log_file   = "/tmp/perf_check_server.log"
     end
 
     def pid
-      pidfile = "#{perf_check.app_root}/tmp/pids/server.pid"
+      pidfile = "#{@app_root}/tmp/pids/server.pid"
       File.read(pidfile).to_i if File.exists?(pidfile)
     end
 
@@ -49,18 +51,16 @@ class PerfCheck
     end
 
     def prepare_to_profile
-      app_root = perf_check.app_root
-      FileUtils.mkdir_p("#{app_root}/tmp/perf_check/miniprofiler")
-      Dir["#{app_root}/tmp/perf_check/miniprofiler/*"].each{|x| FileUtils.rm(x) }
+      FileUtils.mkdir_p("#{@app_root}/tmp/perf_check/miniprofiler")
+      Dir["#{@app_root}/tmp/perf_check/miniprofiler/*"].each{|x| FileUtils.rm(x) }
     end
 
     def latest_profiler_url
-      app_root = perf_check.app_root
-      mp_timer = Dir["#{app_root}/tmp/perf_check/miniprofiler/mp_timers_*"].first
+      mp_timer = Dir["#{@app_root}/tmp/perf_check/miniprofiler/mp_timers_*"].first
       if "#{mp_timer}" =~ /mp_timers_(\w+)/
         mp_link = "/mini-profiler-resources/results?id=#{$1}"
-        FileUtils.mkdir_p("#{app_root}/tmp/miniprofiler")
-        FileUtils.mv(mp_timer, mp_timer.sub(/^#{app_root}\/tmp\/perf_check\//, "#{app_root}/tmp/"))
+        FileUtils.mkdir_p("#{@app_root}/tmp/miniprofiler")
+        FileUtils.mv(mp_timer, mp_timer.sub(/^#{@app_root}\/tmp\/perf_check\//, "#{@app_root}/tmp/"))
       end
       mp_link
     end
@@ -110,9 +110,12 @@ class PerfCheck
         ENV['PERF_CHECK_NOCACHING'] = '1'
       end
 
-      app_root = Shellwords.shellescape(perf_check.app_root)
+      escaped_app_root = Shellwords.shellescape(@app_root)
       Bundler.with_original_env do
-        `cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null`
+        ENV['PATH'] = ENV['PATH'] + ':' + File.expand_path('./bin')
+        cmd = "cd #{escaped_app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >>#{@log_file} 2>&1"
+        perf_check.logger.info(cmd)
+        system(cmd)
       end
       sleep(1.5)
 
