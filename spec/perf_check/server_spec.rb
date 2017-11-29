@@ -74,10 +74,13 @@ RSpec.describe PerfCheck::Server do
   end
 
   describe "#pid" do
+    after(:each) do
+      system("rm #{server.perf_check.app_root}/tmp/pids/server.pid")
+    end
+
     it "should read app_root/tmp/pids/server.pid" do
       system("mkdir", "-p", "#{server.perf_check.app_root}/tmp/pids")
       system("echo 12345 >#{server.perf_check.app_root}/tmp/pids/server.pid")
-
       expect(server.pid).to eq(12345)
     end
   end

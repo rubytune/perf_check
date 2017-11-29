@@ -45,7 +45,7 @@ class PerfCheck
     end
 
     def mem
-      mem = `ps -o rss= -p #{pid}`.strip.to_f / 1024
+      `ps -o rss= -p #{pid}`.strip.to_f / 1024
     end
 
     def prepare_to_profile
