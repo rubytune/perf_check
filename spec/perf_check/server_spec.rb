@@ -5,7 +5,7 @@ require 'shellwords'
 RSpec.describe PerfCheck::Server do
   let(:server) do
     system("mkdir", "-p", "tmp/spec/app")
-    perf_check = PerfCheck.new('tmp/spec/app')
+    perf_check = PerfCheck.new('test_app')
     perf_check.logger = Logger.new('/dev/null')
     PerfCheck::Server.new(perf_check)
   end
@@ -15,21 +15,24 @@ RSpec.describe PerfCheck::Server do
   end
 
   describe "#start" do
+
+    after(:each) do
+      server.exit
+    end
+
     it "should spawn a daemonized rails server from app_root on #host:#port" do
-      expect(server).to receive(:system) do |command|
+      expect(server).to receive(:`) do |command|
         app_root = Shellwords.shellescape(server.perf_check.app_root)
-        expect(command).to match("cd #{app_root}")
         expect(command).to match("-b #{server.host}")
         expect(command).to match("-p #{server.port}")
         expect(command).to match("-d")
       end
 
       allow(server).to receive(:sleep)
-
       server.start
     end
 
-    it "should cause the server to go running?" do
+    it "should cause the server to run" do
       allow(server).to receive(:system)
       allow(server).to receive(:sleep)
 
