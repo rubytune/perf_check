@@ -3,6 +3,9 @@ require 'json'
 
 RSpec.describe "bin/perf_check" do
   def perf_check(*args, stderr: false)
+    `pwd`
+    `pwd`
+    `pwd`
     Bundler.with_clean_env do
       tail = stderr ? " 2>&1" : "2>/dev/null"
       Dir.chdir 'test_app' do
