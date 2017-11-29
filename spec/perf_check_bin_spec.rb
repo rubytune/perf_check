@@ -3,9 +3,11 @@ require 'json'
 
 RSpec.describe "bin/perf_check" do
   def perf_check(*args, stderr: false)
-    Bundler.with_original_env do
+    Bundler.with_clean_env do
       tail = stderr ? " 2>&1" : "2>/dev/null"
-      `cd test_app && bundle exec perf_check #{args.join(' ')} #{tail}`
+      Dir.chdir 'test_app' do
+        `bundle exec perf_check #{args.join(' ')} #{tail}`
+      end
     end
   end
 
