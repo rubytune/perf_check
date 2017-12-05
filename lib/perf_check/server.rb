@@ -47,7 +47,7 @@ class PerfCheck
     end
 
     def mem
-      mem = `ps -o rss= -p #{pid}`.strip.to_f / 1024
+      `ps -o rss= -p #{pid}`.strip.to_f / 1024
     end
 
     def prepare_to_profile
@@ -66,7 +66,7 @@ class PerfCheck
     end
 
     def profile
-      http = Net::HTTP.new(host, port).tap{ |http| http.read_timeout = 1000 }
+      http = Net::HTTP.new(host, port).tap{ |cnx| cnx.read_timeout = 1000 }
       response = nil
       prepare_to_profile
 
@@ -89,7 +89,7 @@ class PerfCheck
           result.backtrace = File.read(backtrace_file).lines.map(&:chomp)
         end
       end
-    rescue Errno::ECONNREFUSED => e
+    rescue Errno::ECONNREFUSED
       raise Exception.new("Couldn't connect to the rails server -- it either failed to boot or crashed")
     end
 
@@ -110,12 +110,11 @@ class PerfCheck
         ENV['PERF_CHECK_NOCACHING'] = '1'
       end
 
-      escaped_app_root = Shellwords.shellescape(@app_root)
-      Bundler.with_original_env do
-        ENV['PATH'] = ENV['PATH'] + ':' + File.expand_path('./bin')
-        cmd = "cd #{escaped_app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >>#{@log_file} 2>&1"
-        perf_check.logger.info(cmd)
-        system(cmd)
+      app_root = Shellwords.shellescape(perf_check.app_root)
+      Bundler.with_clean_env do
+        Dir.chdir app_root do
+          `bundle exec rails server -b 127.0.0.1 -d -p 3031 >>#{@log_file} 2>&1`
+        end
       end
       sleep(1.5)
 
