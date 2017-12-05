@@ -7,13 +7,20 @@ RSpec.describe PerfCheck do
     PerfCheck.new('test_app').tap{ |x| x.logger = Logger.new('/dev/null') }
   end
 
+  let(:config_file) do
+    "#{perf_check.app_root}/config/perf_check.rb"
+  end
+
   after(:all) do
     FileUtils.rm_rf('tmp/spec')
   end
 
   describe "#load_config" do
+    after do
+      FileUtils.rm config_file
+    end
+
     it "should require app_root/config/perf_check" do
-      config_file = "#{perf_check.app_root}/config/perf_check.rb"
       system("mkdir", "-p", File.dirname(config_file))
       File.open(config_file, "w").close
 
@@ -22,7 +29,6 @@ RSpec.describe PerfCheck do
     end
 
     it "should rescue exceptions from the config file" do
-      config_file = "#{perf_check.app_root}/config/perf_check.rb"
       system("mkdir", "-p", File.dirname(config_file))
       File.open(config_file, "w"){ |f| f.write("nil.do_something_you_cant") }
 

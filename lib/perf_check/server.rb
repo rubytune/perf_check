@@ -45,7 +45,7 @@ class PerfCheck
     end
 
     def mem
-      mem = `ps -o rss= -p #{pid}`.strip.to_f / 1024
+      `ps -o rss= -p #{pid}`.strip.to_f / 1024
     end
 
     def prepare_to_profile
@@ -111,8 +111,10 @@ class PerfCheck
       end
 
       app_root = Shellwords.shellescape(perf_check.app_root)
-      Bundler.with_original_env do
-        `cd #{app_root} && bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null`
+      Bundler.with_clean_env do
+        Dir.chdir app_root do
+          `bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null`
+        end
       end
       sleep(1.5)
 
