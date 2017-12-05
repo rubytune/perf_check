@@ -55,7 +55,7 @@ RSpec.describe PerfCheck::Git do
     it "should use hard reset from origin when deployed on a server" do
       # Give our test repo the perf_check origin to fetch from
       # This means the feature branch must exist in this remote git repo
-      system "cd #{repo};git remote add origin git@github.com:rubytune/perf_check.git"
+      system "cd #{repo};git remote add origin https://github.com/rubytune/perf_check.git"
       git.checkout(feature_branch, hard_reset: true)
       branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
 
