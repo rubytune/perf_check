@@ -113,7 +113,7 @@ class PerfCheck
       app_root = Shellwords.shellescape(perf_check.app_root)
       Bundler.with_clean_env do
         Dir.chdir app_root do
-          `bundle exec rails server -b 127.0.0.1 -d -p 3031 >>#{@log_file} 2>&1`
+          `bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null`
         end
       end
       sleep(1.5)
