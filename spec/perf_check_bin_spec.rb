@@ -15,10 +15,8 @@ RSpec.describe "bin/perf_check" do
   end
 
   before(:all) do
-    Bundler.with_original_env do
-      Dir.chdir 'test_app' do
-        system("bundle install && bundle exec rake db:setup")
-       end
+    Bundler.with_clean_env do
+      system("cd test_app && bundle install && bundle exec rake db:setup")
     end
   end
 
