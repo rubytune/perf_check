@@ -23,9 +23,9 @@ class PerfCheck
 
       (options.number_of_requests+1).times do |i|
         profile = issue_request(server, options)
-        next if i.zero? # first request just warms up the server
+        next if i < 2 # first 2 requests warm up the server and get tossed
 
-        if options.verify_no_diff && i == 1
+        if options.verify_no_diff && i == 2
           response_for_comparison(profile.response_body)
         end
 

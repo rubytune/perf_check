@@ -64,9 +64,9 @@ Benchmarking /notes/browse:
 In the above example, `perf_check` assumes you are already on a feature branch. It then:
 
 * Launches its own rails server on a custom port (with fragment caching enabled)
-* Hits /user/45/posts 11 times (throws away the first request)
+* Hits /user/45/posts 11 times (throws away the first 2 requests)
 * Git stashes in case you have uncommitted stuff. Checks out master. Restarts server
-* Hits /user/45/posts 11 times (throws away the first request)
+* Hits /user/45/posts 11 times (throws away the first 2 requests)
 * Applies the stash if it existed
 * Prints results
 
