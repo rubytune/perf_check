@@ -22,9 +22,9 @@ RSpec.describe PerfCheck::TestCase do
                      profile_url: '', response_body: 'abcdef')
     end
 
-    it "should issue_request options.number_of_requests+1 times" do
+    it "should issue_request options.number_of_requests + 2 times" do
       expect(test_case).to receive(:issue_request){ profile }.
-                            with(server, options).exactly(4).times
+                            with(server, options).exactly(5).times
       test_case.run(server, options)
     end
 
@@ -43,7 +43,7 @@ RSpec.describe PerfCheck::TestCase do
     it "should stop issuing requests if an unexpected response code is returned" do
       i = 0
       allow(test_case).to receive(:issue_request) do
-        profile.response_code = [200, 200, 500, 200][i]
+        profile.response_code = [200, 200, 200, 500, 200][i]
         i = i + 1
         profile.dup
       end
