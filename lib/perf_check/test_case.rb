@@ -21,9 +21,9 @@ class PerfCheck
         perf_check.logger.info("\t"+['request', 'latency', 'server rss', 'status', 'queries', 'profiler data'].map(&:underline).join("   "))
       end
 
-      (options.number_of_requests+1).times do |i|
+      (options.number_of_requests + 2).times do |i|
         profile = issue_request(server, options)
-        next if i < 2 # first 2 requests warm up the server and get tossed
+        next if i < 2 # first 2 requests warm up the server/db and get tossed
 
         if options.verify_no_diff && i == 2
           response_for_comparison(profile.response_body)
