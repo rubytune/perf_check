@@ -169,8 +169,8 @@ RSpec.describe PerfCheck::TestCase do
 
     describe "#(this|reference)_query_count" do
       it "should be the average this/reference profiles query count" do
-        expect(test_case.this_latency).to eq(5.5)
-        expect(test_case.reference_latency).to eq(15.0)
+        expect(test_case.this_query_count).to eq(5)
+        expect(test_case.reference_query_count).to eq(15.0)
       end
     end
 
