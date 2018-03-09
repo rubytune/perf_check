@@ -111,18 +111,23 @@ class PerfCheck
     end
 
     def start
-      ENV['PERF_CHECK'] = '1'
+      perf_check_args = { 'PERF_CHECK' => '1' }
       if perf_check.options.verify_no_diff
-        ENV['PERF_CHECK_VERIFICATION'] = '1'
+        perf_check_args['PERF_CHECK_VERIFICATION'] = '1'
       end
       unless perf_check.options.caching
-        ENV['PERF_CHECK_NOCACHING'] = '1'
+        perf_check_args['PERF_CHECK_NOCACHING'] = '1'
       end
 
       app_root = Shellwords.shellescape(perf_check.app_root)
-      Bundler.with_clean_env do
+      Bundler.with_original_env do
         Dir.chdir app_root do
-          `bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null`
+          pid = Process.spawn(
+            perf_check_args,
+            "bundle exec rails server -b #{host} -d -p #{port}",
+            [:out] => '/dev/null'
+          )
+          Process.wait pid
         end
       end
       sleep(1.5)
