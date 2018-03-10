@@ -39,9 +39,12 @@ class PerfCheck
       @perf_check = perf_check
     end
 
+    def pidfile
+      @_pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
+    end
+
     def server_file_pid
-      pidfile = "#{perf_check.app_root}/tmp/pids/server.pid"
-      File.read(pidfile).to_i if File.exists?(pidfile)
+      File.read(pidfile).to_i if File.exist?(pidfile)
     end
 
     def lsof_pid
@@ -103,10 +106,10 @@ class PerfCheck
     end
 
     def exit
-      p = pid
-      if p
-        Process.kill('QUIT', pid)
+      if pid
+        Process.kill('-9', pid)
         sleep(1.5)
+        File.delete(pidfile) if File.exist?(pidfile)
       end
     end
 
