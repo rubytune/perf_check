@@ -99,7 +99,7 @@ class PerfCheck
 
     def exit
       if pid
-        Process.kill('-9', pid)
+        Process.kill('KILL', pid)
         sleep(1.5)
         File.delete(pidfile) if File.exist?(pidfile)
       end
