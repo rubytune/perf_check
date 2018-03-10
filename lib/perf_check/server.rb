@@ -40,20 +40,12 @@ class PerfCheck
     end
 
     def pidfile
-      @_pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
-    end
-
-    def server_file_pid
-      File.read(pidfile).to_i if File.exist?(pidfile)
-    end
-
-    def lsof_pid
-      pid = `lsof -i tcp:#{port} -t`
-      pid.to_i unless pid.empty?
+      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
     end
 
     def pid
-      @_pid ||= lsof_pid || server_file_pid
+      pid = `lsof -i tcp:#{port} -t`
+      pid.to_i unless pid.empty?
     end
 
     def mem
