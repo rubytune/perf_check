@@ -3,10 +3,13 @@ require 'spec_helper'
 require 'shellwords'
 
 RSpec.describe PerfCheck::Server do
+  let(:perf_check)  do
+    perf_check_instance = PerfCheck.new('test_app')
+    perf_check_instance.logger = Logger.new('/dev/null')
+    perf_check_instance
+  end
   let(:server) do
     system("mkdir", "-p", "tmp/spec/app")
-    perf_check = PerfCheck.new('test_app')
-    perf_check.logger = Logger.new('/dev/null')
     PerfCheck::Server.new(perf_check)
   end
 
