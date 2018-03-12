@@ -67,10 +67,10 @@ RSpec.describe PerfCheck::Server do
     end
   end
 
-  describe "#exit" do
-    it "should kill -QUIT pid" do
+  describe "exit" do
+    it "should kill -KILL pid" do
       expect(server).to receive(:pid){ 12345 }.at_least(:once)
-      expect(Process).to receive(:kill).with('QUIT', 12345)
+      expect(Process).to receive(:kill).with('KILL', 12345)
       allow(server).to receive(:sleep)
       server.exit
     end
