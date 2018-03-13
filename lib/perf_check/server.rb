@@ -39,13 +39,8 @@ class PerfCheck
       @perf_check = perf_check
     end
 
-    def pidfile
-      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
-    end
-
     def pid
-      pid = `lsof -i tcp:#{port} -t`
-      pid.to_i unless pid.empty?
+      File.read(pidfile).to_i if File.exists?(pidfile)
     end
 
     def mem
@@ -154,5 +149,11 @@ class PerfCheck
     end
 
     class Profile < OpenStruct; end
+
+    private
+
+    def pidfile
+      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
+    end
   end
 end

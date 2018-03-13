@@ -149,20 +149,14 @@ RSpec.describe PerfCheck::Server do
   end
 
   describe "#pid" do
-    let(:server_mock) do
-      server_mock_pid = Process.spawn("nc -l #{server.port} &")
+    after(:each) do
+      system("rm #{server.perf_check.app_root}/tmp/pids/server.pid")
     end
-    before do
-      server_mock
-    end
-    after do
-      Process.kill('KILL', server_mock)
-    end
-    it "use lsof to find pid of process bound to port" do
-      expect(server).to receive(:`) do |command|
-        expect(command).to eq("lsof -i tcp:#{server.port} -t")
-      end.and_call_original
-      expect(server.pid).to_not be_nil
+
+    it "should read app_root/tmp/pids/server.pid" do
+      system("mkdir", "-p", "#{server.perf_check.app_root}/tmp/pids")
+      system("echo 12345 >#{server.perf_check.app_root}/tmp/pids/server.pid")
+      expect(server.pid).to eq(12345)
     end
   end
 
