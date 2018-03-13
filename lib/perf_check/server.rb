@@ -40,7 +40,6 @@ class PerfCheck
     end
 
     def pid
-      pidfile = "#{perf_check.app_root}/tmp/pids/server.pid"
       File.read(pidfile).to_i if File.exists?(pidfile)
     end
 
@@ -94,26 +93,31 @@ class PerfCheck
     end
 
     def exit
-      p = pid
-      if p
-        Process.kill('QUIT', pid)
+      if pid
+        Process.kill('KILL', pid)
         sleep(1.5)
+        File.delete(pidfile) if File.exist?(pidfile)
       end
     end
 
     def start
-      ENV['PERF_CHECK'] = '1'
+      perf_check_args = { 'PERF_CHECK' => '1' }
       if perf_check.options.verify_no_diff
-        ENV['PERF_CHECK_VERIFICATION'] = '1'
+        perf_check_args['PERF_CHECK_VERIFICATION'] = '1'
       end
       unless perf_check.options.caching
-        ENV['PERF_CHECK_NOCACHING'] = '1'
+        perf_check_args['PERF_CHECK_NOCACHING'] = '1'
       end
 
       app_root = Shellwords.shellescape(perf_check.app_root)
-      Bundler.with_clean_env do
+      Bundler.with_original_env do
         Dir.chdir app_root do
-          `bundle exec rails server -b 127.0.0.1 -d -p 3031 >/dev/null`
+          pid = Process.spawn(
+            perf_check_args,
+            "bundle exec rails server -b #{host} -d -p #{port}",
+            [:out] => '/dev/null'
+          )
+          Process.wait pid
         end
       end
       sleep(1.5)
@@ -145,5 +149,11 @@ class PerfCheck
     end
 
     class Profile < OpenStruct; end
+
+    private
+
+    def pidfile
+      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
+    end
   end
 end

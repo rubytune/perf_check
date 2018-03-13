@@ -3,10 +3,13 @@ require 'spec_helper'
 require 'shellwords'
 
 RSpec.describe PerfCheck::Server do
+  let(:perf_check)  do
+    perf_check_instance = PerfCheck.new('test_app')
+    perf_check_instance.logger = Logger.new('/dev/null')
+    perf_check_instance
+  end
   let(:server) do
     system("mkdir", "-p", "tmp/spec/app")
-    perf_check = PerfCheck.new('test_app')
-    perf_check.logger = Logger.new('/dev/null')
     PerfCheck::Server.new(perf_check)
   end
 
@@ -20,13 +23,26 @@ RSpec.describe PerfCheck::Server do
       server.exit
     end
 
+    before do
+      allow(Dir).to receive(:chdir).and_call_original
+      allow(Process).to receive(:spawn) { 0 }
+      allow(Process).to receive(:wait)
+    end
+
+    let(:perf_check_shell_command) {
+      "bundle exec rails server -b #{server.host} -d -p #{server.port}"
+    }
+    let(:perf_check_server_file_descriptors) { { [:out] => '/dev/null' } }
+
     it "should spawn a daemonized rails server from app_root on #host:#port" do
-      expect(server).to receive(:`) do |command|
-        app_root = Shellwords.shellescape(server.perf_check.app_root)
-        expect(command).to match("-b #{server.host}")
-        expect(command).to match("-p #{server.port}")
-        expect(command).to match("-d")
-      end
+      app_root = Shellwords.shellescape(server.perf_check.app_root)
+      expect(Dir).to receive(:chdir).with(app_root).and_call_original
+
+      expect(Process).to receive(:spawn).with(
+        { 'PERF_CHECK' => '1' },
+        perf_check_shell_command,
+        a_hash_including(perf_check_server_file_descriptors)
+      ).once
 
       allow(server).to receive(:sleep)
       server.start
@@ -41,33 +57,92 @@ RSpec.describe PerfCheck::Server do
       expect(server.running?).to be true
     end
 
-    it "should set env variables depending on perf_check options" do
-      ENV['PERF_CHECK'] = '0'
-      ENV['PERF_CHECK_VERIFICATION'] = '0'
-      ENV['PERF_CHECK_NOCACHING'] = '0'
-      allow(server).to receive(:system)
-      allow(server).to receive(:sleep)
+    context "when building Process.spawn argument hash from perf_check.options" do
+      before do
+        allow(server).to receive(:system)
+        allow(server).to receive(:sleep)
+      end
 
-      server.start
-      expect(ENV['PERF_CHECK']).to eq('1')
-      expect(ENV['PERF_CHECK_VERIFICATION']).to eq('0')
-      expect(ENV['PERF_CHECK_NOCACHING']).to eq('0')
+      context "when setting PERF_CHECK_VERIFICATION" do
+        before do
+          allow(perf_check).to receive_message_chain(:options, :caching) { false }
+          allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { verify_no_diff }
+        end
+        context "when options.verify_no_diff is true" do
+          let(:verify_no_diff) { true }
+          it "sets PERF_CHECK_VERIFICATION key in hash" do
+            expect(Process).to receive(:spawn).with(
+              a_hash_including(
+                'PERF_CHECK' => '1',
+                'PERF_CHECK_VERIFICATION' => '1',
+                'PERF_CHECK_NOCACHING' => '1'
+              ),
+              perf_check_shell_command,
+              a_hash_including(perf_check_server_file_descriptors)
+            ).once
 
-      server.perf_check.options.verify_no_diff = true
-      server.start
-      expect(ENV['PERF_CHECK_VERIFICATION']).to eq('1')
-      expect(ENV['PERF_CHECK_NOCACHING']).to eq('0')
+            server.start
+          end
+        end
+        context "when options.verify_no_diff is false" do
+          let(:verify_no_diff) { false }
+          it "does not set PERF_CHECK_VERIFICATION key in hash" do
+            expect(Process).to receive(:spawn).with(
+              a_hash_including(
+                'PERF_CHECK' => '1',
+                'PERF_CHECK_NOCACHING' => '1'
+              ),
+              perf_check_shell_command,
+              a_hash_including(perf_check_server_file_descriptors)
+            ).once
 
-      server.perf_check.options.caching = false
-      server.start
-      expect(ENV['PERF_CHECK_NOCACHING']).to eq('1')
+            server.start
+          end
+        end
+      end
+
+      context "when setting PERF_CHECK_NO_CACHING" do
+        before do
+          allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
+          allow(perf_check).to receive_message_chain(:options, :caching) { caching }
+        end
+        context "when options.caching is false" do
+          let(:caching) { false }
+          it "sets PERF_CHECK_NOCACHING key in hash" do
+            expect(Process).to receive(:spawn).with(
+              a_hash_including(
+                'PERF_CHECK' => '1',
+                'PERF_CHECK_NOCACHING' => '1'
+              ),
+              perf_check_shell_command,
+              a_hash_including(perf_check_server_file_descriptors)
+            ).once
+
+            server.start
+          end
+        end
+        context "when options.caching is true" do
+          let(:caching) { true }
+          it "does not set PERF_CHECK_NOCACHING key in hash" do
+            expect(Process).to receive(:spawn).with(
+              a_hash_including(
+                'PERF_CHECK' => '1'
+              ),
+              perf_check_shell_command,
+              a_hash_including(perf_check_server_file_descriptors)
+            ).once
+
+            server.start
+          end
+        end
+      end
     end
   end
 
-  describe "#exit" do
-    it "should kill -QUIT pid" do
+  describe "exit" do
+    it "should kill -KILL pid" do
       expect(server).to receive(:pid){ 12345 }.at_least(:once)
-      expect(Process).to receive(:kill).with('QUIT', 12345)
+      expect(Process).to receive(:kill).with('KILL', 12345)
       allow(server).to receive(:sleep)
       server.exit
     end
