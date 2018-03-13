@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'perf_check'
-  s.version = '0.9.1'
-  s.date = '2017-11-09'
+  s.version = '0.10.0'
+  s.date = '2018-03-13'
   s.summary = 'PERF CHECKKK!'
   s.authors = ['rubytune']
   s.homepage = 'https://github.com/rubytune/perf_check'
