@@ -39,7 +39,7 @@ RSpec.describe PerfCheck::Server do
       expect(Dir).to receive(:chdir).with(app_root).and_call_original
 
       expect(Process).to receive(:spawn).with(
-        { 'PERF_CHECK' => '1' },
+        { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' },
         perf_check_shell_command,
         a_hash_including(perf_check_server_file_descriptors)
       ).once
