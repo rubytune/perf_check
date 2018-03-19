@@ -101,7 +101,7 @@ class PerfCheck
     end
 
     def start
-      perf_check_args = { 'PERF_CHECK' => '1' }
+      perf_check_args = { 'PERF_CHECK': '1', 'DISABLE_SPRING': '1' }
       if perf_check.options.verify_no_diff
         perf_check_args['PERF_CHECK_VERIFICATION'] = '1'
       end
