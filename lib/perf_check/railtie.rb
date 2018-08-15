@@ -14,7 +14,7 @@ class PerfCheck
       # Force caching & production-like settings
       config = Rails::Application::Configuration
       config.send(:define_method, :cache_classes){ true }
-      config.send(:define_method, :eager_load){true}
+      config.send(:define_method, :eager_load){ true }
 
       fragment_caching = !ENV['PERF_CHECK_NOCACHING']
       config = ActiveSupport::Configurable::Configuration
