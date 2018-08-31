@@ -88,6 +88,7 @@ GEM
     multi_json (1.13.1)
     nokogiri (1.8.4)
       mini_portile2 (~> 2.3.0)
+    puma (3.12.0)
     rack (1.6.10)
     rack-mini-profiler (1.0.0)
       rack (>= 1.2.0)
@@ -157,6 +158,7 @@ DEPENDENCIES
   jbuilder (~> 2.0)
   jquery-rails
   perf_check!
+  puma
   rack-mini-profiler
   rails (= 4.2.10)
   sass-rails (~> 4.0.3)
