@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    perf_check (0.10.1)
+    perf_check (0.10.2)
       colorize
       diffy
       rake
@@ -12,12 +12,12 @@ GEM
     coderay (1.1.2)
     colorize (0.8.1)
     diff-lcs (1.3)
-    diffy (3.2.0)
+    diffy (3.2.1)
     method_source (0.9.0)
     pry (0.11.3)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
-    rake (12.3.0)
+    rake (12.3.1)
     rspec (3.7.0)
       rspec-core (~> 3.7.0)
       rspec-expectations (~> 3.7.0)
@@ -41,4 +41,4 @@ DEPENDENCIES
   rspec
 
 BUNDLED WITH
-   1.16.1
+   1.16.4
