@@ -15,7 +15,7 @@ class PerfCheck
       @git_root = perf_check.app_root
       @logger = perf_check.logger
 
-      @current_branch = exec "git rev-parse --abbrev-ref HEAD"
+      @current_branch = perf_check.options.branch || exec("git rev-parse --abbrev-ref HEAD")
     end
 
     def checkout(branch, bundle_after_checkout: true, hard_reset: false)

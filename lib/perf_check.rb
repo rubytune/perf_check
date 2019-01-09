@@ -18,6 +18,7 @@ class PerfCheck
     @options = OpenStruct.new(
       number_of_requests: 20,
       reference: 'master',
+      branch: nil,
       cookie: nil,
       headers: {},
       http_statuses: [200],
