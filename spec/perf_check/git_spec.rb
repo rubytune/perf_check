@@ -39,7 +39,6 @@ RSpec.describe PerfCheck::Git do
       expect(git_with_branch_option.current_branch).to eq("specified-branch")
     end
 
-
     it "should initialize #logger to perf_check.logger" do
       expect(git.logger).to eq(perf_check.logger)
     end
