@@ -23,12 +23,20 @@ RSpec.describe PerfCheck::Git do
     FileUtils.rm_rf(File.join(__dir__,'../../tmp/spec/'))
   end
 
-  let(:perf_check){ double(app_root: repo, logger: Logger.new('/dev/null')) }
+  let(:perf_check){ double(app_root: repo, logger: Logger.new('/dev/null'), options: OpenStruct.new(branch: nil)) }
   let(:git){ PerfCheck::Git.new(perf_check) }
+
+  let(:perf_check_with_branch_option){ double(app_root: repo, logger: Logger.new('/dev/null'), options: OpenStruct.new(branch: 'specified-branch')) }
+  let(:git_with_branch_option){ PerfCheck::Git.new(perf_check_with_branch_option) }
+
 
   describe "#initialize" do
     it "should find the current branch checked out in perf_check.app_root" do
       expect(git.current_branch).to eq("master")
+    end
+
+    it "should find the branch specified in --branch if the option is set" do
+      expect(git_with_branch_option.current_branch).to eq("specified-branch")
     end
 
     it "should initialize #logger to perf_check.logger" do

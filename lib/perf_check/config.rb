@@ -24,6 +24,11 @@ class PerfCheck
         options.reference = commit
       end
 
+      opts.on('--branch COMMIT', '-branch',
+              'Set the current branch to benchmark against (defaults to the branch you currently have checked out)') do |branch|
+        options.branch = branch
+      end
+
       opts.on('--quick', '-q',
               '20 requests just on this branch (no comparison with master)') do
         options.reference = nil
