@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    perf_check (0.10.2)
+    perf_check (0.10.3)
       colorize
       diffy
       rake
