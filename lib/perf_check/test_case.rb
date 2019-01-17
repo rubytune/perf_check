@@ -8,6 +8,7 @@ class PerfCheck
     attr_accessor :resource
     attr_accessor :cookie, :this_response, :reference_response
     attr_accessor :this_profiles, :reference_profiles
+    attr_accessor :http_status, :max_memory, :error_backtrace
 
     def initialize(perf_check, route)
       @perf_check = perf_check
@@ -34,17 +35,27 @@ class PerfCheck
                         i, profile.latency, profile.server_memory,
                         profile.response_code, profile.query_count, profile.profile_url)
           perf_check.logger.info(row)
+          self.max_memory = profile.server_memory
         end
 
         context_profiles << profile
+
+        self.http_status = '200'
+
         unless options.http_statuses.include?(profile.response_code)
+          self.http_status = profile.response_code
+          
           error = sprintf("\t  :\tFAILED! (HTTP %d)", profile.response_code)
           perf_check.logger.warn(error.red.bold)
           perf_check.logger.warn("\t   The server responded with an invalid http code")
           if profile.backtrace
             perf_check.logger.warn("Backtrace found:")
             backtrace = [profile.backtrace[0], *profile.backtrace.grep(/#{perf_check.app_root}/)]
-            backtrace.each{ |line| perf_check.logger.warn("  #{line}") }
+            self.error_backtrace = ''
+            backtrace.each do |line|
+              perf_check.logger.warn("  #{line}")
+              self.error_backtrace += "#{line}\n"
+            end
           end
           break
         end
