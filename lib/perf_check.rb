@@ -29,7 +29,8 @@ class PerfCheck
       brief: false,
       caching: true,
       json: false,
-      hard_reset: false
+      hard_reset: false,
+      environment: 'development'
     )
 
     @logger = Logger.new(STDERR).tap do |logger|

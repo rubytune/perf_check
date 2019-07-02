@@ -15,52 +15,65 @@ class PerfCheck
 
       opts.separator "\nBenchmark options:"
       opts.on('--requests N', '-n',
-              'Use N requests in benchmark, defaults to 20') do |n|
+        'Use N requests in benchmark, defaults to 20') do |n|
         options.number_of_requests = n.to_i
       end
 
       opts.on('--reference COMMIT', '-r',
-              'Benchmark against COMMIT instead of master') do |commit|
+        'Benchmark against COMMIT instead of master') do |commit|
         options.reference = commit
       end
 
       opts.on('--branch COMMIT', '-branch',
-              'Set the current branch to benchmark against (defaults to the branch you currently have checked out)') do |branch|
+        'Set the current branch to benchmark against (defaults to the branch you currently have checked out)') do |branch|
         options.branch = branch
       end
 
       opts.on('--quick', '-q',
-              '20 requests just on this branch (no comparison with master)') do
+        '20 requests just on this branch (no comparison with master)') do
         options.reference = nil
       end
 
-      opts.on('--no-caching', 'Do not enable fragment caching (Rails.cache will still work)') do
-        options.caching = false
-      end
-
-      opts.on('--run-migrations', 'Run migrations on the branch and unmigrate at the end') do
-        options[:run_migrations?] = true
-      end
-
-      opts.on('--compare-paths', 'Compare two paths against each other on the same branch') do
+      opts.on('--compare-paths',
+        'Compare two paths against each other on the same branch') do
         options[:compare_paths?] = true
       end
 
-      opts.on('--302-success', 'Consider HTTP 302 code a successful request') do
+      opts.on('--302-success',
+        'Consider HTTP 302 code a successful request') do
         options.http_statuses.push(302)
       end
 
-      opts.on('--302-failure', 'Consider HTTP 302 code an unsuccessful request') do
+      opts.on('--302-failure',
+        'Consider HTTP 302 code an unsuccessful request') do
         options.http_statuses.delete(302)
       end
 
+      opts.separator "\nRails environment"
+
+      opts.on('--deployment','Use git fetch/reset instead of the safe/friendly checkout') do
+        options.hard_reset = true
+      end
+
+      opts.on('--environment', '-e',
+        'Change the rails environment we are profiling. Defaults to development') do |env|
+        options.environment = env
+      end
+
+      opts.on('--no-caching',
+        'Do not enable fragment caching (Rails.cache will still work)') do
+        options.caching = false
+      end
+
       opts.separator "\nMisc"
+
       opts.on('-h', 'Display this help') do
         # Do nothing, just don't error
       end
 
-      opts.on('--deployment','Use git fetch/reset instead of the safe/friendly checkout') do
-        options.hard_reset = true
+      opts.on('--run-migrations',
+        'Run migrations on the branch and unmigrate at the end') do
+        options[:run_migrations?] = true
       end
 
       opts.on('--cookie COOKIE', '-c') do |cookie|
