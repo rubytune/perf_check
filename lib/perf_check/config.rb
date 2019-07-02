@@ -57,13 +57,13 @@ class PerfCheck
 
       opts.on('--environment', '-e',
         'Change the rails environment we are profiling. Defaults to development') do |env|
-        options.environment = ''
+        options.environment = env
+      end
 
       opts.on('--no-caching',
         'Do not enable fragment caching (Rails.cache will still work)') do
         options.caching = false
       end
-
 
       opts.separator "\nMisc"
 

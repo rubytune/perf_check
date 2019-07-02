@@ -30,7 +30,7 @@ class PerfCheck
       caching: true,
       json: false,
       hard_reset: false,
-      environment: 'development',
+      environment: 'development'
     )
 
     @logger = Logger.new(STDERR).tap do |logger|
