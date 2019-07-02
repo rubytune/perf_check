@@ -69,6 +69,7 @@ RSpec.describe PerfCheck::Server do
           allow(perf_check).to receive_message_chain(:options, :environment) { nil }
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { verify_no_diff }
         end
+
         context "when options.verify_no_diff is true" do
           let(:verify_no_diff) { true }
           it "sets PERF_CHECK_VERIFICATION key in hash" do
@@ -85,6 +86,7 @@ RSpec.describe PerfCheck::Server do
             server.start
           end
         end
+
         context "when options.verify_no_diff is false" do
           let(:verify_no_diff) { false }
           it "does not set PERF_CHECK_VERIFICATION key in hash" do
@@ -102,12 +104,32 @@ RSpec.describe PerfCheck::Server do
         end
       end
 
+      context "when changing the env" do
+        before do
+          allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
+          allow(perf_check).to receive_message_chain(:options, :environment) { "production" }
+          allow(perf_check).to receive_message_chain(:options, :caching) { true }
+        end
+
+        it "changes options passed to rails CLI" do
+          perf_check_production_command = "bundle exec rails server -b #{server.host} -d -p #{server.port} -e production"
+          expect(Process).to receive(:spawn).with(
+            a_hash_including(
+                'PERF_CHECK' => '1'
+              ),
+              perf_check_production_command,
+              a_hash_including(perf_check_server_file_descriptors)).once
+          server.start
+        end
+      end
+
       context "when setting PERF_CHECK_NO_CACHING" do
         before do
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
           allow(perf_check).to receive_message_chain(:options, :environment) { nil }
           allow(perf_check).to receive_message_chain(:options, :caching) { caching }
         end
+
         context "when options.caching is false" do
           let(:caching) { false }
           it "sets PERF_CHECK_NOCACHING key in hash" do
