@@ -114,7 +114,7 @@ class PerfCheck
         Dir.chdir app_root do
           pid = Process.spawn(
             perf_check_args,
-            "bundle exec rails server -b #{host} -d -p #{port}",
+            "bundle exec rails server -b #{host} -d -p #{port} -e #{environment}",
             [:out] => '/dev/null'
           )
           Process.wait pid
@@ -146,6 +146,10 @@ class PerfCheck
 
     def running?
       @running
+    end
+
+    def environment
+      perf_check.options.environment || "development"
     end
 
     class Profile < OpenStruct; end

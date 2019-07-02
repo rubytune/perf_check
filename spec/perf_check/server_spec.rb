@@ -30,7 +30,7 @@ RSpec.describe PerfCheck::Server do
     end
 
     let(:perf_check_shell_command) {
-      "bundle exec rails server -b #{server.host} -d -p #{server.port}"
+      "bundle exec rails server -b #{server.host} -d -p #{server.port} -e development"
     }
     let(:perf_check_server_file_descriptors) { { [:out] => '/dev/null' } }
 
@@ -66,6 +66,7 @@ RSpec.describe PerfCheck::Server do
       context "when setting PERF_CHECK_VERIFICATION" do
         before do
           allow(perf_check).to receive_message_chain(:options, :caching) { false }
+          allow(perf_check).to receive_message_chain(:options, :environment) { nil }
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { verify_no_diff }
         end
         context "when options.verify_no_diff is true" do
@@ -104,6 +105,7 @@ RSpec.describe PerfCheck::Server do
       context "when setting PERF_CHECK_NO_CACHING" do
         before do
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
+          allow(perf_check).to receive_message_chain(:options, :environment) { nil }
           allow(perf_check).to receive_message_chain(:options, :caching) { caching }
         end
         context "when options.caching is false" do
@@ -121,6 +123,7 @@ RSpec.describe PerfCheck::Server do
             server.start
           end
         end
+
         context "when options.caching is true" do
           let(:caching) { true }
           it "does not set PERF_CHECK_NOCACHING key in hash" do
