@@ -8,14 +8,15 @@ class PerfCheck
     class BundleError < Exception; end
 
     attr_reader :perf_check, :git_root, :current_branch
-    attr_accessor :logger
 
     def initialize(perf_check)
       @perf_check = perf_check
       @git_root = perf_check.app_root
-      @logger = perf_check.logger
-
       @current_branch = perf_check.options.branch || exec("git rev-parse --abbrev-ref HEAD")
+    end
+
+    def logger
+      @perf_check.logger
     end
 
     def checkout(branch, bundle_after_checkout: true, hard_reset: false)
