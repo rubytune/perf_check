@@ -29,6 +29,13 @@ RSpec.describe PerfCheck::Git do
   let(:perf_check_with_branch_option){ double(app_root: repo, logger: Logger.new('/dev/null'), options: OpenStruct.new(branch: 'specified-branch')) }
   let(:git_with_branch_option){ PerfCheck::Git.new(perf_check_with_branch_option) }
 
+  it "allows logger to change on perf_check" do
+    perf_check = PerfCheck.new(repo)
+    git = PerfCheck::Git.new(perf_check)
+    expect(git.logger).to eq(perf_check.logger)
+    perf_check.logger = Logger.new(nil)
+    expect(git.logger).to eq(perf_check.logger)
+  end
 
   describe "#initialize" do
     it "should find the current branch checked out in perf_check.app_root" do
