@@ -3,11 +3,12 @@ require 'spec_helper'
 require 'shellwords'
 
 RSpec.describe PerfCheck::Server do
-  let(:perf_check)  do
-    perf_check_instance = PerfCheck.new('test_app')
-    perf_check_instance.logger = Logger.new('/dev/null')
-    perf_check_instance
+  let(:perf_check) do
+    perf_check = PerfCheck.new('test_app')
+    perf_check.logger = Logger.new('/dev/null')
+    perf_check
   end
+
   let(:server) do
     system("mkdir", "-p", "tmp/spec/app")
     PerfCheck::Server.new(perf_check)
@@ -24,7 +25,6 @@ RSpec.describe PerfCheck::Server do
 
     before do
       allow(server).to receive(:sleep)
-      allow(Dir).to receive(:chdir).and_call_original
       allow(Process).to receive(:spawn) { 0 }
       allow(Process).to receive(:wait)
     end
@@ -32,16 +32,15 @@ RSpec.describe PerfCheck::Server do
     let(:perf_check_shell_command) {
       "bundle exec rails server -b #{server.host} -d -p #{server.port} -e development"
     }
-    let(:perf_check_server_file_descriptors) { { [:out] => '/dev/null' } }
+    let(:spawn_options) { { chdir: perf_check.app_root }}
 
     it "should spawn a daemonized rails server from app_root on #host:#port" do
       app_root = Shellwords.shellescape(server.perf_check.app_root)
-      expect(Dir).to receive(:chdir).with(app_root).and_call_original
 
       expect(Process).to receive(:spawn).with(
         { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' },
         perf_check_shell_command,
-        a_hash_including(perf_check_server_file_descriptors)
+        a_hash_including(spawn_options)
       ).once
 
       server.start
@@ -78,6 +77,7 @@ RSpec.describe PerfCheck::Server do
           allow(perf_check).to receive_message_chain(:options, :caching) { false }
           allow(perf_check).to receive_message_chain(:options, :environment) { nil }
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { verify_no_diff }
+          allow(perf_check).to receive_message_chain(:options, :spawn_shell) { false }
         end
 
         context "when options.verify_no_diff is true" do
@@ -90,7 +90,7 @@ RSpec.describe PerfCheck::Server do
                 'PERF_CHECK_NOCACHING' => '1'
               ),
               perf_check_shell_command,
-              a_hash_including(perf_check_server_file_descriptors)
+              a_hash_including(spawn_options)
             ).once
 
             server.start
@@ -106,7 +106,7 @@ RSpec.describe PerfCheck::Server do
                 'PERF_CHECK_NOCACHING' => '1'
               ),
               perf_check_shell_command,
-              a_hash_including(perf_check_server_file_descriptors)
+              a_hash_including(spawn_options)
             ).once
 
             server.start
@@ -119,6 +119,7 @@ RSpec.describe PerfCheck::Server do
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
           allow(perf_check).to receive_message_chain(:options, :environment) { "production" }
           allow(perf_check).to receive_message_chain(:options, :caching) { true }
+          allow(perf_check).to receive_message_chain(:options, :spawn_shell) { false }
         end
 
         it "changes options passed to rails CLI" do
@@ -128,7 +129,7 @@ RSpec.describe PerfCheck::Server do
                 'PERF_CHECK' => '1'
               ),
               perf_check_production_command,
-              a_hash_including(perf_check_server_file_descriptors)).once
+              a_hash_including(spawn_options)).once
           server.start
         end
       end
@@ -138,6 +139,7 @@ RSpec.describe PerfCheck::Server do
           allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
           allow(perf_check).to receive_message_chain(:options, :environment) { nil }
           allow(perf_check).to receive_message_chain(:options, :caching) { caching }
+          allow(perf_check).to receive_message_chain(:options, :spawn_shell) { false }
         end
 
         context "when options.caching is false" do
@@ -149,7 +151,7 @@ RSpec.describe PerfCheck::Server do
                 'PERF_CHECK_NOCACHING' => '1'
               ),
               perf_check_shell_command,
-              a_hash_including(perf_check_server_file_descriptors)
+              a_hash_including(spawn_options)
             ).once
 
             server.start
@@ -164,11 +166,25 @@ RSpec.describe PerfCheck::Server do
                 'PERF_CHECK' => '1'
               ),
               perf_check_shell_command,
-              a_hash_including(perf_check_server_file_descriptors)
+              a_hash_including(spawn_options)
             ).once
 
             server.start
           end
+        end
+      end
+
+      context "when options.spawn_shell is true" do
+        it "executes the shell command in a new bash process" do
+          perf_check.options.spawn_shell = true
+
+          expect(Process).to receive(:spawn).with(
+            a_hash_including('HOME' => ENV['HOME']),
+            "bash -l -c \"#{perf_check_shell_command}\"",
+            a_hash_including(spawn_options)
+          ).once
+
+          server.start
         end
       end
     end

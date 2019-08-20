@@ -1,10 +1,11 @@
-require 'net/http'
+require 'benchmark'
+require 'bundler'
+require 'colorize'
 require 'digest'
 require 'fileutils'
-require 'benchmark'
-require 'ostruct'
-require 'colorize'
 require 'logger'
+require 'net/http'
+require 'ostruct'
 
 class PerfCheck
   class Exception < ::Exception; end
@@ -24,12 +25,15 @@ class PerfCheck
       http_statuses: [200],
       verify_no_diff: false,
       diff: false,
-      diff_options: ['-U3',
-                     '--ignore-matching-lines=/mini-profiler-resources/includes.js'],
+      diff_options: [
+        '-U3',
+        '--ignore-matching-lines=/mini-profiler-resources/includes.js'
+      ],
       brief: false,
       caching: true,
       json: false,
       hard_reset: false,
+      spawn_shell: false,
       environment: 'development'
     )
 

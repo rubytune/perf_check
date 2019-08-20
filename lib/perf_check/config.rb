@@ -51,10 +51,14 @@ class PerfCheck
 
       opts.separator "\nRails environment"
 
-      opts.on('--deployment','Use git fetch/reset instead of the safe/friendly checkout') do
+      opts.on('--deployment', 'Use git fetch/reset instead of the safe/friendly checkout') do
         options.hard_reset = true
       end
 
+      opts.on('--shell', 'Use shell (i.e. bash) to start a fresh environment when running the target application.') do
+        options.spawn_shell = true
+      end
+      
       opts.on('--environment', '-e',
         'Change the rails environment we are profiling. Defaults to development') do |env|
         options.environment = env
