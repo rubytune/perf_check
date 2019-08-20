@@ -101,27 +101,8 @@ class PerfCheck
     end
 
     def start
-      perf_check_args = { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' }
-      if perf_check.options.verify_no_diff
-        perf_check_args['PERF_CHECK_VERIFICATION'] = '1'
-      end
-      unless perf_check.options.caching
-        perf_check_args['PERF_CHECK_NOCACHING'] = '1'
-      end
-
-      app_root = Shellwords.shellescape(perf_check.app_root)
-      Bundler.with_original_env do
-        Dir.chdir app_root do
-          pid = Process.spawn(
-            perf_check_args,
-            "bundle exec rails server -b #{host} -d -p #{port} -e #{environment}",
-            [:out] => '/dev/null'
-          )
-          Process.wait pid
-        end
-      end
+      Process.wait(spawn)
       sleep(1.5)
-
       @running = true
     end
 
@@ -158,6 +139,40 @@ class PerfCheck
 
     def pidfile
       @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
+    end
+
+    def environment_variables
+      variables = { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' }
+      if perf_check.options.verify_no_diff
+        variables['PERF_CHECK_VERIFICATION'] = '1'
+      end
+      unless perf_check.options.caching
+        variables['PERF_CHECK_NOCACHING'] = '1'
+      end
+      variables
+    end
+
+    def rails_server_command
+      "bundle exec rails server -b #{host} -d -p #{port} -e #{environment}"
+    end
+
+    def spawn
+      if perf_check.options.spawn_shell
+        Process.spawn(
+          environment_variables.merge('HOME' => ENV['HOME']),
+          "bash -l -c \"#{rails_server_command}\"",
+          chdir: perf_check.app_root,
+          unsetenv_others: true
+        )
+      else
+        Bundler.with_original_env do
+          Process.spawn(
+            environment_variables,
+            rails_server_command,
+            chdir: perf_check.app_root
+          )
+        end
+      end
     end
   end
 end
