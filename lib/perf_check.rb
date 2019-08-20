@@ -1,10 +1,11 @@
-require 'net/http'
+require 'benchmark'
+require 'bundler'
+require 'colorize'
 require 'digest'
 require 'fileutils'
-require 'benchmark'
-require 'ostruct'
-require 'colorize'
 require 'logger'
+require 'net/http'
+require 'ostruct'
 
 class PerfCheck
   class Exception < ::Exception; end
