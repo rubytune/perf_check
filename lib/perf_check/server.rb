@@ -7,6 +7,9 @@ require 'shellwords'
 
 class PerfCheck
   class Server
+    SPAWN_POLL_INTERVAL = 0.25 # seconds
+    SPAWN_TIMEOUT = 120 # times poll interval
+
     attr_reader :perf_check
 
     def self.seed_random!
@@ -120,9 +123,7 @@ class PerfCheck
           Process.wait pid
         end
       end
-      sleep(1.5)
-
-      @running = true
+      @running = wait_for_server
     end
 
     def restart
@@ -158,6 +159,23 @@ class PerfCheck
 
     def pidfile
       @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
+    end
+
+    def wait_for_server
+      SPAWN_TIMEOUT.times do
+        return true if connect_to_server
+        sleep SPAWN_POLL_INTERVAL
+      end
+      false
+    end
+
+    def connect_to_server
+      Timeout::timeout(1) do
+        TCPSocket.new(host, port).close
+        true
+      end
+    rescue Timeout::Error, Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+      false
     end
   end
 end

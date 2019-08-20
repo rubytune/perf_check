@@ -18,12 +18,12 @@ RSpec.describe PerfCheck::Server do
   end
 
   describe "#start" do
-
     after(:each) do
       server.exit
     end
 
     before do
+      allow(server).to receive(:sleep)
       allow(Dir).to receive(:chdir).and_call_original
       allow(Process).to receive(:spawn) { 0 }
       allow(Process).to receive(:wait)
@@ -44,23 +44,33 @@ RSpec.describe PerfCheck::Server do
         a_hash_including(perf_check_server_file_descriptors)
       ).once
 
-      allow(server).to receive(:sleep)
       server.start
     end
 
     it "should cause the server to run" do
+      tcp = TCPServer.new(server.port)
       allow(server).to receive(:system)
-      allow(server).to receive(:sleep)
+      expect(server.running?).to be_falsey
+
+      begin
+        server.start
+        expect(server.running?).to be true
+      ensure
+        tcp.close
+      end
+    end
+
+    it "should not cause the server to run when it doesn't listen on the specified port" do
+      allow(server).to receive(:system)
 
       expect(server.running?).to be_falsey
       server.start
-      expect(server.running?).to be true
+      expect(server.running?).to be false
     end
 
     context "when building Process.spawn argument hash from perf_check.options" do
       before do
         allow(server).to receive(:system)
-        allow(server).to receive(:sleep)
       end
 
       context "when setting PERF_CHECK_VERIFICATION" do
@@ -168,7 +178,6 @@ RSpec.describe PerfCheck::Server do
     it "should kill -KILL pid" do
       expect(server).to receive(:pid){ 12345 }.at_least(:once)
       expect(Process).to receive(:kill).with('KILL', 12345)
-      allow(server).to receive(:sleep)
       server.exit
     end
   end
