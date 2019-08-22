@@ -235,4 +235,21 @@ RSpec.describe PerfCheck do
       perf_check.send :run_migrations_down
     end
   end
+
+  context 'operating on a Rails app' do
+    around do |example|
+      using_app('minimal') do
+        example.run
+      end
+    end
+
+    it 'runs a benchmark with minimal arguments' do
+      output = StringIO.new
+      perf_check = PerfCheck.new(Dir.pwd)
+      perf_check.parse_arguments(%w(/))
+      perf_check.logger = Logger.new(output)
+      perf_check.run
+      expect(output.string).to include('☕️')
+    end
+  end
 end

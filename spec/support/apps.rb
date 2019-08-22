@@ -12,5 +12,16 @@ module Support
     def app_bundle_path(name)
       File.join(bundle_dir, "#{name}.tar.bz2")
     end
+
+    # Unpacks an app, changes directory to that app, and calls the block.
+    def using_app(name, &block)
+      using_tmpdir do |app_dir|
+        PerfCheck::App.new(
+          bundle_path: app_bundle_path(name),
+          app_dir: app_dir
+        ).unpack
+        Dir.chdir(app_dir, &block)
+      end
+    end
   end
 end
