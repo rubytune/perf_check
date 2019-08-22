@@ -18,8 +18,8 @@ class PerfCheck
     @app_root = app_root
     @options = OpenStruct.new(
       number_of_requests: 20,
-      reference: 'master',
-      branch: nil,
+      reference: nil,
+      branch: 'master',
       cookie: nil,
       headers: {},
       http_statuses: [200],
