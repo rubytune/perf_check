@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require 'spec_helper'
 
@@ -13,27 +14,6 @@ RSpec.describe PerfCheck do
 
   after(:all) do
     FileUtils.rm_rf('tmp/spec')
-  end
-
-  describe "#load_config" do
-    after do
-      FileUtils.rm config_file
-    end
-
-    it "should require app_root/config/perf_check" do
-      system("mkdir", "-p", File.dirname(config_file))
-      File.open(config_file, "w").close
-
-      expect(perf_check).to receive(:load).with(config_file)
-      perf_check.load_config
-    end
-
-    it "should rescue exceptions from the config file" do
-      system("mkdir", "-p", File.dirname(config_file))
-      File.open(config_file, "w"){ |f| f.write("nil.do_something_you_cant") }
-
-      expect{ perf_check.load_config }.to raise_error(PerfCheck::ConfigLoadError)
-    end
   end
 
   describe "#add_test_case(route)" do
@@ -235,6 +215,22 @@ RSpec.describe PerfCheck do
       perf_check.send :run_migrations_down
     end
   end
+end
+
+RSpec.describe PerfCheck do
+  it 'expands the app dir' do
+    perf_check = PerfCheck.new('test_app')
+    expect(perf_check.app_root).to eq(
+      File.expand_path('../test_app', __dir__)
+    )
+  end
+
+  it 'returns the path to its config script in the target application' do
+    perf_check = PerfCheck.new('test_app')
+    expect(perf_check.config_path).to eq(
+      File.expand_path('../test_app/config/perf_check.rb', __dir__)
+    )
+  end
 
   context 'operating on a Rails app' do
     around do |example|
@@ -246,10 +242,51 @@ RSpec.describe PerfCheck do
     it 'runs a benchmark with minimal arguments' do
       output = StringIO.new
       perf_check = PerfCheck.new(Dir.pwd)
-      perf_check.parse_arguments(%w(/))
+      perf_check.parse_arguments(%w[/])
       perf_check.logger = Logger.new(output)
       perf_check.run
       expect(output.string).to include('☕️')
+    end
+
+    it 'does not break when there is no config/perf_check.rb' do
+      expect(PerfCheck.new(Dir.pwd).load_config).to be false
+    end
+  end
+
+  context 'operating on a Rails app with config/perf_check.rb' do
+    around do |example|
+      using_app('minimal') do
+        execute 'git', 'checkout', 'perf-check'
+        example.run
+      end
+    end
+
+    it 'executes code in perf_check.rb' do
+      perf_check = PerfCheck.new(Dir.pwd)
+      expect(perf_check.load_config).to be true
+    end
+
+    it 'successfully installed switches in the option parser' do
+      perf_check = PerfCheck.new(Dir.pwd)
+      perf_check.load_config
+      perf_check.parse_arguments('--super')
+      expect(perf_check.options.login_type).to eq(:super)
+    end
+  end
+
+  context 'operating on a Rails app with broken config/perf_check.rb' do
+    around do |example|
+      using_app('minimal') do
+        execute 'git', 'checkout', 'perf-check-broken'
+        example.run
+      end
+    end
+
+    it 'does not capture exceptions from perf_check.rb' do
+      perf_check = PerfCheck.new(Dir.pwd)
+      expect do
+        perf_check.load_config
+      end.to raise_error("Broken config/perf_check.rb")
     end
   end
 end

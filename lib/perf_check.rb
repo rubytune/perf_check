@@ -15,7 +15,7 @@ class PerfCheck
   attr_accessor :logger
 
   def initialize(app_root)
-    @app_root = app_root
+    @app_root = File.expand_path(app_root)
     @options = OpenStruct.new(
       number_of_requests: 20,
       reference: 'master',
@@ -48,24 +48,18 @@ class PerfCheck
     @test_cases = []
   end
 
-  def load_config
-    File.stat(File.join(app_root,'Gemfile')).file?
-    if File.exists?("#{app_root}/config/perf_check.rb")
-      this = self
-      Kernel.send(:define_method, :perf_check){ this }
+  def config_path
+    File.join(app_root, 'config', 'perf_check.rb')
+  end
 
-      dir = Dir.pwd
-      begin
-        Dir.chdir(app_root)
-        load "#{app_root}/config/perf_check.rb"
-      rescue LoadError => e
-        error = ConfigLoadError.new(e.message)
-        error.set_backtrace(e.backtrace)
-        raise error
-      ensure
-        Dir.chdir(dir)
-        Kernel.send(:remove_method, :perf_check)
-      end
+  def load_config
+    if File.exist?(config_path)
+      config = File.read(config_path)
+      perf_check = self
+      eval(config, binding, config_path)
+      true
+    else
+      false
     end
   end
 
@@ -107,6 +101,14 @@ class PerfCheck
   end
 
   private
+
+  def in_app_root(&block)
+    if Dir.pwd != app_root
+      Dir.chdir(app_root, &block)
+    else
+      block.call
+    end
+  end
 
   def profile_compare_paths_requests
     first = test_cases[0]
