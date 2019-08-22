@@ -160,12 +160,13 @@ class PerfCheck
   end
 end
 
+require 'perf_check/app'
+require 'perf_check/callbacks'
+require 'perf_check/config'
+require 'perf_check/git'
+require 'perf_check/output'
 require 'perf_check/server'
 require 'perf_check/test_case'
-require 'perf_check/git'
-require 'perf_check/config'
-require 'perf_check/callbacks'
-require 'perf_check/output'
 
 if defined?(Rails) && ENV['PERF_CHECK']
   require 'perf_check/railtie'
