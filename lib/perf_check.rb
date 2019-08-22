@@ -74,6 +74,8 @@ class PerfCheck
   end
 
   def run
+    git.stash_if_needed
+    git.checkout(options.branch, bundle_after_checkout: true, hard_reset: options.hard_reset)
     begin
       if options.compare_paths?
         raise "Must have two paths" if test_cases.count != 2
@@ -84,7 +86,6 @@ class PerfCheck
           git.stash_if_needed
           git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
           test_cases.each{ |x| x.switch_to_reference_context }
-
           profile_requests
         end
       end
