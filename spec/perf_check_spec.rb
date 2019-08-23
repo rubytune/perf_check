@@ -237,17 +237,23 @@ RSpec.describe PerfCheck do
       end
     end
 
-    it 'runs a benchmark with minimal arguments' do
-      output = StringIO.new
+    let(:output) { StringIO.new }
+    let(:perf_check) do
       perf_check = PerfCheck.new(Dir.pwd)
-      perf_check.parse_arguments(%w[/])
       perf_check.logger = Logger.new(output)
+      perf_check
+    end
+
+    it 'benchmarks the specified branch and compares to master' do
+      perf_check.parse_arguments(%w[--branch slower /])
       perf_check.run
       expect(output.string).to include('☕️')
+      expect(output.string).to include('Benchmarking /')
+      expect(output.string).to include('Checking out master and bundling')
     end
 
     it 'does not break when there is no config/perf_check.rb' do
-      expect(PerfCheck.new(Dir.pwd).load_config).to be false
+      expect(perf_check.load_config).to be false
     end
   end
 

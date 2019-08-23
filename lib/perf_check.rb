@@ -68,36 +68,13 @@ class PerfCheck
   end
 
   def run
-    begin
-      if options.compare_paths?
-        raise "Must have two paths" if test_cases.count != 2
-        profile_compare_paths_requests
-      else
-        profile_requests
-        if options.reference
-          git.stash_if_needed
-          git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
-          test_cases.each{ |x| x.switch_to_reference_context }
-
-          profile_requests
-        end
-      end
-    ensure
-      server.exit
-      if options.reference
-        git.checkout(git.current_branch, bundle_after_checkout: true, hard_reset: options.hard_reset)
-        git.pop if git.stashed?
-      end
-
-      callbacks = {}
-
-      if $!
-        callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
-        callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
-      end
-
-      trigger_when_finished_callbacks(callbacks)
+    if options.compare_paths?
+      compare_paths
+    else
+      compare_branches
     end
+  ensure
+    cleanup_and_report
   end
 
   private
@@ -107,6 +84,21 @@ class PerfCheck
       Dir.chdir(app_root, &block)
     else
       block.call
+    end
+  end
+
+  def compare_paths
+    raise "Must have two paths" if test_cases.count != 2
+    profile_compare_paths_requests
+  end
+
+  def compare_branches
+    profile_requests
+    if options.reference
+      git.stash_if_needed
+      git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
+      test_cases.each(&:switch_to_reference_context)
+      profile_requests
     end
   end
 
@@ -159,6 +151,23 @@ class PerfCheck
       end
     end
     git.clean_db
+  end
+
+  def cleanup_and_report
+    server.exit
+    if options.reference
+      git.checkout(git.current_branch, bundle_after_checkout: true)
+      git.pop if git.stashed?
+    end
+
+    callbacks = {}
+
+    if $!
+      callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
+      callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
+    end
+
+    trigger_when_finished_callbacks(callbacks)
   end
 end
 
