@@ -16,23 +16,6 @@ RSpec.describe PerfCheck do
     FileUtils.rm_rf('tmp/spec')
   end
 
-  describe "#add_test_case(route)" do
-    it "should create add a new PerfCheck::TestCase to #test_cases" do
-      expect(perf_check.test_cases.size).to eq(0)
-      perf_check.add_test_case('/xyz')
-
-      expect(perf_check.test_cases.size).to eq(1)
-      expect(perf_check.test_cases[0].resource).to eq('/xyz')
-    end
-
-    context "when route does not begin with a slash" do
-      it "should prepend a slash to route" do
-        perf_check.add_test_case('xyz')
-        expect(perf_check.test_cases[0].resource).to eq('/xyz')
-      end
-    end
-  end
-
   describe "#run" do
     it "should run profile_requests, stash if needed, checkout the ref branch, and profile again"
 
@@ -219,17 +202,32 @@ end
 
 RSpec.describe PerfCheck do
   it 'expands the app dir' do
-    perf_check = PerfCheck.new('test_app')
+    perf_check = PerfCheck.new('app')
     expect(perf_check.app_root).to eq(
-      File.expand_path('../test_app', __dir__)
+      File.expand_path('../app', __dir__)
     )
   end
 
   it 'returns the path to its config script in the target application' do
-    perf_check = PerfCheck.new('test_app')
+    perf_check = PerfCheck.new('app')
     expect(perf_check.config_path).to eq(
-      File.expand_path('../test_app/config/perf_check.rb', __dir__)
+      File.expand_path('../app/config/perf_check.rb', __dir__)
     )
+  end
+
+  it 'adds a test case with a request path' do
+    perf_check = PerfCheck.new('app')
+    expect(perf_check.test_cases.size).to be_zero
+
+    request_path = '/books/42/authors?q=he'
+    perf_check.add_test_case(request_path)
+    expect(perf_check.test_cases.size).to eq(1)
+    expect(perf_check.test_cases.last.resource).to eq(request_path)
+
+    request_path = 'books/42/authors?q=ah'
+    perf_check.add_test_case(request_path)
+    expect(perf_check.test_cases.size).to eq(2)
+    expect(perf_check.test_cases.last.resource).to eq('/' + request_path)
   end
 
   context 'operating on a Rails app' do

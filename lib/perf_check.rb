@@ -63,8 +63,8 @@ class PerfCheck
     end
   end
 
-  def add_test_case(route)
-    test_cases.push(TestCase.new(self, route.sub(/^([^\/])/, '/\1')))
+  def add_test_case(request_path)
+    test_cases.push(TestCase.new(self, request_path))
   end
 
   def run
