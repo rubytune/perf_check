@@ -191,3 +191,26 @@ RSpec.describe PerfCheck::TestCase do
     it "should be the diff between response bodies on reference and this branch"
   end
 end
+
+RSpec.describe PerfCheck::TestCase do
+  let(:perf_check) { PerfCheck.new('app') }
+
+  it 'normalizes request paths' do
+    [
+      [nil, nil],
+      ['', '/'],
+      ['/', '/'],
+      ['authors', '/authors'],
+      ['authors/12/books', '/authors/12/books'],
+      ['/authors?q=he', '/authors?q=he'],
+      ['authors?q=he', '/authors?q=he']
+    ].each do |request_path, expected|
+      expect(PerfCheck::TestCase.normalize_request_path(request_path)).to eq(expected)
+    end
+  end
+
+  it 'normalizes the request path then initialized' do
+    test_case = PerfCheck::TestCase.new(perf_check, 'authors')
+    expect(test_case.resource).to eq('/authors')
+  end
+end
