@@ -47,6 +47,8 @@ class PerfCheck
         end
 
         @stashed = true
+      else
+        false
       end
     end
 
@@ -64,7 +66,9 @@ class PerfCheck
       logger.info("Git stash applying...")
       exec "git stash pop -q"
 
-      unless $?.success?
+      if $?.success?
+        @stashed = false
+      else
         logger.fatal("Problem with git stash! Bailing...")
         raise StashPopError
       end
