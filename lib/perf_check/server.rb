@@ -135,14 +135,6 @@ class PerfCheck
       perf_check.options.environment || "development"
     end
 
-    class Profile < OpenStruct; end
-
-    private
-
-    def pidfile
-      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
-    end
-
     def environment_variables
       variables = { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' }
       if perf_check.options.verify_no_diff
@@ -156,6 +148,14 @@ class PerfCheck
 
     def rails_server_command
       "bundle exec rails server -b #{host} -d -p #{port} -e #{environment}"
+    end
+
+    class Profile < OpenStruct; end
+
+    private
+
+    def pidfile
+      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
     end
 
     def spawn

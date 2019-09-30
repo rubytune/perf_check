@@ -1,312 +1,120 @@
+# frozen_string_literal: true
 
 require 'spec_helper'
-require 'shellwords'
 
 RSpec.describe PerfCheck::Server do
+  let(:output) { StringIO.new }
   let(:perf_check) do
-    perf_check = PerfCheck.new('test_app')
-    perf_check.logger = Logger.new('/dev/null')
+    perf_check = PerfCheck.new(Dir.pwd)
+    perf_check.logger = Logger.new(output)
     perf_check
   end
+  let(:server) { PerfCheck::Server.new(perf_check) }
 
-  let(:server) do
-    system("mkdir", "-p", "tmp/spec/app")
-    PerfCheck::Server.new(perf_check)
-  end
-
-  after(:all) do
-    FileUtils.rm_rf('tmp/spec')
-  end
-
-  describe "#start" do
-    after(:each) do
-      server.exit
-    end
-
-    before do
-      allow(server).to receive(:sleep)
-      allow(Process).to receive(:spawn) { 0 }
-      allow(Process).to receive(:wait)
-    end
-
-    let(:perf_check_shell_command) {
-      "bundle exec rails server -b #{server.host} -d -p #{server.port} -e development"
-    }
-    let(:spawn_options) { { chdir: perf_check.app_root }}
-
-    it "should spawn a daemonized rails server from app_root on #host:#port" do
-      app_root = Shellwords.shellescape(server.perf_check.app_root)
-
-      expect(Process).to receive(:spawn).with(
-        { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' },
-        perf_check_shell_command,
-        a_hash_including(spawn_options)
-      ).once
-
-      server.start
-    end
-
-    it "should cause the server to run" do
-      tcp = TCPServer.new(server.port)
-      allow(server).to receive(:system)
-      expect(server.running?).to be_falsey
-
-      begin
-        server.start
-        expect(server.running?).to be true
-      ensure
-        tcp.close
-      end
-    end
-
-    it "should not cause the server to run when it doesn't listen on the specified port" do
-      allow(server).to receive(:system)
-
-      expect(server.running?).to be_falsey
-      server.start
-      expect(server.running?).to be false
-    end
-
-    context "when building Process.spawn argument hash from perf_check.options" do
-      before do
-        allow(server).to receive(:system)
-      end
-
-      context "when setting PERF_CHECK_VERIFICATION" do
-        before do
-          allow(perf_check).to receive_message_chain(:options, :caching) { false }
-          allow(perf_check).to receive_message_chain(:options, :environment) { nil }
-          allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { verify_no_diff }
-          allow(perf_check).to receive_message_chain(:options, :spawn_shell) { false }
-        end
-
-        context "when options.verify_no_diff is true" do
-          let(:verify_no_diff) { true }
-          it "sets PERF_CHECK_VERIFICATION key in hash" do
-            expect(Process).to receive(:spawn).with(
-              a_hash_including(
-                'PERF_CHECK' => '1',
-                'PERF_CHECK_VERIFICATION' => '1',
-                'PERF_CHECK_NOCACHING' => '1'
-              ),
-              perf_check_shell_command,
-              a_hash_including(spawn_options)
-            ).once
-
-            server.start
-          end
-        end
-
-        context "when options.verify_no_diff is false" do
-          let(:verify_no_diff) { false }
-          it "does not set PERF_CHECK_VERIFICATION key in hash" do
-            expect(Process).to receive(:spawn).with(
-              a_hash_including(
-                'PERF_CHECK' => '1',
-                'PERF_CHECK_NOCACHING' => '1'
-              ),
-              perf_check_shell_command,
-              a_hash_including(spawn_options)
-            ).once
-
-            server.start
-          end
-        end
-      end
-
-      context "when changing the env" do
-        before do
-          allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
-          allow(perf_check).to receive_message_chain(:options, :environment) { "production" }
-          allow(perf_check).to receive_message_chain(:options, :caching) { true }
-          allow(perf_check).to receive_message_chain(:options, :spawn_shell) { false }
-        end
-
-        it "changes options passed to rails CLI" do
-          perf_check_production_command = "bundle exec rails server -b #{server.host} -d -p #{server.port} -e production"
-          expect(Process).to receive(:spawn).with(
-            a_hash_including(
-                'PERF_CHECK' => '1'
-              ),
-              perf_check_production_command,
-              a_hash_including(spawn_options)).once
-          server.start
-        end
-      end
-
-      context "when setting PERF_CHECK_NO_CACHING" do
-        before do
-          allow(perf_check).to receive_message_chain(:options, :verify_no_diff) { false }
-          allow(perf_check).to receive_message_chain(:options, :environment) { nil }
-          allow(perf_check).to receive_message_chain(:options, :caching) { caching }
-          allow(perf_check).to receive_message_chain(:options, :spawn_shell) { false }
-        end
-
-        context "when options.caching is false" do
-          let(:caching) { false }
-          it "sets PERF_CHECK_NOCACHING key in hash" do
-            expect(Process).to receive(:spawn).with(
-              a_hash_including(
-                'PERF_CHECK' => '1',
-                'PERF_CHECK_NOCACHING' => '1'
-              ),
-              perf_check_shell_command,
-              a_hash_including(spawn_options)
-            ).once
-
-            server.start
-          end
-        end
-
-        context "when options.caching is true" do
-          let(:caching) { true }
-          it "does not set PERF_CHECK_NOCACHING key in hash" do
-            expect(Process).to receive(:spawn).with(
-              a_hash_including(
-                'PERF_CHECK' => '1'
-              ),
-              perf_check_shell_command,
-              a_hash_including(spawn_options)
-            ).once
-
-            server.start
-          end
-        end
-      end
-
-      context "when options.spawn_shell is true" do
-        it "executes the shell command in a new bash process" do
-          perf_check.options.spawn_shell = true
-
-          expect(Process).to receive(:spawn).with(
-            a_hash_including('HOME' => ENV['HOME']),
-            "bash -l -c \"#{perf_check_shell_command}\"",
-            a_hash_including(spawn_options)
-          ).once
-
-          server.start
-        end
-      end
-    end
-  end
-
-  describe "exit" do
-    it "should kill -KILL pid" do
-      expect(server).to receive(:pid){ 12345 }.at_least(:once)
-      expect(Process).to receive(:kill).with('KILL', 12345)
-      server.exit
-    end
-  end
-
-  describe "#pid" do
-    after(:each) do
-      system("rm #{server.perf_check.app_root}/tmp/pids/server.pid")
-    end
-
-    it "should read app_root/tmp/pids/server.pid" do
-      system("mkdir", "-p", "#{server.perf_check.app_root}/tmp/pids")
-      system("echo 12345 >#{server.perf_check.app_root}/tmp/pids/server.pid")
-      expect(server.pid).to eq(12345)
-    end
-  end
-
-  describe "#restart" do
-    context "already running" do
-      it "should exit then start" do
-        expect(server).to receive(:running?){ true }.ordered
-        expect(server).to receive(:exit).ordered
-        expect(server).to receive(:start).ordered
-        server.restart
-      end
-    end
-
-    context "not running yet" do
-      it "should start" do
-        expect(server).to receive(:running?){ false }.ordered
-        expect(server).not_to receive(:exit)
-        expect(server).to receive(:start).ordered
-        server.restart
-      end
-    end
-  end
-
-  describe "#profile(&block)" do
-    let(:net_http) do
-      http = double()
-      expect(http).to receive(:start).ordered
-      expect(http).to receive(:finish).ordered
-      expect(http).to receive(:read_timeout=)
-      http
-    end
-
-    let(:http_response) do
-      OpenStruct.new(
-        'X-Runtime' => '120.5',
-        'X-PerfCheck-Query-Count' => '80',
-        :code => '200',
-        :body => 'body'
+  describe 'setup' do
+    it 'uses basic environment variables' do
+      expect(server.environment_variables).to eq(
+        'PERF_CHECK' => '1',
+        'DISABLE_SPRING' => '1'
       )
     end
 
-    before do
-      expect(Net::HTTP).to receive(:new){ net_http }
-      expect(server).to receive(:prepare_to_profile)
-      allow(server).to receive(:mem){ 12345 }
-      allow(server).to receive(:latest_profiler_url){ "/abcxyz" }.at_least(:once)
+    it 'sets an additional environment variable when only verifying' do
+      # Settings this option instructs PerfCheck to only measure the
+      # experimental branch. It will not measure and compare the difference
+      # to another branch.
+      perf_check.options.verify_no_diff = true
+      expect(server.environment_variables).to eq(
+        'PERF_CHECK' => '1',
+        'DISABLE_SPRING' => '1',
+        'PERF_CHECK_VERIFICATION' => '1'
+      )
     end
 
-    it "should yield a Net::HTTP to block" do
-      server.profile do |http|
-        expect(http).to eq(net_http)
-        http_response
+    it 'sets an additional environment variable when chaching is off' do
+      perf_check.options.caching = false
+      expect(server.environment_variables).to eq(
+        'PERF_CHECK' => '1',
+        'DISABLE_SPRING' => '1',
+        'PERF_CHECK_NOCACHING' => '1'
+      )
+    end
+
+    it 'runs in the development environment by default' do
+      expect(server.environment).to eq('development')
+    end
+
+    it 'will start in the configured environment' do
+      perf_check.options.environment = 'production'
+      expect(server.environment).to eq('production')
+    end
+
+    it 'generates a sensible rails server command' do
+      expect(server.rails_server_command).to eq(
+        'bundle exec rails server -b 127.0.0.1 -d -p 3031 -e development'
+      )
+    end
+  end
+
+  describe 'system' do
+    it 'does not return a PID when not running' do
+      expect(server.pid).to be_nil
+    end
+
+    it 'measures zero memory when not running' do
+      # This spec might not be the actual behavior we want, but it's what
+      # the formatters currently expect.
+      expect(server.mem).to be_zero
+    end
+  end
+
+  context 'operating on an actual Rails app' do
+    around do |example|
+      using_app('minimal') do
+        example.run
       end
     end
 
-    it "should create a Profile with results from the response" do
-      prof = server.profile do |http|
-        http_response
+    it 'starts a server' do
+      begin
+        server.start
+        expect(server.running?).to be true
+        expect(server.pid).to_not be_nil
+        expect(server.mem).to_not be_zero
+      ensure
+        server.exit
       end
-
-      expect(prof.latency).to eq(1000*http_response['X-Runtime'].to_f)
-      expect(prof.query_count).to eq(http_response['X-PerfCheck-Query-Count'].to_i)
-      expect(prof.profile_url).to eq(server.latest_profiler_url)
-      expect(prof.response_code).to eq(http_response.code.to_i)
-      expect(prof.response_body).to eq(http_response.body)
-      expect(prof.server_memory).to eq(server.mem)
-      expect(prof.backtrace).to be_nil
     end
 
-    it "should include backtrace in the profile if request raised an exception" do
-      FileUtils.mkdir_p("tmp/spec")
-      File.open("tmp/spec/request_backtrace.txt", "w"){ |f| f.write("one\ntwo") }
-      http_response['X-PerfCheck-StackTrace'] = "tmp/spec/request_backtrace.txt"
-
-      prof = server.profile do |http|
-        http_response
+    it 'starts a server in a fresh shell environment' do
+      perf_check.options.spawn_shell = true
+      begin
+        server.start
+        expect(server.running?).to be true
+        expect(server.pid).to_not be_nil
+        expect(server.mem).to_not be_zero
+      ensure
+        server.exit
       end
-
-      expect(prof.backtrace).to eq(["one", "two"])
     end
 
-    it "should raise a PerfCheck::Exception if it cant connect" do
-      expect do
-        server.profile do |http|
-          http.finish
-          raise Errno::ECONNREFUSED.new
+    it 'profiles' do
+      begin
+        server.start
+
+        profile = server.profile do |http|
+          http.get('/', {})
         end
-      end.to raise_error(PerfCheck::Exception)
+
+        expect(profile.response_code).to eq(200)
+        expect(profile.response_body).to eq('Hi!')
+        expect(profile.query_count).to be_zero
+        expect(profile.latency).to_not be_zero
+        expect(profile.server_memory).to_not be_zero
+        expect(profile.profile_url).to be_nil
+      ensure
+        server.exit
+      end
     end
-  end
-
-  describe "#mem" do
-    it "should give the rss size of #pid in kilobytes"
-  end
-
-  describe "prepare_to_profile" do
-    it "should clean app_root/tmp/perf_check/miniprofiler"
-  end
-
-  describe "latest_profiler_url" do
-    it "should a url to the miniprofiler result from the last profile"
   end
 end
