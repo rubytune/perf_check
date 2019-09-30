@@ -1,159 +1,158 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
-require 'securerandom'
 
 RSpec.describe PerfCheck::Git do
-  repo = File.join(__dir__, "../../tmp/spec/repo")
-  repo_file = "file"
-  reference = "master"
-  feature_branch = "another_branch"
-  before do
-    system("
-      rm -rf #{repo}         &&
-      mkdir -p #{repo}       &&
-      cd #{repo}             &&
-      git init >/dev/null    &&
-      touch #{repo_file}     &&
-      git add #{repo_file}   &&
-      git commit -m 'Initialize test repo' >/dev/null &&
-      git branch #{feature_branch}
-    ") or abort("Couldn't initialize test repo at #{repo}")
-  end
-
-  after(:all) do
-    FileUtils.rm_rf(File.join(__dir__,'../../tmp/spec/'))
-  end
-
-  let(:perf_check){ double(app_root: repo, logger: Logger.new('/dev/null'), options: OpenStruct.new(branch: nil)) }
-  let(:git){ PerfCheck::Git.new(perf_check) }
-
-  let(:perf_check_with_branch_option){ double(app_root: repo, logger: Logger.new('/dev/null'), options: OpenStruct.new(branch: 'specified-branch')) }
-  let(:git_with_branch_option){ PerfCheck::Git.new(perf_check_with_branch_option) }
-
-  it "allows logger to change on perf_check" do
-    perf_check = PerfCheck.new(repo)
+  it 'allows logger to change on perf_check' do
+    perf_check = PerfCheck.new(Dir.pwd)
     git = PerfCheck::Git.new(perf_check)
     expect(git.logger).to eq(perf_check.logger)
     perf_check.logger = Logger.new(nil)
     expect(git.logger).to eq(perf_check.logger)
   end
 
-  describe "#initialize" do
-    it "should find the current branch checked out in perf_check.app_root" do
-      expect(git.current_branch).to eq("master")
-    end
-
-    it "should find the branch specified in --branch if the option is set" do
-      expect(git_with_branch_option.current_branch).to eq("specified-branch")
-    end
-
-    it "should initialize #logger to perf_check.logger" do
-      expect(git.logger).to eq(perf_check.logger)
-    end
-  end
-
-  describe "#checkout" do
-    it "should checkout the branch" do
-      git.checkout(feature_branch)
-      branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
-      expect(branch).to eq(feature_branch)
-    end
-
-    it "should raise BundleError if `bundle` fails"
-
-    context "when branch doesn't exist" do
-      it "should raise Git::NoSuchBranch" do
-        expect{ git.checkout("no_branch_such_as_this") }.
-          to raise_error(PerfCheck::Git::NoSuchBranch)
+  context 'operating on a Rails app' do
+    around do |example|
+      using_app('minimal') do
+        example.run
       end
     end
 
-    it "should use hard reset from origin when deployed on a server" do
-      # Give our test repo the perf_check origin to fetch from
-      # This means the feature branch must exist in this remote git repo
-      system "cd #{repo};git remote add origin https://github.com/rubytune/perf_check.git"
-      git.checkout(feature_branch, hard_reset: true)
-      branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
+    let(:output) { StringIO.new }
+    let(:perf_check) do
+      perf_check = PerfCheck.new(Dir.pwd)
+      perf_check.logger = Logger.new(output)
+      perf_check
+    end
+    let(:feature_branch) { 'perf-check' }
+    let(:non_existent_branch){ 'non-existent' }
 
-      # This file is only present on the "another_branch" branch
-      expect(File.file?(repo + '/' + repo_file)).to be_truthy
+    describe 'when initializing' do
+      it 'finds the current branch checked out in perf_check.app_root' do
+        git = PerfCheck::Git.new(perf_check)
+        expect(git.current_branch).to eq('master')
+      end
+
+      it 'finds the branch specified in --branch if the option is set' do
+        perf_check.options.branch = 'specified-branch'
+        git = PerfCheck::Git.new(perf_check)
+        expect(git.current_branch).to eq('specified-branch')
+      end
+
+      it 'initializes #logger to perf_check.logger' do
+        git = PerfCheck::Git.new(perf_check)
+        expect(git.logger).to eq(perf_check.logger)
+      end
     end
 
-    it "should checkout master by default" do
-      `cd #{repo} && git checkout #{feature_branch}`
+    describe 'when checking out' do
+      let(:git) { PerfCheck::Git.new(perf_check) }
 
-      git.checkout(reference)
+      it 'checks out an existing branch' do
+        git.checkout(feature_branch)
+        branch = `git rev-parse --abbrev-ref HEAD`.strip
+        expect(branch).to eq(feature_branch)
+      end
 
-      branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
-      expect(branch).to eq("master")
+      it 'checks out with a hard reset' do
+        expect(File.exist?('config/perf_check.rb')).to be(false)
+        git.checkout(feature_branch, hard_reset: true)
+        branch = `git rev-parse --abbrev-ref HEAD`.strip
+        expect(branch).to eq('master')
+        expect(File.exist?('config/perf_check.rb')).to be(true)
+      end
+
+      it 'does not check out a non-existent branch' do
+        expect do
+          git.checkout(non_existent_branch)
+        end.to raise_error(PerfCheck::Git::NoSuchBranch)
+      end
+
+      it 'fails when running Bundler fails' do
+        expect do
+          git.checkout('bundle-broken')
+        end.to raise_error(PerfCheck::Git::BundleError)
+      end
     end
 
-    it "should be happy to checkout git.current_branch" do
-      `cd #{repo} && git checkout #{feature_branch}`
-      git.checkout(git.current_branch)
-      branch = `cd #{repo} && git rev-parse --abbrev-ref HEAD`.strip
-      expect(branch).to eq(feature_branch)
+    describe 'detecting and stashing changes' do
+      let(:git) { PerfCheck::Git.new(perf_check) }
+
+      it 'knows there is nothing to stash when there are no changes' do
+        expect(git.anything_to_stash?).to eq(false)
+      end
+
+      it 'is not stashed' do
+        expect(git.stashed?).to eq(false)
+      end
+
+      it 'does not stash anything when there are no changes' do
+        expect(git.stash_if_needed).to eq(false)
+      end
+
+      it 'fails when popping nothing' do
+        expect do
+          git.pop
+        end.to raise_error(PerfCheck::Git::StashPopError)
+      end
+
+      context 'with changes to the working directory' do
+        before do
+          File.open('Gemfile', 'a') { |f| f.write("\n") }
+        end
+
+        it 'knows when there are changes to stash' do
+          expect(git.anything_to_stash?).to eq(true)
+        end
+
+        it 'is not stashed' do
+          expect(git.stashed?).to eq(false)
+        end
+
+        it 'stashes changes' do
+          expect(git.stash_if_needed).to eq(true)
+          expect(git.anything_to_stash?).to eq(false)
+          expect(git.stashed?).to eq(true)
+        end
+
+        it 'knows when there are changes to stash when changes are staged' do
+          `git add .`
+          expect(git.anything_to_stash?).to eq(true)
+        end
+
+        it 'stashes staged changes' do
+          `git add .`
+          expect(git.stash_if_needed).to eq(true)
+          expect(git.anything_to_stash?).to eq(false)
+          expect(git.stashed?).to eq(true)
+        end
+
+        it 'pops stashed changes' do
+          git.stash_if_needed
+          expect(git.anything_to_stash?).to eq(false)
+          git.pop
+          expect(git.anything_to_stash?).to eq(true)
+          expect(git.stashed?).to eq(false)
+        end
+      end
     end
-  end
 
-  describe "#anything_to_stash?" do
-    it "should be true when there are changes in the working tree" do
-      system("cd #{repo} && echo #{SecureRandom.hex(8)} >#{repo_file}")
-      expect(git.anything_to_stash?).to eq(true)
-    end
+    describe 'migrations' do
+      let(:git) { PerfCheck::Git.new(perf_check) }
 
-    it "should be true when there are staged changes" do
-      system("cd #{repo} && echo #{SecureRandom.hex(8)} >#{repo_file}")
-      system("cd #{repo} && git add #{repo_file}")
-      expect(git.anything_to_stash?).to eq(true)
-    end
+      it 'finds new migrations to run down' do
+        git.checkout('migrations')
+        expect(git.migrations_to_run_down).to_not be_empty
+      end
 
-    it "should be false when there are no working/staged changes" do
-      expect(git.anything_to_stash?).to eq(false)
-    end
-  end
+      it 'does not find migrations to run down on master' do
+        expect(git.migrations_to_run_down).to be_empty
+      end
 
-  describe "#stash_if_needed" do
-    it "should call git stash if there are changes" do
-      system("cd #{repo} && echo #{SecureRandom.hex(8)} >#{repo_file}")
-
-      git.stash_if_needed
-
-      expect(File.read("#{repo}/#{repo_file}")).to eq("")
-      expect(git.anything_to_stash?).to eq(false)
-    end
-
-    it "should raise StashError if `git stash` fails"
-  end
-
-  describe "#pop" do
-    it "should execute git stash pop" do
-      changes = SecureRandom.hex(8)
-      system("cd #{repo} && echo #{changes} >#{repo_file} && git stash")
-
-      expect(File.read("#{repo}/#{repo_file}")).to eq("")
-
-      git.pop
-      expect(File.read("#{repo}/#{repo_file}").strip).to eq(changes)
-    end
-
-    it "should raise StashPopError if `git stash pop` fails"
-  end
-
-  describe "#migrations_to_run_down" do
-    before do
-      system("cd #{repo} && git checkout -b a_branch")
-      system("mkdir", "-p", "#{repo}/db/migrate")
-    end
-    after { system("cd #{repo} && git checkout master") }
-
-    it "should be empty by default" do
-      expect(git.migrations_to_run_down).to be_empty
-    end
-
-    it "should list those versions on current_branch which are not on master" do
-      File.open("#{repo}/db/migrate/12345_xyz.rb", "w"){ }
-      system("cd #{repo} && git add db/migrate/12345_xyz.rb && git commit -m 'migration'")
-      expect(git.migrations_to_run_down).to eq(["12345"])
+      it 'does not find migrations on feature branch without migrations' do
+        git.checkout(feature_branch)
+        expect(git.migrations_to_run_down).to be_empty
+      end
     end
   end
 end
