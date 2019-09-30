@@ -1,15 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe PerfCheck::TestCase do
-  let(:test_case) do
-    system("mkdir", "-p", "tmp/spec/app")
-    perf_check = PerfCheck.new('tmp/spec/app')
-    perf_check.logger = Logger.new('/dev/null')
-    PerfCheck::TestCase.new(perf_check, '/xyz')
+  let(:output) { StringIO.new }
+  let(:perf_check) do
+    perf_check = PerfCheck.new(Dir.pwd)
+    perf_check.logger = Logger.new(output)
+    perf_check
   end
-
-  after(:all) do
-    FileUtils.rm_rf('tmp/spec')
+  let(:test_case) do
+    PerfCheck::TestCase.new(perf_check, '/xyz')
   end
 
   describe "#run(server, options)" do
@@ -190,10 +189,6 @@ RSpec.describe PerfCheck::TestCase do
   describe "#response_diff" do
     it "should be the diff between response bodies on reference and this branch"
   end
-end
-
-RSpec.describe PerfCheck::TestCase do
-  let(:perf_check) { PerfCheck.new('app') }
 
   it 'normalizes request paths' do
     [
