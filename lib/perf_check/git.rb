@@ -99,6 +99,8 @@ class PerfCheck
     end
 
     def current_migrations_not_on_master
+      return [] unless File.exist?('db/migrate')
+
       exec("git diff master --name-only --diff-filter=A db/migrate/").
         split.reverse
     end
