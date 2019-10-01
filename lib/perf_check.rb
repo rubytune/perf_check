@@ -11,6 +11,7 @@ require 'ostruct'
 class PerfCheck
   class Exception < ::Exception; end
   class ConfigLoadError < Exception; end
+  class BundleError < Exception; end
 
   attr_reader :app_root, :options, :git, :server, :test_cases
   attr_accessor :logger
@@ -108,6 +109,7 @@ class PerfCheck
     reference_test = test_cases[1]
     profile_test_case(first)
     reference_test.switch_to_reference_context
+    self.class.bundle
     profile_test_case(reference_test)
   end
 
@@ -176,6 +178,16 @@ class PerfCheck
     exception = fail_with || RuntimeError
     raise exception.new(output) unless status.success?
     output
+  end
+
+  # Runs Bundler in the current.
+  def self.bundle
+    Bundler.with_original_env do
+      execute(
+        'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
+        fail_with: BundleError
+      )
+    end
   end
 end
 

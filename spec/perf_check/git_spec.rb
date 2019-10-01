@@ -71,7 +71,7 @@ RSpec.describe PerfCheck::Git do
       it 'fails when running Bundler fails' do
         expect do
           git.checkout('bundle-broken')
-        end.to raise_error(PerfCheck::Git::BundleError)
+        end.to raise_error(PerfCheck::BundleError)
       end
     end
 

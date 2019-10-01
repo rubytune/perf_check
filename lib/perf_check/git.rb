@@ -5,7 +5,6 @@ class PerfCheck
     class NoSuchBranch < Exception; end
     class StashError < Exception; end
     class StashPopError < Exception; end
-    class BundleError < Exception; end
 
     attr_reader :perf_check, :git_root, :current_branch
 
@@ -26,7 +25,7 @@ class PerfCheck
         fail_with: NoSuchBranch
       )
       update_submodules
-      bundle if bundle_after_checkout
+      PerfCheck.bundle if bundle_after_checkout
     end
 
     def stash_if_needed
@@ -81,15 +80,6 @@ class PerfCheck
 
     def update_submodules
       PerfCheck.execute('git submodule update')
-    end
-
-    def bundle
-      Bundler.with_original_env do
-        PerfCheck.execute(
-          'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
-          fail_with: BundleError
-        )
-      end
     end
 
     def current_migrations_not_on_master
