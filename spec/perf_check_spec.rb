@@ -3,28 +3,22 @@
 require 'spec_helper'
 
 RSpec.describe PerfCheck do
+  around do |example|
+    using_app('rails-4') do
+      link_perf_check
+      run_bundle_install
+      example.run
+    end
+  end
+
+  let(:output) { StringIO.new }
   let(:perf_check) do
-    FileUtils.mkdir_p("tmp/spec")
-    PerfCheck.new('test_app').tap{ |x| x.logger = Logger.new('/dev/null') }
-  end
-
-  let(:config_file) do
-    "#{perf_check.app_root}/config/perf_check.rb"
-  end
-
-  after(:all) do
-    FileUtils.rm_rf('tmp/spec')
+    perf_check = PerfCheck.new(Dir.pwd)
+    perf_check.logger = Logger.new(output)
+    perf_check
   end
 
   describe "#run" do
-    it "should run profile_requests, stash if needed, checkout the ref branch, and profile again"
-
-    it "should ensure that server is shut down"
-
-    it "should ensure that current branch is checked out"
-
-    it "should ensure that anything stashed is popped"
-
     context 'when run_migrations is false' do
       before { perf_check.options[:run_migrations?] = false }
 
