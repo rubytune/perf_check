@@ -5,6 +5,7 @@ require 'digest'
 require 'fileutils'
 require 'logger'
 require 'net/http'
+require 'open3'
 require 'ostruct'
 
 class PerfCheck
@@ -168,6 +169,13 @@ class PerfCheck
     end
 
     trigger_when_finished_callbacks(callbacks)
+  end
+
+  def self.execute(*args, fail_with: nil)
+    output, status = Open3.capture2e(*args)
+    exception = fail_with || RuntimeError
+    raise exception.new(output) unless status.success?
+    output
   end
 end
 
