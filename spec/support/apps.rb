@@ -23,5 +23,26 @@ module Support
         Dir.chdir(app_dir, &block)
       end
     end
+
+    def perf_check_project_root
+      File.expand_path('../../', __dir__)
+    end
+
+    # Because apps are unpacked to a temporary directory we need to symlink
+    # the perf_check project root from the application directory in order to
+    # use it easily from the Gemfile.
+    def link_perf_check
+      execute('ln', '-s', perf_check_project_root, 'perf_check')
+    end
+
+    def run_bundle_install
+      # Use the --frozen option to prevent the test suite from writing a new
+      # Gemfile.lock.
+      bundle 'install', '--frozen', '--retry', '3', '--jobs', '3'
+    end
+
+    def run_db_setup
+      bundle 'exec', 'rake', 'db:setup'
+    end
   end
 end
