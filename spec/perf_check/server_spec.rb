@@ -71,6 +71,7 @@ RSpec.describe PerfCheck::Server do
   context 'operating on an actual Rails app' do
     around do |example|
       using_app('minimal') do
+        run_bundle_install
         example.run
       end
     end
