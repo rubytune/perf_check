@@ -47,7 +47,9 @@ class PerfCheck
     end
 
     def mem
-      `ps -o rss= -p #{pid}`.strip.to_f / 1024
+      return 0.0 unless pid
+
+      PerfCheck.execute('ps', '-o', 'rss=', '-p', pid.to_s).strip.to_f / 1024
     end
 
     def prepare_to_profile
