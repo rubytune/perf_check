@@ -3,6 +3,34 @@
 module Support
   # Helpers to prepare app directories for integration testing.
   module Apps
+    # Prints a lot of stuff to STDOUT so we can see if the isolated app was
+    # unpacked an functioning properly.
+    def inspect_app
+      puts "SOURCE"
+      puts
+      puts execute('ls', '-al')
+      puts
+      puts "BRANCHES"
+      puts
+      puts git('branch', '-a')
+      puts
+      puts "PIDS"
+      puts
+      puts execute('ls', '-al', 'tmp/pids')
+      puts
+      puts "PROCESSES"
+      puts
+      puts execute('ps', 'ax').lines.grep(%r{rails}).join("\n")
+      puts
+      puts "LOGS"
+      Dir.glob('log/*.log').each do |filename|
+        puts
+        puts ">> #{filename}"
+        puts
+        puts File.read(filename)
+      end
+    end
+
     # Returns the directory that holds all the app bundles.
     def bundle_dir
       File.expand_path('../bundles', __dir__)
