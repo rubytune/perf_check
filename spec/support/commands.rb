@@ -8,8 +8,18 @@ module Support
     # Wrapper to safely execute commands in specs.
     def execute(*args, **kwargs)
       output, status = Open3.capture2e(*args, **kwargs)
-      raise PerfCheck::App::PackError, output unless status.exitstatus.zero?
+      raise output unless status.success?
       output
+    end
+
+    def git(*args)
+      execute('git', *args)
+    end
+
+    def bundle(*args)
+      Bundler.with_clean_env do
+        execute('bundle', *args)
+      end
     end
   end
 end
