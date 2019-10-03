@@ -180,7 +180,7 @@ class PerfCheck
     output
   end
 
-  # Runs Bundler in the current.
+  # Runs Bundler in the current working directory.
   def self.bundle
     Bundler.with_clean_env do
       execute(
