@@ -15,6 +15,7 @@ RSpec.describe PerfCheck do
   let(:perf_check) do
     perf_check = PerfCheck.new(Dir.pwd)
     perf_check.logger = Logger.new(output)
+    perf_check.options.spawn_shell = true
     perf_check
   end
 
@@ -235,6 +236,7 @@ RSpec.describe PerfCheck do
     let(:perf_check) do
       perf_check = PerfCheck.new(Dir.pwd)
       perf_check.logger = Logger.new(output)
+      perf_check.options.spawn_shell = true
       perf_check
     end
 
