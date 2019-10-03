@@ -182,7 +182,7 @@ class PerfCheck
 
   # Runs Bundler in the current.
   def self.bundle
-    Bundler.with_original_env do
+    Bundler.with_clean_env do
       execute(
         'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
         fail_with: BundleError
