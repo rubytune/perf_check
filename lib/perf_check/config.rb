@@ -59,7 +59,7 @@ class PerfCheck
         options.spawn_shell = true
       end
       
-      opts.on('--environment', '-e',
+      opts.on('--environment ENVIRONMENT', '-e',
         'Change the rails environment we are profiling. Defaults to development') do |env|
         options.environment = env
       end

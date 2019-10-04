@@ -19,6 +19,13 @@ RSpec.describe PerfCheck do
     perf_check
   end
 
+  describe 'option parser' do
+    it 'parses the environment' do
+      perf_check.parse_arguments(%w[--environment staging])
+      expect(perf_check.options.environment).to eq('staging')
+    end
+  end
+
   describe "#run" do
     context 'when run_migrations is false' do
       before { perf_check.options[:run_migrations?] = false }
