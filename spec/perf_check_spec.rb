@@ -24,6 +24,26 @@ RSpec.describe PerfCheck do
       perf_check.parse_arguments(%w[--environment staging])
       expect(perf_check.options.environment).to eq('staging')
     end
+
+    it 'parses the number of requests' do
+      perf_check.parse_arguments(%w[-n 43])
+      expect(perf_check.options.number_of_requests).to eq(43)
+    end
+
+    it 'parses a relatively complex expression' do
+      perf_check.parse_arguments(
+        %w[
+          --deployment
+          --shell
+          -n 2
+          --branch UE-3965/faster    /4/co/cu/15
+        ]
+      )
+      expect(perf_check.options.hard_reset).to eq(true)
+      expect(perf_check.options.spawn_shell).to eq(true)
+      expect(perf_check.options.number_of_requests).to eq(2)
+      expect(perf_check.options.branch).to eq('UE-3965/faster')
+    end
   end
 
   describe "#run" do
