@@ -70,10 +70,12 @@ class PerfCheck
   end
 
   def run
-    if options.compare_paths?
-      compare_paths
-    else
-      compare_branches
+    in_app_root do
+      if options.compare_paths?
+        compare_paths
+      else
+        compare_branches
+      end
     end
   ensure
     cleanup_and_report
