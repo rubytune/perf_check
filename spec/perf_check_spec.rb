@@ -44,6 +44,11 @@ RSpec.describe PerfCheck do
       expect(perf_check.options.number_of_requests).to eq(2)
       expect(perf_check.options.branch).to eq('UE-3965/faster')
     end
+
+    it 'parses the verbose option' do
+      perf_check.parse_arguments(%w[--verbose])
+      expect(perf_check.options.verbose).to eq(true)
+    end
   end
 
   describe "#run" do
@@ -250,6 +255,17 @@ RSpec.describe PerfCheck do
     perf_check.add_test_case(request_path)
     expect(perf_check.test_cases.size).to eq(2)
     expect(perf_check.test_cases.last.resource).to eq('/' + request_path)
+  end
+
+  it 'uses the info log level by default' do
+    perf_check = PerfCheck.new('app')
+    expect(perf_check.logger.level).to eq(Logger::INFO)
+  end
+
+  it 'sets the log level to debug when running in verbose mode' do
+    perf_check = PerfCheck.new('app')
+    perf_check.options.verbose = true
+    expect(perf_check.logger.level).to eq(Logger::DEBUG)
   end
 
   context 'operating on a Rails app' do

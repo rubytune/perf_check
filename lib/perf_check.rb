@@ -36,18 +36,20 @@ class PerfCheck
       json: false,
       hard_reset: false,
       spawn_shell: false,
-      environment: 'development'
+      environment: 'development',
+      verbose: false
     )
-
-    @logger = Logger.new(STDERR).tap do |logger|
-      logger.formatter = proc do |severity, datetime, progname, msg|
-        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] #{msg}\n"
-      end
-    end
-
     @git = Git.new(self)
     @server = Server.new(self)
     @test_cases = []
+  end
+
+  def logger
+    @logger ||= Logger.new(
+      STDERR,
+      level: logger_level,
+      formatter: logger_formatter
+    )
   end
 
   def config_path
@@ -82,6 +84,22 @@ class PerfCheck
   end
 
   private
+
+  def logger_level
+    options.verbose ? Logger::DEBUG : Logger::INFO
+  end
+
+  def logger_formatter
+    if options.verbose
+      proc do |level, datetime, _, msg|
+        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] (#{level}) #{msg}\n"
+      end
+    else
+      proc do |_, datetime, _, msg|
+        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] #{msg}\n"
+      end
+    end
+  end
 
   def in_app_root(&block)
     if Dir.pwd != app_root
@@ -118,7 +136,7 @@ class PerfCheck
   def profile_test_case(test)
     trigger_before_start_callbacks(test)
     run_migrations_up if options.run_migrations?
-    server.restart
+    logger.debug(server.restart)
 
     test.cookie = options.cookie
 
