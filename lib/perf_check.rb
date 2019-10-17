@@ -5,17 +5,19 @@ require 'digest'
 require 'fileutils'
 require 'logger'
 require 'net/http'
+require 'open3'
 require 'ostruct'
 
 class PerfCheck
   class Exception < ::Exception; end
   class ConfigLoadError < Exception; end
+  class BundleError < Exception; end
 
   attr_reader :app_root, :options, :git, :server, :test_cases
   attr_accessor :logger
 
   def initialize(app_root)
-    @app_root = app_root
+    @app_root = File.expand_path(app_root)
     @options = OpenStruct.new(
       number_of_requests: 20,
       reference: 'master',
@@ -34,92 +36,107 @@ class PerfCheck
       json: false,
       hard_reset: false,
       spawn_shell: false,
-      environment: 'development'
+      environment: 'development',
+      verbose: false
     )
-
-    @logger = Logger.new(STDERR).tap do |logger|
-      logger.formatter = proc do |severity, datetime, progname, msg|
-        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] #{msg}\n"
-      end
-    end
-
     @git = Git.new(self)
     @server = Server.new(self)
     @test_cases = []
   end
 
-  def load_config
-    File.stat(File.join(app_root,'Gemfile')).file?
-    if File.exists?("#{app_root}/config/perf_check.rb")
-      this = self
-      Kernel.send(:define_method, :perf_check){ this }
+  def logger
+    @logger ||= Logger.new(
+      STDERR,
+      level: logger_level,
+      formatter: logger_formatter
+    )
+  end
 
-      dir = Dir.pwd
-      begin
-        Dir.chdir(app_root)
-        load "#{app_root}/config/perf_check.rb"
-      rescue LoadError => e
-        error = ConfigLoadError.new(e.message)
-        error.set_backtrace(e.backtrace)
-        raise error
-      ensure
-        Dir.chdir(dir)
-        Kernel.send(:remove_method, :perf_check)
-      end
+  def config_path
+    File.join(app_root, 'config', 'perf_check.rb')
+  end
+
+  def load_config
+    if File.exist?(config_path)
+      config = File.read(config_path)
+      perf_check = self
+      eval(config, binding, config_path)
+      true
+    else
+      false
     end
   end
 
-  def add_test_case(route)
-    test_cases.push(TestCase.new(self, route.sub(/^([^\/])/, '/\1')))
+  def add_test_case(request_path)
+    test_cases.push(TestCase.new(self, request_path))
   end
 
   def run
-    begin
+    in_app_root do
       if options.compare_paths?
-        raise "Must have two paths" if test_cases.count != 2
-        profile_compare_paths_requests
+        compare_paths
       else
-        profile_requests
-        if options.reference
-          git.stash_if_needed
-          git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
-          test_cases.each{ |x| x.switch_to_reference_context }
-
-          profile_requests
-        end
+        compare_branches
       end
-    ensure
-      server.exit
-      if options.reference
-        git.checkout(git.current_branch, bundle_after_checkout: true, hard_reset: options.hard_reset)
-        git.pop if git.stashed?
-      end
-
-      callbacks = {}
-
-      if $!
-        callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
-        callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
-      end
-
-      trigger_when_finished_callbacks(callbacks)
     end
+  ensure
+    cleanup_and_report
   end
 
   private
+
+  def logger_level
+    options.verbose ? Logger::DEBUG : Logger::INFO
+  end
+
+  def logger_formatter
+    if options.verbose
+      proc do |level, datetime, _, msg|
+        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] (#{level}) #{msg}\n"
+      end
+    else
+      proc do |_, datetime, _, msg|
+        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] #{msg}\n"
+      end
+    end
+  end
+
+  def in_app_root(&block)
+    if Dir.pwd != app_root
+      Dir.chdir(app_root, &block)
+    else
+      block.call
+    end
+  end
+
+  def compare_paths
+    raise "Must have two paths" if test_cases.count != 2
+    profile_compare_paths_requests
+  end
+
+  def compare_branches
+    profile_requests
+    if options.reference
+      git.stash_if_needed
+      git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
+      test_cases.each(&:switch_to_reference_context)
+      profile_requests
+    end
+  end
 
   def profile_compare_paths_requests
     first = test_cases[0]
     reference_test = test_cases[1]
     profile_test_case(first)
     reference_test.switch_to_reference_context
+    self.class.bundle
     profile_test_case(reference_test)
   end
 
   def profile_test_case(test)
     trigger_before_start_callbacks(test)
     run_migrations_up if options.run_migrations?
-    server.restart
+    logger.debug(server.restart)
 
     test.cookie = options.cookie
 
@@ -157,6 +174,40 @@ class PerfCheck
       end
     end
     git.clean_db
+  end
+
+  def cleanup_and_report
+    server.exit
+    if options.reference
+      git.checkout(git.current_branch, bundle_after_checkout: true)
+      git.pop if git.stashed?
+    end
+
+    callbacks = {}
+
+    if $!
+      callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
+      callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
+    end
+
+    trigger_when_finished_callbacks(callbacks)
+  end
+
+  def self.execute(*args, fail_with: nil)
+    output, status = Open3.capture2e(*args)
+    exception = fail_with || RuntimeError
+    raise exception.new(output) unless status.success?
+    output
+  end
+
+  # Runs Bundler in the current working directory.
+  def self.bundle
+    Bundler.with_clean_env do
+      execute(
+        'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
+        fail_with: BundleError
+      )
+    end
   end
 end
 

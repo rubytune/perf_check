@@ -7,6 +7,7 @@ end
 
 RSpec.configure do |config|
   config.include Support::Apps
+  config.include Support::Commands
   config.include Support::Paths
 
   config.expect_with :rspec do |expectations|

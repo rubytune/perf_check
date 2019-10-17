@@ -59,7 +59,7 @@ class PerfCheck
         options.spawn_shell = true
       end
       
-      opts.on('--environment', '-e',
+      opts.on('--environment ENVIRONMENT', '-e',
         'Change the rails environment we are profiling. Defaults to development') do |env|
         options.environment = env
       end
@@ -67,6 +67,11 @@ class PerfCheck
       opts.on('--no-caching',
         'Do not enable fragment caching (Rails.cache will still work)') do
         options.caching = false
+      end
+
+      opts.on('--verbose',
+        'Include all command output in the logs') do
+        options.verbose = true
       end
 
       opts.separator "\nMisc"

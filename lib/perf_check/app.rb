@@ -24,7 +24,7 @@ class PerfCheck
     end
 
     def pack
-      execute('tar', '-cjf', bundle_path, '.', '.git', chdir: app_dir)
+      execute('tar', '-cjf', bundle_path, '.', chdir: app_dir)
     end
 
     def unpack

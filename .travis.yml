@@ -1,2 +1,10 @@
+sudo: false
+dist: bionic
 language: ruby
-script: bundle exec rspec
+cache: bundler
+rvm:
+  - 2.6.3
+before_install:
+  - export BUNDLE_GEMFILE=
+script:
+  - bundle exec rspec --tag ~skip_on_ci --fail-fast --format documentation --backtrace

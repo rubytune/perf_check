@@ -1,4 +1,3 @@
-
 require 'net/http'
 require 'benchmark'
 require 'ostruct'
@@ -47,7 +46,9 @@ class PerfCheck
     end
 
     def mem
-      `ps -o rss= -p #{pid}`.strip.to_f / 1024
+      return 0.0 unless pid
+
+      PerfCheck.execute('ps', '-o', 'rss=', '-p', pid.to_s).strip.to_f / 1024
     end
 
     def prepare_to_profile
@@ -104,8 +105,12 @@ class PerfCheck
     end
 
     def start
-      Process.wait(spawn)
-      @running = wait_for_server
+      IO.pipe do |read, write|
+        Process.wait(spawn(write))
+        write.close
+        @running = wait_for_server
+        read.read
+      end
     end
 
     def restart
@@ -135,14 +140,6 @@ class PerfCheck
       perf_check.options.environment || "development"
     end
 
-    class Profile < OpenStruct; end
-
-    private
-
-    def pidfile
-      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
-    end
-
     def environment_variables
       variables = { 'PERF_CHECK' => '1', 'DISABLE_SPRING' => '1' }
       if perf_check.options.verify_no_diff
@@ -158,20 +155,35 @@ class PerfCheck
       "bundle exec rails server -b #{host} -d -p #{port} -e #{environment}"
     end
 
-    def spawn
+    class Profile < OpenStruct; end
+
+    private
+
+    def pidfile
+      @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
+    end
+
+    def spawn_options(output)
+      {
+        chdir: perf_check.app_root,
+        out: output,
+        err: [:child, :out]
+      }
+    end
+
+    def spawn(output)
       if perf_check.options.spawn_shell
         Process.spawn(
           environment_variables.merge('HOME' => ENV['HOME']),
           "bash -l -c \"#{rails_server_command}\"",
-          chdir: perf_check.app_root,
-          unsetenv_others: true
+          spawn_options(output).merge(unsetenv_others: true)
         )
       else
         Bundler.with_original_env do
           Process.spawn(
             environment_variables,
             rails_server_command,
-            chdir: perf_check.app_root
+            spawn_options(output)
           )
         end
       end

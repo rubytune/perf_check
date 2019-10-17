@@ -10,11 +10,11 @@ class PerfCheck
     attr_accessor :this_profiles, :reference_profiles
     attr_accessor :http_status, :max_memory, :error_backtrace
 
-    def initialize(perf_check, route)
+    def initialize(perf_check, request_path)
       @perf_check = perf_check
       self.this_profiles = []
       self.reference_profiles = []
-      self.resource = route
+      self.resource = self.class.normalize_request_path(request_path)
     end
 
     def run(server, options)
@@ -128,6 +128,12 @@ class PerfCheck
 
     def switch_to_reference_context
       @context = :reference
+    end
+
+    def self.normalize_request_path(request_path)
+      return unless request_path
+
+      request_path.start_with?('/') ? request_path : '/' + request_path
     end
 
     private

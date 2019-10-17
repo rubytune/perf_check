@@ -12,6 +12,7 @@ RSpec.describe PerfCheck::App do
 
       expect(File.exist?(File.join(app_dir, 'Gemfile'))).to be true
       expect(File.exist?(File.join(app_dir, '.git'))).to be true
+      expect(File.exist?(File.join(app_dir, '.gitignore'))).to be true
     end
   end
 
@@ -56,6 +57,7 @@ RSpec.describe PerfCheck::App do
           # should be there.
           expect(File.exist?(File.join(app2_dir, 'Gemfile'))).to be true
           expect(File.exist?(File.join(app2_dir, '.git'))).to be true
+          expect(File.exist?(File.join(app2_dir, '.gitignore'))).to be true
         end
       end
     end
