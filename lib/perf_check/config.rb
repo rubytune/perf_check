@@ -69,6 +69,11 @@ class PerfCheck
         options.caching = false
       end
 
+      opts.on('--verbose',
+        'Include all command output in the logs') do
+        options.verbose = true
+      end
+
       opts.separator "\nMisc"
 
       opts.on('-h', 'Display this help') do
