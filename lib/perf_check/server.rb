@@ -105,8 +105,12 @@ class PerfCheck
     end
 
     def start
-      Process.wait(spawn)
-      @running = wait_for_server
+      IO.pipe do |read, write|
+        Process.wait(spawn(write))
+        write.close
+        @running = wait_for_server
+        read.read
+      end
     end
 
     def restart
@@ -159,20 +163,27 @@ class PerfCheck
       @pidfile ||= "#{perf_check.app_root}/tmp/pids/server.pid"
     end
 
-    def spawn
+    def spawn_options(output)
+      {
+        chdir: perf_check.app_root,
+        out: output,
+        err: [:child, :out]
+      }
+    end
+
+    def spawn(output)
       if perf_check.options.spawn_shell
         Process.spawn(
           environment_variables.merge('HOME' => ENV['HOME']),
           "bash -l -c \"#{rails_server_command}\"",
-          chdir: perf_check.app_root,
-          unsetenv_others: true
+          spawn_options(output).merge(unsetenv_others: true)
         )
       else
         Bundler.with_original_env do
           Process.spawn(
             environment_variables,
             rails_server_command,
-            chdir: perf_check.app_root
+            spawn_options(output)
           )
         end
       end
