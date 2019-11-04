@@ -52,7 +52,7 @@ RSpec.describe PerfCheck do
           --branch UE-3965/faster    /4/co/cu/15
         ]
       )
-      expect(perf_check.options.hard_reset).to eq(true)
+      expect(perf_check.options.deployment).to eq(true)
       expect(perf_check.options.spawn_shell).to eq(true)
       expect(perf_check.options.number_of_requests).to eq(2)
       expect(perf_check.options.branch).to eq('UE-3965/faster')
