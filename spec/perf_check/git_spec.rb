@@ -26,6 +26,7 @@ RSpec.describe PerfCheck::Git do
     end
     let(:feature_branch) { 'perf-check' }
     let(:non_existent_branch){ 'non-existent' }
+    let(:commit) { 'fe704dd6d1fa37d8d432b6d07c1ce261a93ca11f' }
 
     describe 'when initializing' do
       it 'finds the initial branch checked out in perf_check.app_root' do
@@ -42,6 +43,22 @@ RSpec.describe PerfCheck::Git do
       it 'initializes #logger to perf_check.logger' do
         git = PerfCheck::Git.new(perf_check)
         expect(git.logger).to eq(perf_check.logger)
+      end
+
+      it 'returns the real actual current branch or commit' do
+        git = PerfCheck::Git.new(perf_check)
+        expect(git.detect_current_branch).to eq('master')
+
+        git.checkout('HEAD~1')
+        expect(git.detect_current_branch).to eq(
+          'fe704dd6d1fa37d8d432b6d07c1ce261a93ca11f'
+        )
+
+        git.checkout(feature_branch)
+        expect(git.detect_current_branch).to eq(feature_branch)
+
+        git.checkout(commit)
+        expect(git.detect_current_branch).to eq(commit)
       end
     end
 
