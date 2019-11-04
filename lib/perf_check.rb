@@ -34,6 +34,9 @@ class PerfCheck
       brief: false,
       caching: true,
       json: false,
+      # Deployment is set to true when PerfCheck runs in a CI-like managed
+      # environment.
+      deployment: false,
       hard_reset: false,
       spawn_shell: false,
       environment: 'development',
