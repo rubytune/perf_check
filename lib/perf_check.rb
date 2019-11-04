@@ -185,7 +185,7 @@ class PerfCheck
   def cleanup_and_report
     server.exit
     if options.reference
-      git.checkout(git.current_branch, bundle_after_checkout: true)
+      git.checkout(git.initial_branch, bundle_after_checkout: true)
       git.pop if git.stashed?
     end
 
