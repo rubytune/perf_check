@@ -6,12 +6,13 @@ class PerfCheck
     class StashError < Exception; end
     class StashPopError < Exception; end
 
-    attr_reader :perf_check, :git_root, :current_branch
+    attr_reader :perf_check, :git_root
+    attr_reader :initial_branch
 
     def initialize(perf_check)
       @perf_check = perf_check
       @git_root = perf_check.app_root
-      @current_branch = perf_check.options.branch || detect_current_branch
+      @initial_branch = perf_check.options.branch || detect_current_branch
     end
 
     def logger

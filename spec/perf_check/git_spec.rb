@@ -28,15 +28,15 @@ RSpec.describe PerfCheck::Git do
     let(:non_existent_branch){ 'non-existent' }
 
     describe 'when initializing' do
-      it 'finds the current branch checked out in perf_check.app_root' do
+      it 'finds the initial branch checked out in perf_check.app_root' do
         git = PerfCheck::Git.new(perf_check)
-        expect(git.current_branch).to eq('master')
+        expect(git.initial_branch).to eq('master')
       end
 
       it 'finds the branch specified in --branch if the option is set' do
         perf_check.options.branch = 'specified-branch'
         git = PerfCheck::Git.new(perf_check)
-        expect(git.current_branch).to eq('specified-branch')
+        expect(git.initial_branch).to eq('specified-branch')
       end
 
       it 'initializes #logger to perf_check.logger' do
