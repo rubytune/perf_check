@@ -6,12 +6,13 @@ class PerfCheck
     class StashError < Exception; end
     class StashPopError < Exception; end
 
-    attr_reader :perf_check, :git_root, :current_branch
+    attr_reader :perf_check, :git_root
+    attr_reader :initial_branch
 
     def initialize(perf_check)
       @perf_check = perf_check
       @git_root = perf_check.app_root
-      @current_branch = perf_check.options.branch || detect_current_branch
+      @initial_branch = detect_current_branch
     end
 
     def logger
@@ -64,6 +65,16 @@ class PerfCheck
       PerfCheck.execute('git checkout db')
     end
 
+    def detect_current_branch
+      branch = PerfCheck.execute('git rev-parse --abbrev-ref=loose HEAD').strip
+      return branch unless branch == 'HEAD'
+
+      # When the current ref is abbreviated to HEAD it's pretty useless because
+      # it will not allow us to reliably switch to this ref at a later time. The
+      # solution is to not abbreviate.
+      PerfCheck.execute('git rev-parse HEAD').strip
+    end
+
     private
 
     def checkout_command(branch, hard_reset: false)
@@ -72,10 +83,6 @@ class PerfCheck
       else
         "git checkout #{branch}"
       end
-    end
-
-    def detect_current_branch
-      PerfCheck.execute('git rev-parse --abbrev-ref HEAD').strip
     end
 
     def update_submodules
