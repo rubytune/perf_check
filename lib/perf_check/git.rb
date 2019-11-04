@@ -12,7 +12,7 @@ class PerfCheck
     def initialize(perf_check)
       @perf_check = perf_check
       @git_root = perf_check.app_root
-      @initial_branch = perf_check.options.branch || detect_current_branch
+      @initial_branch = detect_current_branch
     end
 
     def logger
