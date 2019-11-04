@@ -24,13 +24,12 @@ class PerfCheck
     ]
   end
 
-
   def trigger_before_start_callbacks(test_case)
     before_start_callbacks.each{ |f| f.call(self, test_case) }
   end
 
   def trigger_when_finished_callbacks(data={})
-    data = data.merge(:current_branch => git.current_branch)
+    data = data.merge(current_branch: git.detect_current_branch)
     results = OpenStruct.new(data)
     if test_cases.size == 1
       results.current_latency = test_cases.first.this_latency
