@@ -113,14 +113,20 @@ class PerfCheck
 
   def compare_paths
     raise "Must have two paths" if test_cases.count != 2
+    ensure_branch
     profile_compare_paths_requests
   end
 
   def compare_branches
+    ensure_branch
     profile_requests
     if options.reference
       git.stash_if_needed
-      git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.automated)
+      git.checkout(
+        options.reference,
+        bundle_after_checkout: true,
+        hard_reset: options.automated
+      )
       test_cases.each(&:switch_to_reference_context)
       profile_requests
     end
@@ -180,11 +186,7 @@ class PerfCheck
 
   def cleanup_and_report
     server.exit
-    if options.reference
-      git.checkout(git.initial_branch, bundle_after_checkout: true)
-      git.pop if git.stashed?
-    end
-
+    cleanup_git
     callbacks = {}
 
     if $!
@@ -210,6 +212,26 @@ class PerfCheck
         fail_with: BundleError
       )
     end
+  end
+
+  private
+
+  def ensure_branch
+    return unless options.automated && options.branch
+
+    git.checkout(options.branch, bundle_after_checkout: true, hard_reset: true)
+  end
+
+  def cleanup_git
+    return if options.automated
+
+    # Switch back to the initial branch unless we're already on it.
+    if git.initial_branch != git.detect_current_branch  
+      git.checkout(git.initial_branch, bundle_after_checkout: false)
+    end
+
+    # Restore any stashed changes
+    git.pop if git.stashed?
   end
 end
 
