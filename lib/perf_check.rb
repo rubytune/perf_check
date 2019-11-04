@@ -37,7 +37,6 @@ class PerfCheck
       # Deployment is set to true when PerfCheck runs in a CI-like managed
       # environment.
       deployment: false,
-      hard_reset: false,
       spawn_shell: false,
       environment: 'development',
       verbose: false
@@ -121,7 +120,11 @@ class PerfCheck
     profile_requests
     if options.reference
       git.stash_if_needed
-      git.checkout(options.reference, bundle_after_checkout: true, hard_reset: options.hard_reset)
+      git.checkout(
+        options.reference,
+        bundle_after_checkout: true,
+        hard_reset: options.deployment
+      )
       test_cases.each(&:switch_to_reference_context)
       profile_requests
     end
