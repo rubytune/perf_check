@@ -19,6 +19,19 @@ RSpec.describe PerfCheck do
     perf_check
   end
 
+  describe 'defaults' do
+    let(:options) { perf_check.options }
+
+    it 'is not automated by default' do
+      expect(options.automated).to eq(false)
+    end
+
+    it 'changes to running in automated mode' do
+      options.automated = true
+      expect(options.automated).to eq(true)
+    end
+  end
+
   describe 'option parser' do
     it 'parses the environment' do
       perf_check.parse_arguments(%w[--environment staging])

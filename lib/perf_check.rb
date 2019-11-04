@@ -34,6 +34,9 @@ class PerfCheck
       brief: false,
       caching: true,
       json: false,
+      # Automated is set to true when PerfCheck runs in a CI-like managed
+      # environment.
+      automated: false,
       hard_reset: false,
       spawn_shell: false,
       environment: 'development',
