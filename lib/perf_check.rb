@@ -74,15 +74,31 @@ class PerfCheck
   end
 
   def run
-    in_app_root do
-      if options.compare_paths?
-        compare_paths
-      else
-        compare_branches
-      end
+    if options.compare_paths?
+      compare_paths
+    else
+      compare_branches
     end
   ensure
     cleanup_and_report
+  end
+
+  # Runs Bundler in the current working directory.
+  def bundle
+    Bundler.with_clean_env do
+      execute(
+        'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
+        fail_with: BundleError
+      )
+    end
+  end
+
+  # Executes a command in the current working directory.
+  def execute(*args, fail_with: nil)
+    output, status = Open3.capture2e(*args, chdir: app_root)
+    exception = fail_with || RuntimeError
+    raise exception.new(output) unless status.success?
+    output
   end
 
   private
@@ -100,14 +116,6 @@ class PerfCheck
       proc do |_, datetime, _, msg|
         "[#{datetime.strftime("%Y-%m-%d %H:%M:%S")}] #{msg}\n"
       end
-    end
-  end
-
-  def in_app_root(&block)
-    if Dir.pwd != app_root
-      Dir.chdir(app_root, &block)
-    else
-      block.call
     end
   end
 
@@ -137,7 +145,7 @@ class PerfCheck
     reference_test = test_cases[1]
     profile_test_case(first)
     reference_test.switch_to_reference_context
-    self.class.bundle
+    bundle
     profile_test_case(reference_test)
   end
 
@@ -196,25 +204,6 @@ class PerfCheck
 
     trigger_when_finished_callbacks(callbacks)
   end
-
-  def self.execute(*args, fail_with: nil)
-    output, status = Open3.capture2e(*args)
-    exception = fail_with || RuntimeError
-    raise exception.new(output) unless status.success?
-    output
-  end
-
-  # Runs Bundler in the current working directory.
-  def self.bundle
-    Bundler.with_clean_env do
-      execute(
-        'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
-        fail_with: BundleError
-      )
-    end
-  end
-
-  private
 
   def ensure_branch
     return unless options.deployment && options.branch

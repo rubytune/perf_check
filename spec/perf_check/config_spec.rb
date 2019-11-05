@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe PerfCheck do
-  let(:perf_check) { PerfCheck.new('test_app') }
+  let(:perf_check) { PerfCheck.new(minimal_app_dir) }
 
   context "option parser" do
     it "allows the -b option to select the experiment branch" do

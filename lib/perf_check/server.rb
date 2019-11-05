@@ -48,7 +48,7 @@ class PerfCheck
     def mem
       return 0.0 unless pid
 
-      PerfCheck.execute('ps', '-o', 'rss=', '-p', pid.to_s).strip.to_f / 1024
+      perf_check.execute('ps', '-o', 'rss=', '-p', pid.to_s).strip.to_f / 1024
     end
 
     def prepare_to_profile

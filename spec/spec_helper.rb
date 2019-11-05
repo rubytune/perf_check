@@ -10,6 +10,10 @@ RSpec.configure do |config|
   config.include Support::Commands
   config.include Support::Paths
 
+  config.after(:suite) do
+    FileUtils.rm_rf(Support::Apps.minimal_app_dir)
+  end
+
   config.expect_with :rspec do |expectations|
     # This option will default to `true` in RSpec 4, it's included here for
     # forward compatibility.
