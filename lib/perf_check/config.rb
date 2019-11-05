@@ -24,7 +24,7 @@ class PerfCheck
         options.reference = commit
       end
 
-      opts.on('--branch COMMIT', '-branch',
+      opts.on('--branch COMMIT', '-b',
         'Set the current branch to benchmark against (defaults to the branch you currently have checked out)') do |branch|
         options.branch = branch
       end
@@ -100,7 +100,7 @@ class PerfCheck
         end
       end
 
-      opts.on('--brief', '-b') do
+      opts.on('--brief') do
         options.brief = true
       end
 
