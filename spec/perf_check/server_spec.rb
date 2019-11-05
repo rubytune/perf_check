@@ -5,7 +5,7 @@ require 'spec_helper'
 RSpec.describe PerfCheck::Server do
   let(:output) { StringIO.new }
   let(:perf_check) do
-    perf_check = PerfCheck.new(Dir.pwd)
+    perf_check = PerfCheck.new(minimal_app_dir)
     perf_check.logger = Logger.new(output)
     perf_check
   end
