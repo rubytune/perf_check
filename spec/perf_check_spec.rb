@@ -295,13 +295,60 @@ RSpec.describe PerfCheck do
       perf_check.options.spawn_shell = true
       perf_check
     end
+    let(:git) { perf_check.git }
 
     it 'benchmarks the specified branch and compares to master' do
+      expect(git.detect_current_branch).to eq('master')
+
       perf_check.parse_arguments(%w[--branch slower /])
       perf_check.run
+
       expect(output.string).to include('☕️')
       expect(output.string).to include('Benchmarking /')
+      expect(output.string).to_not include('Checking out slower and bundling')
       expect(output.string).to include('Checking out master and bundling')
+
+      expect(git.detect_current_branch).to eq(git.initial_branch)
+    end
+
+    it 'benchmarks the specified branch and compares to master in deployment mode' do
+      expect(git.detect_current_branch).to eq('master')
+
+      perf_check.parse_arguments(%w[--deployment --branch slower /])
+      perf_check.run
+
+      expect(output.string).to include('☕️')
+      expect(output.string).to include('Benchmarking /')
+      expect(output.string).to include('Checking out slower and bundling')
+      expect(output.string).to include('Checking out master and bundling')
+
+      expect(git.detect_current_branch).to eq(git.initial_branch)
+    end
+
+    it 'benchmarks two paths' do
+      expect(git.detect_current_branch).to eq('master')
+
+      perf_check.parse_arguments(%w[--compare-paths / /])
+      perf_check.run
+
+      expect(output.string).to include('☕️')
+      expect(output.string).to include('Benchmarking /')
+      expect(output.string).to_not include('Checking out')
+
+      expect(git.detect_current_branch).to eq(git.initial_branch)
+    end
+
+    it 'benchmarks two paths in deployment mode' do
+      expect(git.detect_current_branch).to eq('master')
+
+      perf_check.parse_arguments(%w[--deployment --compare-paths / /])
+      perf_check.run
+
+      expect(output.string).to include('☕️')
+      expect(output.string).to include('Benchmarking /')
+      expect(output.string).to_not include('Checking out')
+
+      expect(git.detect_current_branch).to eq(git.initial_branch)
     end
 
     it 'does not break when there is no config/perf_check.rb' do
