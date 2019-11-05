@@ -4,6 +4,21 @@ RSpec.describe PerfCheck do
   let(:perf_check) { PerfCheck.new('test_app') }
 
   context "option parser" do
+    it "allows the -b option to select the experiment branch" do
+      perf_check.parse_arguments(%w(-b lrz/optimizations))
+      expect(perf_check.options.branch).to eq('lrz/optimizations')
+    end
+
+    it "allows the --branch option to select the experiment branch" do
+      perf_check.parse_arguments(%w(--branch lrz/optimizations))
+      expect(perf_check.options.branch).to eq('lrz/optimizations')
+    end
+
+    it "allows the --brief option to set brief output" do
+      perf_check.parse_arguments(%w(--brief))
+      expect(perf_check.options.brief).to eq(true)
+    end
+
     it "allows the --deployment options to turn on deployment mode" do
       perf_check.parse_arguments(%w(--deployment))
       expect(perf_check.options.deployment).to eq(true)
