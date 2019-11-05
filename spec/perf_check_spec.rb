@@ -241,22 +241,21 @@ RSpec.describe PerfCheck do
 end
 
 RSpec.describe PerfCheck do
+  let(:perf_check) { PerfCheck.new(minimal_app_dir) }
+
   it 'expands the app dir' do
-    perf_check = PerfCheck.new('app')
-    expect(perf_check.app_root).to eq(
-      File.expand_path('../app', __dir__)
-    )
+    app_dir = minimal_app_dir + '/../' + minimal_app_dir.split('/').last
+    perf_check = PerfCheck.new(app_dir)
+    expect(perf_check.app_root).to eq(minimal_app_dir)
   end
 
   it 'returns the path to its config script in the target application' do
-    perf_check = PerfCheck.new('app')
     expect(perf_check.config_path).to eq(
-      File.expand_path('../app/config/perf_check.rb', __dir__)
+      File.join(minimal_app_dir, 'config/perf_check.rb')
     )
   end
 
   it 'adds a test case with a request path' do
-    perf_check = PerfCheck.new('app')
     expect(perf_check.test_cases.size).to be_zero
 
     request_path = '/books/42/authors?q=he'
@@ -271,12 +270,10 @@ RSpec.describe PerfCheck do
   end
 
   it 'uses the info log level by default' do
-    perf_check = PerfCheck.new('app')
     expect(perf_check.logger.level).to eq(Logger::INFO)
   end
 
   it 'sets the log level to debug when running in verbose mode' do
-    perf_check = PerfCheck.new('app')
     perf_check.options.verbose = true
     expect(perf_check.logger.level).to eq(Logger::DEBUG)
   end
