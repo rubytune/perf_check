@@ -1,5 +1,3 @@
-require 'shellwords'
-
 class PerfCheck
   class Git
     class NoSuchBranch < Exception; end
