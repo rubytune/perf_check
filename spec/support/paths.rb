@@ -10,5 +10,10 @@ module Support
     def using_tmpdir(&block)
       Dir.mktmpdir('perf-check', &block)
     end
+
+    # Returns the root directory if the source code.
+    def perf_check_project_root
+      File.expand_path('../../', __dir__)
+    end
   end
 end
