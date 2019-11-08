@@ -5,7 +5,6 @@ require_relative 'lib/perf_check/version'
 Gem::Specification.new do |s|
   s.name = 'perf_check'
   s.version = PerfCheck::VERSION
-  s.date = '2019-07-02'
   s.summary = 'PERF CHECKKK!'
   s.authors = %w[rubytune]
   s.homepage = 'https://github.com/rubytune/perf_check'
