@@ -9,6 +9,8 @@ require 'open3'
 require 'ostruct'
 
 class PerfCheck
+  autoload :VERSION, 'perf_check/version'
+
   class Exception < ::Exception; end
   class ConfigLoadError < Exception; end
   class BundleError < Exception; end
