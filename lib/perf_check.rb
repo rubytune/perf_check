@@ -91,7 +91,7 @@ class PerfCheck
   def bundle
     Bundler.with_clean_env do
       execute(
-        'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
+        'bundle', 'install', '--retry', '3', '--jobs', '3',
         fail_with: BundleError
       )
     end
