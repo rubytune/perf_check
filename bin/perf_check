@@ -1,6 +1,11 @@
 #!/usr/bin/env ruby
 
-require 'perf_check'
+begin
+  require 'perf_check'
+rescue LoadError
+  $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
+  retry
+end
 
 app_root =
   begin
