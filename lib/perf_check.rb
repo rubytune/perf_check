@@ -9,6 +9,7 @@ require 'logger'
 require 'net/http'
 require 'open3'
 require 'ostruct'
+require 'securerandom'
 
 class PerfCheck
   autoload :VERSION, 'perf_check/version'
@@ -91,9 +92,12 @@ class PerfCheck
   def bundle
     Bundler.with_clean_env do
       execute(
-        'bundle', 'install', '--retry', '3', '--jobs', '3',
+        { 'BUNDLE_APP_CONFIG' => bundle_app_config_path },
+        'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
         fail_with: BundleError
       )
+    ensure
+      FileUtils.rm_rf(File.join(app_root, bundle_app_config_path))
     end
   end
 
@@ -106,6 +110,12 @@ class PerfCheck
   end
 
   private
+
+  # Returns a random bundle config path so we don't clobber any settings
+  # previously made in a working directory.
+  def bundle_app_config_path
+    @bundle_app_config_path ||= ".bundle-#{SecureRandom.uuid}"
+  end
 
   def logger_level
     options.verbose ? Logger::DEBUG : Logger::INFO
