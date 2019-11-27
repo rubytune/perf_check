@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 class PerfCheck
-  VERSION = '0.10.5'
+  VERSION = '0.10.5' unless defined?(VERSION)
 end
