@@ -55,13 +55,7 @@ module Support
     end
 
     def run_bundle_install
-      bundle_app_config_path = ".bundle-#{SecureRandom.uuid}"
-      bundle(
-        'BUNDLE_APP_CONFIG' => bundle_app_config_path,
-        'install', '--frozen', '--retry', '3', '--jobs', '3'
-      )
-    ensure
-      FileUtils.rm_rf(File.join(Dir.pwd, bundle_app_config_path)
+      PerfCheck.new(Dir.pwd).bundle
     end
 
     def run_db_setup
