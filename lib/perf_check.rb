@@ -212,8 +212,10 @@ class PerfCheck
     callbacks = {}
 
     if $!
-      callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
-      callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
+      callbacks[:error_message] = +"#{$!.class}: #{$!.message}\n"
+      callbacks[:error_message] << $!.backtrace.map do |line|
+        "\t#{line}"
+      end.join("\n")
     end
 
     trigger_when_finished_callbacks(callbacks)
