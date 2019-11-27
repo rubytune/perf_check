@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'benchmark'
 require 'bundler'
 require 'colorize'
@@ -7,6 +9,7 @@ require 'logger'
 require 'net/http'
 require 'open3'
 require 'ostruct'
+require 'securerandom'
 
 class PerfCheck
   autoload :VERSION, 'perf_check/version'
@@ -89,9 +92,12 @@ class PerfCheck
   def bundle
     Bundler.with_clean_env do
       execute(
+        { 'BUNDLE_APP_CONFIG' => bundle_app_config_path },
         'bundle', 'install', '--frozen', '--retry', '3', '--jobs', '3',
         fail_with: BundleError
       )
+    ensure
+      FileUtils.rm_rf(File.join(app_root, bundle_app_config_path))
     end
   end
 
@@ -104,6 +110,12 @@ class PerfCheck
   end
 
   private
+
+  # Returns a random bundle config path so we don't clobber any settings
+  # previously made in a working directory.
+  def bundle_app_config_path
+    @bundle_app_config_path ||= ".bundle-#{SecureRandom.uuid}"
+  end
 
   def logger_level
     options.verbose ? Logger::DEBUG : Logger::INFO
@@ -200,8 +212,10 @@ class PerfCheck
     callbacks = {}
 
     if $!
-      callbacks[:error_message] = "#{$!.class}: #{$!.message}\n"
-      callbacks[:error_message] << $!.backtrace.map{|x| "\t#{x}"}.join("\n")
+      callbacks[:error_message] = +"#{$!.class}: #{$!.message}\n"
+      callbacks[:error_message] << $!.backtrace.map do |line|
+        "\t#{line}"
+      end.join("\n")
     end
 
     trigger_when_finished_callbacks(callbacks)

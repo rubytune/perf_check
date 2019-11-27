@@ -55,9 +55,7 @@ module Support
     end
 
     def run_bundle_install
-      # Use the --frozen option to prevent the test suite from writing a new
-      # Gemfile.lock.
-      bundle 'install', '--frozen', '--retry', '3', '--jobs', '3'
+      PerfCheck.new(Dir.pwd).bundle
     end
 
     def run_db_setup
