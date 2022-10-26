@@ -1,3 +1,5 @@
+# ⚠ THIS PROJECT HAS BEEN ARCHIVED ⚠
+
 ![](https://api.travis-ci.org/rubytune/perf_check.svg)
 ## What is perf check
 
